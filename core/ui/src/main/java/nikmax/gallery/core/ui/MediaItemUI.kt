@@ -1,5 +1,11 @@
 package nikmax.gallery.core.ui
 
+import android.webkit.MimeTypeMap
+import kotlin.io.path.Path
+import kotlin.io.path.extension
+import kotlin.io.path.name
+import kotlin.io.path.nameWithoutExtension
+
 sealed interface MediaItemUI {
     enum class Volume { PRIMARY, SECONDARY }
 
@@ -15,13 +21,17 @@ sealed interface MediaItemUI {
 
     data class File(
         override val path: String,
-        override val name: String,
         override val size: Long,
         override val dateCreated: Long,
         override val dateModified: Long,
         override val volume: Volume,
-        val mimetype: String,
-        override val thumbnail: String? = null
+        override val name: String = Path(path).name,
+        override val thumbnail: String? = null,
+        val mimetype: String = MimeTypeMap
+            .getSingleton()
+            .getMimeTypeFromExtension(
+                Path(path).extension
+            ) ?: ""
     ) : MediaItemUI {
         enum class MediaType { IMAGE, VIDEO, GIF }
 
@@ -29,6 +39,11 @@ sealed interface MediaItemUI {
             get() = if (mimetype.startsWith("video/")) MediaType.VIDEO
             else if (mimetype == "image/gif") MediaType.GIF
             else MediaType.IMAGE
+
+        val extension: String
+            get() = Path(path).extension
+        val nameWithoutExtension: String
+            get() = Path(path).nameWithoutExtension
     }
 
     data class Album(

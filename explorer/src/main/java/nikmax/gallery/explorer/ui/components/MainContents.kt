@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.core.ui.components.ItemsGrid
 import nikmax.gallery.data.preferences.GalleryPreferences
 
 

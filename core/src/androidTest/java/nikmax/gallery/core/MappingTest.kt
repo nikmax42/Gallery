@@ -8,7 +8,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.name
 import kotlin.io.path.pathString
 
-class MediaItemDataToUiMapperTest {
+class MappingTest {
     private lateinit var image1: MediaFileData
     private lateinit var video1: MediaFileData
 

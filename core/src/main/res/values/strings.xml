@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="back">Back</string>
-    <string name="pluggable_storage">Pluggable Storage</string>
     <string name="search_placeholder">Search media…</string>
     <string name="clear_search_query">Clear search query</string>
     <string name="appearance">Appearance</string>

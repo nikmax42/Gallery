@@ -2,10 +2,12 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
-    namespace = "nikmax.gallery.core.ui"
+    namespace = "nikmax.gallery.dialogs"
     compileSdk = 35
 
     defaultConfig {
@@ -18,22 +20,23 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 }
 
 dependencies {
+    implementation(project(":core"))
+    implementation(project(":core:ui"))
+    implementation(project(":core:data"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.ktx)
@@ -52,10 +55,25 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    // Coil
-    implementation(libs.coil.kt.coil.compose)
-    implementation(libs.coil.video)
-    implementation(libs.coil.gif)
-    // Icons
-    implementation(libs.material.icons.extended)
+    // hilt
+    // Dagger Core
+    implementation(libs.dagger)
+    ksp(libs.dagger.compiler)
+    // Dagger Android
+    api(libs.dagger.android)
+    api(libs.dagger.android.support)
+    ksp(libs.dagger.android.processor)
+    // Hilt
+    implementation(libs.hilt.android)
+    implementation(libs.com.google.dagger.hilt.android.gradle.plugin)
+    ksp(libs.hilt.android.compiler)
+    ksp(libs.hilt.compiler)
+    // Activity KTX for viewModels()
+    ksp(libs.androidx.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.activity.ktx)
+    // Hilt testing
+    testImplementation(libs.hilt.core)
+    testImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.hilt.android.testing)
 }

@@ -13,7 +13,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import nikmax.gallery.core.MediaItemDataToUiMapper
+import nikmax.gallery.core.ItemsUtils.Mapping.mapDataFilesToUiFiles
+import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.applyFilters
+import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createAlbumOwnFilesList
+import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createFlatAlbumsList
+import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createNestedAlbumsList
+import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.excludeHidden
+import nikmax.gallery.core.ItemsUtils.Sorting.applySorting
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.data.Resource
 import nikmax.gallery.data.media.MediaFileData
@@ -21,8 +27,6 @@ import nikmax.gallery.data.media.MediaItemsRepo
 import nikmax.gallery.data.preferences.GalleryPreferences
 import nikmax.gallery.data.preferences.PreferencesRepo
 import javax.inject.Inject
-import kotlin.io.path.Path
-import kotlin.io.path.pathString
 
 
 @HiltViewModel
@@ -39,6 +43,7 @@ class ExplorerVm
     ) {
         sealed interface Mode {
             data object Viewing : Mode
+
             data class Selection(
                 val items: List<MediaItemUI>,
                 val selectedItems: List<MediaItemUI>
@@ -142,86 +147,28 @@ class ExplorerVm
             is Resource.Loading -> filesResource.data
             is Resource.Error -> TODO()
         }
-        // if nested albums view selected - show album content
-        // if plain albums view selected - show plain albums list or opened album files
+        // convert files data models to files ui models
+        val filesUi = filesData.mapDataFilesToUiFiles()
+        // apply primary filtering based on albums mode and target path
         val itemsUi = when (albumsMode) {
             GalleryPreferences.AlbumsMode.PLAIN -> {
                 when (albumPath == null) {
-                    true -> createFlatAlbumsList(filesData)
-                    false -> createAlbumOwnFilesList(filesData, albumPath)
+                    true -> filesUi.createFlatAlbumsList()
+                    false -> filesUi.createAlbumOwnFilesList(albumPath)
                 }
             }
-            GalleryPreferences.AlbumsMode.NESTED -> createNestedAlbumsList(
-                files = filesData,
+            GalleryPreferences.AlbumsMode.NESTED -> filesUi.createNestedAlbumsList(
                 albumPath = albumPath ?: "/storage/"
             )
-        }.let {
-            when (showHidden) {
-                true -> it
-                false -> it.filterNot { itemUi -> itemUi.hidden }
-            }
-        }
-        // apply filtering
-        val filteredItemsUi = itemsUi.applyFilters(selectedFilters)
-        // apply sorting
+        }.apply { if (!showHidden) this.excludeHidden() }
+        // apply secondary filtering based on selected preferences
+        val filteredItemsUi = itemsUi.applyFilters(selectedFilters = selectedFilters)
+        // apply sorting based on selected preference
         val sortedItemsUi = filteredItemsUi.applySorting(
-            sortingOrder, descendSortingEnabled
+            sortingOrder = sortingOrder,
+            descend = descendSortingEnabled
         )
         return sortedItemsUi
-    }
-
-    private fun List<MediaItemUI>.applyFilters(
-        selectedFilters: Set<GalleryPreferences.Filter>
-    ): List<MediaItemUI> {
-
-        val imagesFiltered = when (selectedFilters.contains(GalleryPreferences.Filter.IMAGES)) {
-            true -> this.filter { item ->
-                when (item) {
-                    is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.IMAGE
-                    is MediaItemUI.Album -> item.imagesCount > 0
-                }
-            }
-            false -> emptyList()
-        }
-
-        val videosFiltered = when (selectedFilters.contains(GalleryPreferences.Filter.VIDEOS)) {
-            true -> this.filter { item ->
-                when (item) {
-                    is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.VIDEO
-                    is MediaItemUI.Album -> item.videosCount > 0
-                }
-            }
-            false -> emptyList()
-        }
-
-        val gifsFiltered = when (selectedFilters.contains(GalleryPreferences.Filter.GIFS)) {
-            true -> this.filter { item ->
-                when (item) {
-                    is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.GIF
-                    is MediaItemUI.Album -> item.gifsCount > 0
-                }
-            }
-            false -> emptyList()
-        }
-
-        return imagesFiltered + videosFiltered + gifsFiltered
-    }
-
-    private fun List<MediaItemUI>.applySorting(
-        sortingOrder: GalleryPreferences.SortingOrder,
-        descend: Boolean
-    ): List<MediaItemUI> {
-        return when (sortingOrder) {
-            GalleryPreferences.SortingOrder.CREATION_DATE -> this.sortedBy { it.dateCreated }
-            GalleryPreferences.SortingOrder.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
-            GalleryPreferences.SortingOrder.NAME -> this.sortedBy { it.name }
-            GalleryPreferences.SortingOrder.SIZE -> this.sortedBy { it.size }
-        }.let {
-            when (descend) {
-                true -> it.reversed()
-                false -> it
-            }
-        }
     }
 
 
@@ -325,75 +272,6 @@ class ExplorerVm
         _uiState.update {
             it.copy(mode = UIState.Mode.Viewing)
         }
-    }
-
-
-    private fun createFlatAlbumsList(files: List<MediaFileData>): List<MediaItemUI> {
-        val albumsList = files
-            // group files by its album path
-            .groupBy { Path(it.path).parent.pathString }
-            .let { groups ->
-                // if only one album found - return its files list, else return albums list
-                when (groups.size == 1) {
-                    true -> createAlbumOwnFilesList(files, groups.keys.first())
-                    false -> groups.map { MediaItemDataToUiMapper.mapToAlbum(it.value) }
-                }
-            }
-        return albumsList
-    }
-
-    private fun createAlbumOwnFilesList(
-        files: List<MediaFileData>,
-        albumPath: String
-    ): List<MediaItemUI.File> {
-        return files
-            .filter { Path(it.path).parent.pathString == albumPath }
-            .map { MediaItemDataToUiMapper.mapToFile(it) }
-    }
-
-    /**
-     * include target album's direct children
-     * include target album's deep children that doesn't have any media albums between them and the target album
-     * NOT include album if it's a target album's deep child, but has intermediate media album between.
-     *
-     *
-     * For Example, we have the next directories structure:
-     * ```
-     * DCIM [3 images in directory itself]
-     * DCIM/Pictures [2]
-     * DCIM/Photos [0]
-     * DCIM/Photos/Birthday [10]
-     * DCIM/Photos/Cats [50]
-     * DCIM/Movies/FolderWithoutOwnMedia/DeepFolderWithMedia [1]
-     * ```
-     * If the target albums is `/DCIM/`, then the next albums should be returned:
-     * ```
-     * DCIM [3] // Because have 3 own files
-     * Pictures [2]
-     * Photos [50] // Photos doesn't contain any files by itself, but has two child albums with media
-     * DeepFolderWithMedia[1] // intermediate folder doesn't contain media files by itself, so `FolderWithoutOwnMedia` will be skipped
-     * ```
-     */
-    private fun createNestedAlbumsList(
-        files: List<MediaFileData>,
-        albumPath: String?
-    ): List<MediaItemUI> {
-        val nestedFiles = files.filter { it.path.startsWith(albumPath.toString()) }
-        val subAlbums = nestedFiles
-            .groupBy { Path(it.path).parent.pathString }
-            .map { MediaItemDataToUiMapper.mapToAlbum(it.value) }
-            .filterNot { it.path == albumPath }
-        // 1. filter albums that not include other album full path
-        val filteredNestedAlbums = subAlbums.filterNot { album ->
-            subAlbums
-                .filterNot { it == album }
-                .any { otherAlbum -> album.path.startsWith(otherAlbum.path) }
-        }
-        // 2. filter album own files
-        val ownFiles = files.filter { file ->
-            Path(file.path).parent.pathString == albumPath
-        }.map { MediaItemDataToUiMapper.mapToFile(it) }
-        return filteredNestedAlbums + ownFiles
     }
 
 

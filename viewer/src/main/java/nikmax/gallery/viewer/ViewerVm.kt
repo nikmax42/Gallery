@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.MediaItemDataToUiMapper
+import nikmax.gallery.core.ItemsUtils.Mapping.mapDataFileToUiFile
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.data.Resource
 import nikmax.gallery.data.media.MediaItemsRepo
@@ -64,18 +64,18 @@ class ViewerVm
     private suspend fun observeItems(filePath: String) {
         val albumPath = Path(filePath).parent.pathString
         mediaItemsRepo
-            .getFilesPlacedOnPath(albumPath)
-            .collectLatest { res ->
-                val files = when (res) {
-                    is Resource.Success -> res.data.map { MediaItemDataToUiMapper.mapToFile(it) }
-                    is Resource.Loading -> res.data.map { MediaItemDataToUiMapper.mapToFile(it) }
-                    is Resource.Error -> emptyList() // todo show error message instead
-                }
+            .getFilesFlow()
+            .collectLatest { resource ->
+                val albumFiles = when (resource) {
+                    is Resource.Success -> resource.data.map { it.mapDataFileToUiFile() }
+                    is Resource.Loading -> resource.data.map { it.mapDataFileToUiFile() }
+                    is Resource.Error -> TODO() // todo show error message instead
+                }.filter { Path(it.path).parent.pathString == albumPath }
                 _uiState.update {
                     it.copy(
                         content = UIState.Content.Ready(
-                            files = files,
-                            loading = res is Resource.Loading
+                            files = albumFiles,
+                            loading = resource is Resource.Loading
                         )
                     )
                 }
@@ -97,6 +97,5 @@ class ViewerVm
                 )
             }
         }
-
     }
 }

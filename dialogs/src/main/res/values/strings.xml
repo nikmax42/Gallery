@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="filename">Filename</string>
+    <string name="new_filename">New filename</string>
+    <string name="invalid_filename">Invalid filename</string>
+    <string name="extension">Extension</string>
+    <string name="new_extension">New extension</string>
+    <string name="invalid_extension">Invalid extension</string>
+    <string name="delete_x_items">Permanently delete %1$d items? </string>
+    <string name="pick_destination">Pick destination</string>
+    <string name="ok">OK</string>
+</resources>

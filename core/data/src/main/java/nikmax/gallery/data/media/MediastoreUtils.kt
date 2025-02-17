@@ -5,23 +5,17 @@ import android.database.Cursor
 import android.provider.MediaStore
 
 
-interface MediaStoreDs {
-    fun rescanFiles()
-    fun getFiles(): List<MediaFileData>
-}
+/**
+ * Utilities for retrieving media files from the [MediaStore].
+ */
+internal object MediastoreUtils {
 
-
-internal class MediaStoreDsImpl(private val context: Context) : MediaStoreDs {
-
-    private var _files = listOf<MediaFileData>()
-
-    override fun rescanFiles() {
-        _files = getAllImagesAndVideos()
-    }
-
-    override fun getFiles(): List<MediaFileData> = _files
-
-    private fun getAllImagesAndVideos(): MutableList<MediaFileData> {
+    /**
+     * Retrieves a list of images and videos (including placed in hidden .directories) from the mediastore.
+     *
+     * @return a list of [MediaFileData] objects.
+     */
+    fun getAllImagesAndVideos(context: Context): MutableList<MediaFileData> {
         val projection = arrayOf(
             MediaStore.MediaColumns.DATA,
             MediaStore.MediaColumns.DATE_ADDED,
@@ -51,6 +45,12 @@ internal class MediaStoreDsImpl(private val context: Context) : MediaStoreDs {
         return filesData
     }
 
+    /**
+     * Creates a [MediaFileData] object from a mediastore cursor.
+     *
+     * @param cursor the cursor to create the [MediaFileData] object from.
+     * @return a [MediaFileData] object.
+     */
     private fun createMediaItemData(cursor: Cursor): MediaFileData {
         val data = cursor.getString(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
@@ -76,9 +76,5 @@ internal class MediaStoreDsImpl(private val context: Context) : MediaStoreDs {
             volume = if (volumeName == MediaStore.VOLUME_EXTERNAL_PRIMARY) MediaFileData.Volume.PRIMARY
             else MediaFileData.Volume.SECONDARY
         )
-    }
-
-    private fun getExternalVolumeNames(context: Context): List<String> {
-        return MediaStore.getExternalVolumeNames(context).toList()
     }
 }

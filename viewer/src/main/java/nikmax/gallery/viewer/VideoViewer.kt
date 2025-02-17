@@ -52,7 +52,6 @@ import coil.request.videoFramePercent
 import dev.vivvvek.seeker.Seeker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.R
 import kotlin.concurrent.timer
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
@@ -219,7 +218,7 @@ private fun VideoFrame(
     }
     AsyncImage(
         model = imageRequest,
-        error = painterResource(R.drawable.gallery_image_placeholder),
+        error = painterResource(nikmax.gallery.core.ui.R.drawable.gallery_image_placeholder),
         contentDescription = null,
         modifier = modifier
     )

@@ -10,12 +10,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object MediaDataModule {
+internal object MediaDataModule {
 
     @Singleton
     @Provides
     fun providesMediaItemsRepo(@ApplicationContext context: Context): MediaItemsRepo {
-        val mediaStoreDsImpl = MediaStoreDsImpl(context)
-        return MediaItemRepoImpl(mediaStoreDsImpl)
+        return MediaItemRepoImpl(context = context)
     }
 }

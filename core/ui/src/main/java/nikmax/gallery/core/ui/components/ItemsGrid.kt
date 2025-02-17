@@ -1,4 +1,4 @@
-package nikmax.gallery.explorer.ui.components
+package nikmax.gallery.core.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -42,8 +42,8 @@ import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
-import nikmax.gallery.core.R
 import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.core.ui.R
 
 @Composable
 fun ItemsGrid(
