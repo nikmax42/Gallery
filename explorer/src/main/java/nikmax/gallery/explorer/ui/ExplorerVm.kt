@@ -39,7 +39,11 @@ class ExplorerVm
     ) {
         sealed interface Mode {
             data object Viewing : Mode
-            data class Selection(val selectedItems: List<MediaItemUI>) : Mode
+            data class Selection(
+                val items: List<MediaItemUI>,
+                val selectedItems: List<MediaItemUI>
+            ) : Mode
+
             data class Searching(
                 val searchQuery: String = "",
                 val foundedItems: List<MediaItemUI> = emptyList()
@@ -50,11 +54,13 @@ class ExplorerVm
     sealed interface UserAction {
         data class Launch(val path: String?) : UserAction
         data object Refresh : UserAction
-        data class ItemClick(val item: MediaItemUI) : UserAction
-        data class ItemLongClick(val item: MediaItemUI) : UserAction
         data class SearchQueryChange(val newQuery: String) : UserAction
         data class Search(val query: String) : UserAction
         data class UpdatePreferences(val preferences: GalleryPreferences) : UserAction
+        data class OpenItem(val item: MediaItemUI) : UserAction
+        data class ChangeItemSelection(val item: MediaItemUI) : UserAction
+        data object SelectAllItems : UserAction
+        data object ClearSelection : UserAction
     }
 
     sealed interface Event {
@@ -73,11 +79,13 @@ class ExplorerVm
             when (action) {
                 is UserAction.Launch -> onLaunch(action.path)
                 UserAction.Refresh -> onRefresh()
-                is UserAction.ItemClick -> onItemClick(action.item)
-                is UserAction.ItemLongClick -> onItemClick(action.item)
+                is UserAction.OpenItem -> openItem(action.item)
                 is UserAction.SearchQueryChange -> onSearchQueryChange(action.newQuery)
                 is UserAction.Search -> onSearch(action.query)
                 is UserAction.UpdatePreferences -> updatePreferences(action.preferences)
+                is UserAction.ChangeItemSelection -> changeItemSelection(action.item)
+                UserAction.SelectAllItems -> selectAllItems()
+                UserAction.ClearSelection -> clearSelection()
             }
         }
     }
@@ -217,17 +225,6 @@ class ExplorerVm
     }
 
 
-    private suspend fun onItemClick(item: MediaItemUI) {
-        when (_uiState.value.mode) {
-            UIState.Mode.Viewing, is UIState.Mode.Searching -> openItem(item)
-            is UIState.Mode.Selection -> changeItemSelection(item)
-        }
-    }
-
-    private suspend fun onItemLongClick(item: MediaItemUI) {
-        changeItemSelection(item)
-    }
-
     private suspend fun openItem(item: MediaItemUI) {
         val event = when (item) {
             is MediaItemUI.File -> Event.OpenFile(item)
@@ -237,22 +234,68 @@ class ExplorerVm
     }
 
     private fun changeItemSelection(item: MediaItemUI) {
+        when (val mode = _uiState.value.mode) {
+            UIState.Mode.Viewing -> _uiState.update {
+                it.copy(
+                    mode = UIState.Mode.Selection(
+                        items = _uiState.value.items,
+                        selectedItems = listOf(item)
+                    )
+                )
+            }
+            is UIState.Mode.Searching -> _uiState.update {
+                it.copy(
+                    mode = UIState.Mode.Selection(
+                        items = mode.foundedItems,
+                        selectedItems = listOf(item)
+                    )
+                )
+            }
+            is UIState.Mode.Selection -> {
+                val selectedItems = mode.selectedItems
+                val newSelectedItems = when (selectedItems.contains(item)) {
+                    true -> selectedItems - item
+                    false -> selectedItems + item
+                }
+                val newState = when (newSelectedItems.isEmpty()) {
+                    true -> _uiState.value.copy(mode = UIState.Mode.Viewing)
+                    false -> _uiState.value.copy(
+                        mode = UIState.Mode.Selection(
+                            items = mode.items,
+                            selectedItems = newSelectedItems
+                        )
+                    )
+                }
+                _uiState.update { newState }
+            }
+        }
+    }
+
+    private fun selectAllItems() {
+        val newState = when (val mode = _uiState.value.mode) {
+            UIState.Mode.Viewing, is UIState.Mode.Selection -> _uiState.value.copy(
+                mode = UIState.Mode.Selection(
+                    items = _uiState.value.items,
+                    selectedItems = _uiState.value.items
+                )
+            )
+            is UIState.Mode.Searching -> _uiState.value.copy(
+                mode = UIState.Mode.Selection(
+                    items = mode.foundedItems,
+                    selectedItems = mode.foundedItems
+                )
+            )
+        }
+        _uiState.update { newState }
+    }
+
+    private fun clearSelection() {
+        // todo return to previous mode instead of viewing (to return back to search mode, for example)
         val mode = _uiState.value.mode
-        if (mode is UIState.Mode.Viewing) {
+        if (mode is UIState.Mode.Selection) {
             _uiState.update {
-                it.copy(mode = UIState.Mode.Selection(listOf(item)))
+                it.copy(mode = UIState.Mode.Viewing)
             }
-        } else if (mode is UIState.Mode.Selection) {
-            val selectedItems = mode.selectedItems
-            val newSelectedItems = when (selectedItems.contains(item)) {
-                true -> selectedItems - item
-                false -> selectedItems + item
-            }
-            val newState = when (newSelectedItems.isEmpty()) {
-                true -> _uiState.value.copy(mode = UIState.Mode.Viewing)
-                false -> _uiState.value.copy(mode = UIState.Mode.Selection(newSelectedItems))
-            }
-            _uiState.update { newState }
         }
     }
 

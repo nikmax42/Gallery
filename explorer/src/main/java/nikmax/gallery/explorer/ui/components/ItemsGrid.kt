@@ -1,4 +1,4 @@
-package nikmax.gallery.explorer.ui
+package nikmax.gallery.explorer.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -10,8 +10,13 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.Videocam
@@ -21,11 +26,13 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,10 +43,111 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import nikmax.gallery.core.R
+import nikmax.gallery.core.ui.MediaItemUI
+
+@Composable
+fun ItemsGrid(
+    items: List<MediaItemUI>,
+    selectedItems: List<MediaItemUI>,
+    onItemClick: (MediaItemUI) -> Unit,
+    onItemLongClick: (MediaItemUI) -> Unit,
+    modifier: Modifier = Modifier,
+    columnsAmountPortrait: Int = 3,
+    columnsAmountLandscape: Int = 4,
+    gridState: LazyGridState = rememberLazyGridState()
+) {
+    val orientation = LocalConfiguration.current.orientation
+    val columnsAmount = when (orientation) {
+        android.content.res.Configuration.ORIENTATION_PORTRAIT -> columnsAmountPortrait
+        android.content.res.Configuration.ORIENTATION_LANDSCAPE -> columnsAmountLandscape
+        else -> columnsAmountPortrait
+    }
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(columnsAmount),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        state = gridState,
+        modifier = modifier,
+    ) {
+        items.forEach {
+            item {
+                GridItem(
+                    image = it.thumbnail,
+                    name = it.name,
+                    isVideo = it is MediaItemUI.File && it.mediaType == MediaItemUI.File.MediaType.VIDEO,
+                    isFolder = it is MediaItemUI.Album,
+                    folderFilesCount = if (it is MediaItemUI.Album) it.filesCount else 0,
+                    isSelected = selectedItems.contains(it),
+                    isSecondaryVolume = it.volume == MediaItemUI.Volume.SECONDARY,
+                    onClick = { onItemClick(it) },
+                    onLongClick = { onItemLongClick(it) }
+                )
+            }
+        }
+    }
+}
+@Preview
+@Composable
+private fun ItemsGridPreview() {
+    val image = remember {
+        MediaItemUI.File(
+            path = "",
+            name = "image.png",
+            volume = MediaItemUI.Volume.PRIMARY,
+            dateCreated = 0,
+            dateModified = 0,
+            size = 0,
+            mimetype = "image/png"
+        )
+    }
+    val video = remember {
+        MediaItemUI.File(
+            path = "",
+            name = "video.mp4",
+            volume = MediaItemUI.Volume.PRIMARY,
+            dateCreated = 0,
+            dateModified = 0,
+            size = 0,
+            mimetype = "video/mp4"
+        )
+    }
+    val gif = remember {
+        MediaItemUI.File(
+            path = "",
+            name = "gif.gif",
+            volume = MediaItemUI.Volume.PRIMARY,
+            dateCreated = 0,
+            dateModified = 0,
+            size = 0,
+            mimetype = "image/gif"
+        )
+    }
+    val album = remember {
+        MediaItemUI.Album(
+            path = "",
+            name = "gif.gif",
+            volume = MediaItemUI.Volume.PRIMARY,
+            dateCreated = 0,
+            dateModified = 0,
+            size = 0,
+            filesCount = 3
+        )
+    }
+    val items = remember { listOf(image, video, gif, album) }
+    val selectedItems = remember { listOf(album) }
+
+    ItemsGrid(
+        items = items,
+        selectedItems = selectedItems,
+        onItemClick = {},
+        onItemLongClick = {}
+    )
+}
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MediaItem(
+private fun GridItem(
     image: String?,
     name: String,
     onClick: () -> Unit,
@@ -78,9 +186,15 @@ fun MediaItem(
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(12.dp))
                 )
+                if (isSelected) IconCorner(
+                    icon = Icons.Default.CheckCircle,
+                    contentDescription = null, // todo add content description
+                    bottomEndRadius = 30F,
+                    modifier = Modifier.align(Alignment.TopStart)
+                )
                 if (isVideo) IconCorner(
                     icon = Icons.Default.PlayCircle,
-                    contentDescription = "",
+                    contentDescription = null,
                     bottomStartRadius = 30F,
                     modifier = Modifier.align(Alignment.TopEnd)
                 )
@@ -98,7 +212,7 @@ fun MediaItem(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Icon(
+                        if (isSecondaryVolume) Icon(
                             imageVector = Icons.Default.SdCard,
                             contentDescription = stringResource(R.string.pluggable_storage),
                             modifier = Modifier.height(MaterialTheme.typography.titleMedium.fontSize.value.dp),
@@ -117,7 +231,7 @@ fun MediaItem(
 @Preview
 @Composable
 private fun MediaItemPreview() {
-    MediaItem(
+    GridItem(
         image = "",
         name = "name",
         isFolder = true,
@@ -131,7 +245,7 @@ private fun MediaItemPreview() {
 @Composable
 private fun IconCorner(
     icon: ImageVector,
-    contentDescription: String,
+    contentDescription: String?,
     modifier: Modifier = Modifier,
     topStartRadius: Float = 0F,
     topEndRadius: Float = 0F,

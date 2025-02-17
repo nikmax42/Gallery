@@ -1,26 +1,16 @@
 package nikmax.gallery.explorer.ui
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -35,15 +25,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
-import nikmax.gallery.core.R
 import nikmax.gallery.core.ui.MediaItemUI
-import nikmax.gallery.core.ui.Searchbar
+import nikmax.gallery.data.preferences.GalleryPreferences
+import nikmax.gallery.explorer.ui.components.GalleryAppearanceMenu
+import nikmax.gallery.explorer.ui.components.ItemsGrid
+import nikmax.gallery.explorer.ui.components.SearchTopBar
+import nikmax.gallery.explorer.ui.components.SelectionTopBar
 
 
 @Composable
@@ -116,108 +107,69 @@ private fun ExplorerContent(
                     )
                 }
                 // show selection topbar in selection mode
-                is ExplorerVm.UIState.Mode.Selection -> TODO()
+                is ExplorerVm.UIState.Mode.Selection -> SelectionTopBar(
+                    items = state.items.toSet(),
+                    selectedItems = mode.selectedItems.toSet(),
+                    onClearSelectionClick = { onAction(ExplorerVm.UserAction.ClearSelection) },
+                    onSelectAllClick = { onAction(ExplorerVm.UserAction.SelectAllItems) }
+                )
             }
         }
     ) { paddings ->
-        Box {
-            PullToRefreshBox(
-                isRefreshing = state.loading,
+        when (val mode = state.mode) {
+            ExplorerVm.UIState.Mode.Viewing -> ViewingContent(
+                items = state.items,
+                loading = state.loading,
                 onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
-                modifier = Modifier.padding(
-                    top = paddings.calculateTopPadding(),
-                    bottom = paddings.calculateBottomPadding(),
-                    start = 8.dp,
-                    end = 8.dp
-                )
-            ) {
-                ItemsGrid(
-                    items = when (val mode = state.mode) {
-                        is ExplorerVm.UIState.Mode.Searching -> mode.foundedItems
-                        ExplorerVm.UIState.Mode.Viewing -> state.items
-                        is ExplorerVm.UIState.Mode.Selection -> TODO()
-                    },
-                    selectedItems = emptyList(), // todo get from selection mode when it will be implemented
-                    onItemClick = { onAction(ExplorerVm.UserAction.ItemClick(it)) },
-                    onItemLongClick = { onAction(ExplorerVm.UserAction.ItemLongClick(it)) },
-                    columnsAmountPortrait = state.preferences.gridColumnsPortrait,
-                    columnsAmountLandscape = state.preferences.gridColumnsLandscape,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .nestedScroll(topbarScrollBehavior.nestedScrollConnection)
-                )
-            }
-            if (showSheet) {
-                ModalBottomSheet(
-                    onDismissRequest = { showSheet = false },
-                    dragHandle = null
-                ) {
-                    GalleryAppearanceMenu(
-                        selectedAlbumsMode = state.preferences.albumsMode,
-                        onAlbumsModeChange = {
-                            onAction(
-                                ExplorerVm.UserAction.UpdatePreferences(
-                                    state.preferences.copy(albumsMode = it)
-                                )
-                            )
-                        },
-                        gridPortraitColumnsAmount = state.preferences.gridColumnsPortrait,
-                        onGridPortraitColumnsAmountChange = {
-                            onAction(
-                                ExplorerVm.UserAction.UpdatePreferences(
-                                    state.preferences.copy(gridColumnsPortrait = it)
-                                )
-                            )
-                        },
-                        gridLandscapeColumnsAmount = state.preferences.gridColumnsLandscape,
-                        onGridLandscapeColumnsAmountChange = {
-                            onAction(
-                                ExplorerVm.UserAction.UpdatePreferences(
-                                    state.preferences.copy(gridColumnsLandscape = it)
-                                )
-                            )
-                        },
-                        selectedSortingType = state.preferences.sortingOrder,
-                        onSortingTypeChange = {
-                            onAction(
-                                ExplorerVm.UserAction.UpdatePreferences(
-                                    state.preferences.copy(sortingOrder = it)
-                                )
-                            )
-                        },
-                        descend = state.preferences.descendSorting,
-                        onDescendChange = {
-                            onAction(
-                                ExplorerVm.UserAction.UpdatePreferences(
-                                    state.preferences.copy(descendSorting = it)
-                                )
-                            )
-                        },
-                        selectedFilters = state.preferences.enabledFilters,
-                        onFilterSelectionChange = { filter ->
-                            onAction(
-                                ExplorerVm.UserAction.UpdatePreferences(
-                                    state.preferences.copy(
-                                        enabledFilters = when (state.preferences.enabledFilters.contains(filter)) {
-                                            true -> state.preferences.enabledFilters - filter
-                                            false -> state.preferences.enabledFilters + filter
-                                        }
-                                    )
-                                )
-                            )
-                        },
-                        showHidden = state.preferences.showHidden,
-                        onHiddenChange = {
-                            onAction(
-                                ExplorerVm.UserAction.UpdatePreferences(
-                                    state.preferences.copy(showHidden = it)
-                                )
-                            )
-                        },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                onItemClick = { onAction(ExplorerVm.UserAction.OpenItem(it)) },
+                onItemLongClick = { onAction(ExplorerVm.UserAction.ChangeItemSelection(it)) },
+                showSheet = showSheet,
+                onShowSheetChange = { showSheet = it },
+                preferences = state.preferences,
+                onPreferencesChange = { onAction(ExplorerVm.UserAction.UpdatePreferences(it)) },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = paddings.calculateTopPadding(),
+                        bottom = paddings.calculateBottomPadding(),
+                        start = 8.dp,
+                        end = 8.dp
                     )
-                }
-            }
+                    .nestedScroll(topbarScrollBehavior.nestedScrollConnection)
+            )
+            is ExplorerVm.UIState.Mode.Searching -> SearchingContent(
+                items = mode.foundedItems,
+                loading = state.loading,
+                onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
+                onItemClick = { onAction(ExplorerVm.UserAction.OpenItem(it)) },
+                onItemLongClick = { onAction(ExplorerVm.UserAction.ChangeItemSelection(it)) },
+                preferences = state.preferences,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = paddings.calculateTopPadding(),
+                        bottom = paddings.calculateBottomPadding(),
+                        start = 8.dp,
+                        end = 8.dp
+                    )
+            )
+            is ExplorerVm.UIState.Mode.Selection -> SelectionContent(
+                items = mode.items,
+                selectedItems = mode.selectedItems,
+                loading = state.loading,
+                onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
+                onItemClick = { onAction(ExplorerVm.UserAction.ChangeItemSelection(it)) },
+                onItemLongClick = { onAction(ExplorerVm.UserAction.ChangeItemSelection(it)) },
+                preferences = state.preferences,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = paddings.calculateTopPadding(),
+                        bottom = paddings.calculateBottomPadding(),
+                        start = 8.dp,
+                        end = 8.dp
+                    )
+            )
         }
     }
 }
@@ -239,57 +191,126 @@ private fun ExplorerContentPreview() {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchTopBar(
-    searchQuery: String,
-    onQueryChange: (String) -> Unit,
-    onSearch: (query: String) -> Unit,
-    modifier: Modifier = Modifier,
-    trailingIcon: @Composable (() -> Unit) = {}
+fun ViewingContent(
+    items: List<MediaItemUI>,
+    loading: Boolean,
+    onRefresh: () -> Unit,
+    onItemClick: (MediaItemUI) -> Unit,
+    onItemLongClick: (MediaItemUI) -> Unit,
+    showSheet: Boolean,
+    onShowSheetChange: (Boolean) -> Unit,
+    preferences: GalleryPreferences,
+    onPreferencesChange: (GalleryPreferences) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val focusManager = LocalFocusManager.current // to clear focus on search cancel
-
-    fun clearQueryAndFocus() {
-        focusManager.clearFocus()
-        onQueryChange("")
-    }
-
-    // Cancel search with back press
-    BackHandler(searchQuery.isNotEmpty()) { clearQueryAndFocus() }
-
-    Searchbar(
-        query = searchQuery,
-        onQueryChange = { onQueryChange(it) },
-        onSearch = { onSearch(it) },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = stringResource(R.string.search_placeholder)
+    Box {
+        PullToRefreshBox(
+            isRefreshing = loading,
+            onRefresh = { onRefresh() },
+        ) {
+            ItemsGrid(
+                items = items,
+                selectedItems = emptyList(),
+                onItemClick = { onItemClick(it) },
+                onItemLongClick = { onItemLongClick(it) },
+                columnsAmountPortrait = preferences.gridColumnsPortrait,
+                columnsAmountLandscape = preferences.gridColumnsLandscape,
+                modifier = modifier
             )
-        },
-        trailingIcon = {
-            AnimatedVisibility(
-                visible = searchQuery.isNotEmpty(),
-                enter = slideInHorizontally { it } + fadeIn(),
-                exit = slideOutHorizontally { it } + fadeOut()
+        }
+        if (showSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { onShowSheetChange(false) },
+                dragHandle = null
             ) {
-                Icon(
-                    imageVector = Icons.Default.Clear,
-                    contentDescription = "",
-                    modifier = Modifier.clickable { clearQueryAndFocus() }
+                GalleryAppearanceMenu(
+                    selectedAlbumsMode = preferences.albumsMode,
+                    onAlbumsModeChange = { onPreferencesChange(preferences.copy(albumsMode = it)) },
+                    gridPortraitColumnsAmount = preferences.gridColumnsPortrait,
+                    onGridPortraitColumnsAmountChange = { onPreferencesChange(preferences.copy(gridColumnsPortrait = it)) },
+                    gridLandscapeColumnsAmount = preferences.gridColumnsLandscape,
+                    onGridLandscapeColumnsAmountChange = { onPreferencesChange(preferences.copy(gridColumnsLandscape = it)) },
+                    selectedSortingType = preferences.sortingOrder,
+                    onSortingTypeChange = { onPreferencesChange(preferences.copy(sortingOrder = it)) },
+                    descend = preferences.descendSorting,
+                    onDescendChange = { onPreferencesChange(preferences.copy(descendSorting = it)) },
+                    selectedFilters = preferences.enabledFilters,
+                    onFilterSelectionChange = { filter ->
+                        onPreferencesChange(
+                            preferences.copy(
+                                enabledFilters = when (preferences.enabledFilters.contains(filter)) {
+                                    true -> preferences.enabledFilters - filter
+                                    false -> preferences.enabledFilters + filter
+                                }
+                            )
+                        )
+                    },
+                    showHidden = preferences.showHidden,
+                    onHiddenChange = { onPreferencesChange(preferences.copy(showHidden = it)) },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
-            AnimatedVisibility(
-                visible = searchQuery.isEmpty(),
-                enter = slideInHorizontally { it } + fadeIn(),
-                exit = slideOutHorizontally { it } + fadeOut()
-            ) {
-                trailingIcon()
-            }
-        },
-        placeholder = { Text(text = stringResource(R.string.search_placeholder)) },
-        modifier = modifier
-    )
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchingContent(
+    items: List<MediaItemUI>,
+    loading: Boolean,
+    onRefresh: () -> Unit,
+    onItemClick: (MediaItemUI) -> Unit,
+    onItemLongClick: (MediaItemUI) -> Unit,
+    preferences: GalleryPreferences,
+    modifier: Modifier = Modifier
+) {
+    PullToRefreshBox(
+        isRefreshing = loading,
+        onRefresh = { onRefresh() },
+    ) {
+        ItemsGrid(
+            items = items,
+            selectedItems = emptyList(),
+            onItemClick = { onItemClick(it) },
+            onItemLongClick = { onItemLongClick(it) },
+            columnsAmountPortrait = preferences.gridColumnsPortrait,
+            columnsAmountLandscape = preferences.gridColumnsLandscape,
+            modifier = modifier
+        )
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectionContent(
+    items: List<MediaItemUI>,
+    selectedItems: List<MediaItemUI>,
+    loading: Boolean,
+    onRefresh: () -> Unit,
+    onItemClick: (MediaItemUI) -> Unit,
+    onItemLongClick: (MediaItemUI) -> Unit,
+    preferences: GalleryPreferences,
+    modifier: Modifier = Modifier
+) {
+    PullToRefreshBox(
+        isRefreshing = loading,
+        onRefresh = { onRefresh() },
+    ) {
+        ItemsGrid(
+            items = items,
+            selectedItems = selectedItems,
+            onItemClick = { onItemClick(it) },
+            onItemLongClick = { onItemLongClick(it) },
+            columnsAmountPortrait = preferences.gridColumnsPortrait,
+            columnsAmountLandscape = preferences.gridColumnsLandscape,
+            modifier = modifier
+        )
+    }
 }
 
 

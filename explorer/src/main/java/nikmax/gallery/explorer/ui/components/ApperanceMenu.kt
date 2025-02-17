@@ -1,4 +1,4 @@
-package nikmax.gallery.explorer.ui
+package nikmax.gallery.explorer.ui.components
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
@@ -290,7 +290,7 @@ private fun SortingMenuPreview() {
 
 
 @Composable
-fun FilteringMenu(
+private fun FilteringMenu(
     selectedFilters: Set<GalleryPreferences.Filter>,
     onSelectionChange: (GalleryPreferences.Filter) -> Unit,
     hiddenEnabled: Boolean,
