@@ -1,6 +1,5 @@
 package nikmax.gallery.viewer
 
-import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -42,7 +41,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
@@ -57,7 +55,6 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-@OptIn(UnstableApi::class)
 @Composable
 fun VideoViewer(
     videoUri: String,
@@ -117,18 +114,11 @@ fun VideoViewer(
     }
 
     Box(modifier = modifier) {
-        /*  val artwork = remember(videoUri) {
-             MediaMetadataRetriever()
-                 .apply { setDataSource(videoUri) }
-                 .frameAtTime?.toDrawable(context.resources)
-         } */
         AndroidView(
             factory = { context ->
                 PlayerView(context).apply {
                     this.player = player
                     useController = false
-                    // artworkDisplayMode = PlayerView.ARTWORK_DISPLAY_MODE_FILL
-                    // defaultArtwork = artwork
                 }
             },
             modifier = Modifier
@@ -191,8 +181,6 @@ fun VideoViewer(
 private fun VideoViewerPreview() {
     VideoViewer(
         videoUri = "/storage/emulated/0/Movies/4_532580209606526323.mp4",
-        // videoUri = "",
-        // videoUri = videoPath,
         showPlayerControls = true,
     )
 }

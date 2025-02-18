@@ -41,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import nikmax.gallery.data.preferences.GalleryPreferences
+import nikmax.gallery.explorer.R
 
 
 @Composable
@@ -62,9 +63,9 @@ fun GalleryAppearanceMenu(
     modifier: Modifier = Modifier
 ) {
     val tabs = listOf(
-        stringResource(nikmax.gallery.core.R.string.appearance),
-        stringResource(nikmax.gallery.core.R.string.sorting),
-        stringResource(nikmax.gallery.core.R.string.filtering),
+        stringResource(R.string.appearance),
+        stringResource(R.string.sorting),
+        stringResource(R.string.filtering),
     )
     var selectedTab by remember { mutableIntStateOf(0) }
     Column {
@@ -159,8 +160,8 @@ private fun AppearanceMenu(
                     onClick = { onAlbumsModeChange(mode) },
                     label = {
                         val modeName = when (mode) {
-                            GalleryPreferences.AlbumsMode.PLAIN -> stringResource(nikmax.gallery.core.R.string.plain_albums)
-                            GalleryPreferences.AlbumsMode.NESTED -> stringResource(nikmax.gallery.core.R.string.nested_albums)
+                            GalleryPreferences.AlbumsMode.PLAIN -> stringResource(R.string.plain_albums)
+                            GalleryPreferences.AlbumsMode.NESTED -> stringResource(R.string.nested_albums)
                         }
                         Text(modeName)
                     }
@@ -178,7 +179,7 @@ private fun AppearanceMenu(
                 val maxColumns = remember { 6F }
                 var value by remember { mutableFloatStateOf(gridPortraitColumnsAmount.toFloat()) }
                 Text(
-                    text = stringResource(nikmax.gallery.core.R.string.grid_cols_portrait) + ": ${value.toInt()}",
+                    text = stringResource(R.string.grid_cols_portrait) + ": ${value.toInt()}",
                     textAlign = TextAlign.Center
                 )
                 Slider(
@@ -199,7 +200,7 @@ private fun AppearanceMenu(
                 val maxColumns = remember { 10F }
                 var value by remember { mutableFloatStateOf(gridLandscapeColumnsAmount.toFloat()) }
                 Text(
-                    text = stringResource(nikmax.gallery.core.R.string.grid_cols_landscape) + ": ${value.toInt()}",
+                    text = stringResource(R.string.grid_cols_landscape) + ": ${value.toInt()}",
                     textAlign = TextAlign.Center
                 )
                 Slider(
@@ -259,15 +260,15 @@ private fun SortingMenu(
                     if (sorting == selectedType) {
                         Icon(
                             imageVector = if (descend) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
-                            contentDescription = if (descend) stringResource(nikmax.gallery.core.R.string.descend)
-                            else stringResource(nikmax.gallery.core.R.string.ascend)
+                            contentDescription = if (descend) stringResource(R.string.descend)
+                            else stringResource(R.string.ascend)
                         )
                     } else Spacer(modifier = Modifier.width(24.dp))
                     val sortingName = when (sorting) {
-                        GalleryPreferences.SortingOrder.CREATION_DATE -> stringResource(nikmax.gallery.core.R.string.creation_date)
-                        GalleryPreferences.SortingOrder.MODIFICATION_DATE -> stringResource(nikmax.gallery.core.R.string.modification_date)
-                        GalleryPreferences.SortingOrder.NAME -> stringResource(nikmax.gallery.core.R.string.name)
-                        GalleryPreferences.SortingOrder.SIZE -> stringResource(nikmax.gallery.core.R.string.size)
+                        GalleryPreferences.SortingOrder.CREATION_DATE -> stringResource(R.string.creation_date)
+                        GalleryPreferences.SortingOrder.MODIFICATION_DATE -> stringResource(R.string.modification_date)
+                        GalleryPreferences.SortingOrder.NAME -> stringResource(R.string.name)
+                        GalleryPreferences.SortingOrder.SIZE -> stringResource(R.string.size)
                     }
                     Text(sortingName)
                 }
@@ -311,9 +312,9 @@ private fun FilteringMenu(
                         onCheckedChange = { onSelectionChange(filter) }
                     )
                     val text = when (filter) {
-                        GalleryPreferences.Filter.IMAGES -> stringResource(nikmax.gallery.core.R.string.images)
-                        GalleryPreferences.Filter.VIDEOS -> stringResource(nikmax.gallery.core.R.string.videos)
-                        GalleryPreferences.Filter.GIFS -> stringResource(nikmax.gallery.core.R.string.gifs)
+                        GalleryPreferences.Filter.IMAGES -> stringResource(R.string.images)
+                        GalleryPreferences.Filter.VIDEOS -> stringResource(R.string.videos)
+                        GalleryPreferences.Filter.GIFS -> stringResource(R.string.gifs)
                     }
                     Text(text)
                 }
@@ -330,7 +331,7 @@ private fun FilteringMenu(
                     checked = hiddenEnabled,
                     onCheckedChange = { onHiddenChange(hiddenEnabled.not()) },
                 )
-                Text(stringResource(nikmax.gallery.core.R.string.hidden))
+                Text(stringResource(R.string.hidden))
             }
         }
     }

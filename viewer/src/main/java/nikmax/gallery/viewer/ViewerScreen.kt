@@ -39,14 +39,16 @@ fun ViewerScreen(
     onBackCLick: () -> Unit,
     vm: ViewerVm = hiltViewModel()
 ) {
-    val uiState by vm.uiState.collectAsState()
+    val state by vm.uiState.collectAsState()
 
     LaunchedEffect(filePath) {
         vm.onAction(ViewerVm.UserAction.Launch(filePath))
     }
 
-    when (val content = uiState.content) {
-        ViewerVm.UIState.Content.Preparing -> {}
+    when (val content = state.content) {
+        ViewerVm.UIState.Content.Preparing -> {
+            /* todo implement animated loading placeholder */
+        }
         is ViewerVm.UIState.Content.Ready -> {
             val initialPage = remember(content.files) {
                 content.files
@@ -55,7 +57,7 @@ fun ViewerScreen(
             }
             ViewerScreenContent(
                 files = content.files,
-                showControls = content.showControls,
+                showControls = state.showControls,
                 onSwitchControls = { vm.onAction(ViewerVm.UserAction.SwitchControls) },
                 onBackCLick = { onBackCLick() },
                 initialPage = initialPage
@@ -176,7 +178,7 @@ fun ViewerTopBar(
         },
         navigationIcon = {
             IconButton(onClick = { onBackCLick() }) {
-                Icon(Icons.Default.ArrowBack, stringResource(nikmax.gallery.core.R.string.back))
+                Icon(Icons.Default.ArrowBack, stringResource(R.string.back))
             }
         }
     )
