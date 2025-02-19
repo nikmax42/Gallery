@@ -76,4 +76,8 @@ dependencies {
     testImplementation(libs.hilt.core)
     testImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.hilt.android.testing)
+    // Coil
+    implementation(libs.coil.kt.coil.compose)
+    implementation(libs.coil.video)
+    implementation(libs.coil.gif)
 }

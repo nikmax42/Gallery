@@ -1,6 +1,5 @@
 package nikmax.gallery.explorer.ui.components
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -29,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,17 +44,13 @@ internal fun SearchTopBar(
     onQueryChange: (String) -> Unit,
     onSearch: (query: String) -> Unit,
     trailingIcon: @Composable (() -> Unit) = {},
-    scrollBehavior: TopAppBarScrollBehavior? = null
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    focusManager: FocusManager = LocalFocusManager.current
 ) {
-    val focusManager = LocalFocusManager.current // to clear focus on search cancel
-
     fun clearQueryAndFocus() {
         focusManager.clearFocus()
         onQueryChange("")
     }
-
-    // Cancel search with back press
-    BackHandler(searchQuery.isNotEmpty()) { clearQueryAndFocus() }
 
     TopAppBar(
         navigationIcon = {

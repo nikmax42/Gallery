@@ -12,4 +12,11 @@
     <string name="delete_x_items">Permanently delete %1$d items? </string>
     <string name="pick_destination">Pick destination</string>
     <string name="ok">OK</string>
+    <string name="filename_conflict">Filename conflict</string>
+    <string name="x_files_already_exist">%1$d items already exists in the target directory</string>
+    <string name="file_already_exist">Item with such name already exists in the target directory</string>
+    <string name="apply_to_all">Apply to all</string>
+    <string name="skip">Skip this item</string>
+    <string name="keep_both">Keep both</string>
+    <string name="overwrite">Overwrite with new</string>
 </resources>

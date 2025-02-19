@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -42,7 +43,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
     // Hilt
     implementation(libs.hilt.android)
     implementation(libs.com.google.dagger.hilt.android.gradle.plugin)
@@ -57,4 +57,10 @@ dependencies {
     androidTestImplementation(libs.turbine)
     // Datastore
     implementation(libs.androidx.datastore.preferences)
+    // Worker
+    implementation(libs.androidx.work.runtime.ktx)
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+    // Timber
+    implementation(libs.timber)
 }

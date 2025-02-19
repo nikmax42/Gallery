@@ -1,4 +1,4 @@
-package nikmax.gallery.viewer
+package nikmax.gallery.viewer.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

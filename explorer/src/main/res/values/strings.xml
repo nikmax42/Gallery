@@ -21,4 +21,8 @@
     <string name="videos">Videos</string>
     <string name="gifs">GIFs</string>
     <string name="hidden">Hidden</string>
+    <string name="copy_selected">Copy selected</string>
+    <string name="move_selected">Move selected</string>
+    <string name="rename_selected">Rename selected</string>
+    <string name="delete_selected">Delete selected</string>
 </resources>

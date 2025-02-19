@@ -15,8 +15,8 @@ android {
         applicationId = "nikmax.gallery"
         minSdk = 30
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.8.0"
+        versionCode = 3
+        versionName = "0.8.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

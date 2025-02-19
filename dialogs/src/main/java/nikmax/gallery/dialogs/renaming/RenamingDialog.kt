@@ -27,12 +27,14 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.dialogs.R
+import kotlin.io.path.Path
+import kotlin.io.path.pathString
 
 
 @Composable
 fun RenamingDialog(
     mediaItem: MediaItemUI,
-    onConfirm: () -> Unit,
+    onConfirm: (newPath: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var name by remember {
@@ -108,7 +110,10 @@ fun RenamingDialog(
                         Text(text = stringResource(id = R.string.cancel))
                     }
                     TextButton(
-                        onClick = { onConfirm() },
+                        onClick = {
+                            val newPath = "${Path(mediaItem.path).parent.pathString}/$name${if (extension != null) ".$extension" else ""}"
+                            onConfirm(newPath)
+                        },
                         enabled = nameIsValid && extensionIsValid
                     ) {
                         Text(text = stringResource(id = R.string.rename))

@@ -1,14 +1,20 @@
 package nikmax.gallery.data.media
 
 import android.content.Context
+import androidx.lifecycle.LiveData
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import nikmax.gallery.data.Resource
-import java.io.File
 
 interface MediaItemsRepo {
 
@@ -19,11 +25,14 @@ interface MediaItemsRepo {
 
     /**
      * Use mediastore to update files flow with all available media files.
-     * @return nothing
      */
     suspend fun rescan()
 
-    suspend fun copyFile(
+    suspend fun checkExistence(filePath: String): Boolean
+
+    suspend fun executeFileOperations(operations: List<FileOperation>): LiveData<List<WorkInfo>>
+
+    /* suspend fun copyFile(
         sourceFilePath: String,
         destinationFilePath: String,
         conflictResolution: ConflictResolution
@@ -41,7 +50,7 @@ interface MediaItemsRepo {
         conflictResolution: ConflictResolution
     ): Result<File>
 
-    suspend fun deleteFile(filePath: String): Result<File>
+    suspend fun deleteFile(filePath: String): Result<File> */
 }
 
 
@@ -72,7 +81,11 @@ internal class MediaItemRepoImpl(
         }
     }
 
-    override suspend fun copyFile(
+    override suspend fun checkExistence(filePath: String): Boolean {
+        return FilesUtils.checkExistence(filePath)
+    }
+
+    /* override suspend fun copyFile(
         sourceFilePath: String,
         destinationFilePath: String,
         conflictResolution: ConflictResolution
@@ -106,5 +119,21 @@ internal class MediaItemRepoImpl(
         val result = FilesUtils.delete(filePath)
         rescan()
         return result
+    } */
+
+    override suspend fun executeFileOperations(operations: List<FileOperation>): LiveData<List<WorkInfo>> {
+        val workManager = WorkManager.getInstance(context)
+        val workTag = System.currentTimeMillis().toString()
+        val requests = operations.map {
+            OneTimeWorkRequestBuilder<FileOperationWorker>()
+                .setInputData(
+                    workDataOf(
+                        FileOperationWorker.Keys.FILE_OPERATION_JSON.name to Json.encodeToString(it)
+                    )
+                ).addTag(workTag)
+                .build()
+        }
+        requests.forEach { workManager.enqueue(it) }
+        return workManager.getWorkInfosByTagLiveData(workTag)
     }
 }

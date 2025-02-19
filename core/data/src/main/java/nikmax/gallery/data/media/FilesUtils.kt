@@ -8,6 +8,7 @@ import nikmax.gallery.data.media.FilesUtils.rename
 import java.io.File
 import java.nio.file.FileAlreadyExistsException
 import kotlin.io.path.Path
+import kotlin.io.path.exists
 import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.pathString
@@ -18,6 +19,10 @@ import kotlin.io.path.pathString
  * Provides functions for [copy], [move], [delete], and [rename] files.
  */
 internal object FilesUtils {
+
+    fun checkExistence(filePath: String): Boolean {
+        return Path(filePath).exists()
+    }
 
     /**
      * Copy a file from one location to another.

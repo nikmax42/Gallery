@@ -1,5 +1,6 @@
 package nikmax.gallery.explorer.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -20,13 +21,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
+import nikmax.gallery.dialogs.conflict_resolver.ConflictResolverDialog
+import nikmax.gallery.dialogs.deletion.DeletionDialog
+import nikmax.gallery.dialogs.renaming.RenamingDialog
 import nikmax.gallery.explorer.ui.components.SearchTopBar
 import nikmax.gallery.explorer.ui.components.SearchingContent
+import nikmax.gallery.explorer.ui.components.SelectionBottomBar
 import nikmax.gallery.explorer.ui.components.SelectionContent
 import nikmax.gallery.explorer.ui.components.SelectionTopBar
 import nikmax.gallery.explorer.ui.components.ViewingContent
@@ -67,9 +74,19 @@ private fun ExplorerContent(
     val topbarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
     )
+    val focusManager = LocalFocusManager.current
     var showSheet by remember { mutableStateOf(false) }
 
+    BackHandler(state.mode is ExplorerVm.UIState.Mode.Searching) {
+        onAction(ExplorerVm.UserAction.SearchQueryChange(""))
+        focusManager.clearFocus()
+    }
+    BackHandler(state.mode is ExplorerVm.UIState.Mode.Selection) {
+        onAction(ExplorerVm.UserAction.ClearSelection)
+    }
+
     Scaffold(
+        // todo add animated visibility to bars
         topBar = {
             when (val mode = state.mode) {
                 // show searchbar in viewing and searching modes
@@ -88,6 +105,7 @@ private fun ExplorerContent(
                             }
                         },
                         scrollBehavior = topbarScrollBehavior,
+                        focusManager = focusManager
                     )
                 }
                 // show selection topbar in selection mode
@@ -96,6 +114,17 @@ private fun ExplorerContent(
                     selectedItems = mode.selectedItems.toSet(),
                     onClearSelectionClick = { onAction(ExplorerVm.UserAction.ClearSelection) },
                     onSelectAllClick = { onAction(ExplorerVm.UserAction.SelectAllItems) }
+                )
+            }
+        },
+        bottomBar = {
+            val mode = state.mode
+            if (mode is ExplorerVm.UIState.Mode.Selection) {
+                SelectionBottomBar(
+                    onCopyClick = { onAction(ExplorerVm.UserAction.Copy(mode.selectedItems)) },
+                    onMoveClick = { onAction(ExplorerVm.UserAction.Move(mode.selectedItems)) },
+                    onRenameClick = { onAction(ExplorerVm.UserAction.Rename(mode.selectedItems)) },
+                    onDeleteClick = { onAction(ExplorerVm.UserAction.Delete(mode.selectedItems)) }
                 )
             }
         }
@@ -155,6 +184,29 @@ private fun ExplorerContent(
                     )
             )
         }
+    }
+
+    when (val dialog = state.dialog) {
+        ExplorerVm.UIState.Dialog.None -> {}
+        is ExplorerVm.UIState.Dialog.AlbumPicker -> AlbumPickerFullScreenDialog(
+            onConfirm = { dialog.onConfirm(it) },
+            onDismiss = { dialog.onDismiss() }
+        )
+        is ExplorerVm.UIState.Dialog.ConflictResolver -> ConflictResolverDialog(
+            conflictItem = dialog.conflictItem,
+            onResolve = { resolution, applyToAll -> dialog.onConfirm(resolution) },
+            onDismiss = { dialog.onDismiss }
+        )
+        is ExplorerVm.UIState.Dialog.DeletionConfirmation -> DeletionDialog(
+            items = dialog.items,
+            onConfirm = { dialog.onConfirm() },
+            onDismiss = { dialog.onDismiss() }
+        )
+        is ExplorerVm.UIState.Dialog.Renaming -> RenamingDialog(
+            mediaItem = dialog.item,
+            onConfirm = { dialog.onConfirm(it) },
+            onDismiss = { dialog.onDismiss() }
+        )
     }
 }
 @Preview(device = "spec:parent=pixel_5,orientation=portrait")

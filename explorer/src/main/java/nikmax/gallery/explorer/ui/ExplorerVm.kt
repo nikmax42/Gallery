@@ -2,7 +2,9 @@ package nikmax.gallery.explorer.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import nikmax.gallery.core.ItemsUtils.Mapping.mapDataFilesToUiFiles
 import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.applyFilters
 import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createAlbumOwnFilesList
@@ -22,11 +25,18 @@ import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.excludeHidden
 import nikmax.gallery.core.ItemsUtils.Sorting.applySorting
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.data.Resource
+import nikmax.gallery.data.media.ConflictResolution
+import nikmax.gallery.data.media.FileOperation
+import nikmax.gallery.data.media.FileOperationWorker
 import nikmax.gallery.data.media.MediaFileData
 import nikmax.gallery.data.media.MediaItemsRepo
 import nikmax.gallery.data.preferences.GalleryPreferences
 import nikmax.gallery.data.preferences.PreferencesRepo
+import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 
 @HiltViewModel
@@ -39,7 +49,8 @@ class ExplorerVm
         val items: List<MediaItemUI> = emptyList(),
         val loading: Boolean = false,
         val mode: Mode = Mode.Viewing,
-        val preferences: GalleryPreferences = GalleryPreferences()
+        val preferences: GalleryPreferences = GalleryPreferences(),
+        val dialog: Dialog = Dialog.None
     ) {
         sealed interface Mode {
             data object Viewing : Mode
@@ -54,6 +65,33 @@ class ExplorerVm
                 val foundedItems: List<MediaItemUI> = emptyList()
             ) : Mode
         }
+
+        sealed interface Dialog {
+            data object None : Dialog
+
+            data class DeletionConfirmation(
+                val items: List<MediaItemUI>,
+                val onConfirm: () -> Unit,
+                val onDismiss: () -> Unit
+            ) : Dialog
+
+            data class Renaming(
+                val item: MediaItemUI,
+                val onConfirm: (newPath: String) -> Unit,
+                val onDismiss: () -> Unit
+            ) : Dialog
+
+            data class AlbumPicker(
+                val onConfirm: (selectedPath: String) -> Unit,
+                val onDismiss: () -> Unit
+            ) : Dialog
+
+            data class ConflictResolver(
+                val conflictItem: MediaItemUI,
+                val onConfirm: (resolution: ConflictResolution) -> Unit,
+                val onDismiss: () -> Unit
+            ) : Dialog
+        }
     }
 
     sealed interface UserAction {
@@ -66,6 +104,10 @@ class ExplorerVm
         data class ChangeItemSelection(val item: MediaItemUI) : UserAction
         data object SelectAllItems : UserAction
         data object ClearSelection : UserAction
+        data class Copy(val items: List<MediaItemUI>) : UserAction
+        data class Move(val items: List<MediaItemUI>) : UserAction
+        data class Rename(val items: List<MediaItemUI>) : UserAction
+        data class Delete(val items: List<MediaItemUI>) : UserAction
     }
 
     sealed interface Event {
@@ -91,6 +133,10 @@ class ExplorerVm
                 is UserAction.ChangeItemSelection -> changeItemSelection(action.item)
                 UserAction.SelectAllItems -> selectAllItems()
                 UserAction.ClearSelection -> clearSelection()
+                is UserAction.Copy -> onCopyOrMove(action.items)
+                is UserAction.Move -> onCopyOrMove(action.items, move = true)
+                is UserAction.Rename -> onRename(action.items)
+                is UserAction.Delete -> onDelete(action.items)
             }
         }
     }
@@ -179,6 +225,7 @@ class ExplorerVm
         }
         _event.emit(event)
     }
+
 
     private fun changeItemSelection(item: MediaItemUI) {
         when (val mode = _uiState.value.mode) {
@@ -277,5 +324,166 @@ class ExplorerVm
 
     private suspend fun updatePreferences(preferences: GalleryPreferences) {
         prefsRepo.savePreferences(preferences)
+    }
+
+
+    private suspend fun onCopyOrMove(items: List<MediaItemUI>, move: Boolean = false) {
+        val destinationAlbumPath = try {
+            awaitForDestinationPath()
+        } catch (e: CancellationException) {
+            return
+        }
+        val operations = items.map { item ->
+            val destinationFilePath = "$destinationAlbumPath/${item.name}"
+            val conflicts = mediaItemsRepo.checkExistence(destinationFilePath)
+            val resolution = when (conflicts) {
+                true -> try {
+                    awaitForConflictResolution(item)
+                } catch (e: CancellationException) {
+                    return
+                }
+                false -> ConflictResolution.KEEP_BOTH
+            }
+            when (move) {
+                true -> FileOperation.Move(item.path, destinationFilePath, resolution)
+                false -> FileOperation.Copy(item.path, destinationFilePath, resolution)
+            }
+        }
+        // turn of selection mode if items moving
+        if (move) _uiState.update { it.copy(mode = UIState.Mode.Viewing) }
+        executeFileOperations(operations)
+    }
+
+    private suspend fun onRename(items: List<MediaItemUI>) {
+        val operations = items.map { item ->
+            val newPath = try {
+                awaitForNewPath(item = item)
+            } catch (e: CancellationException) {
+                return
+            }
+            val conflicts = mediaItemsRepo.checkExistence(newPath)
+            val resolution = when (conflicts) {
+                true -> try {
+                    awaitForConflictResolution(item)
+                } catch (e: CancellationException) {
+                    return
+                }
+                false -> ConflictResolution.KEEP_BOTH
+            }
+            FileOperation.Rename(item.path, newPath, resolution)
+        }
+        _uiState.update { it.copy(mode = UIState.Mode.Viewing) }
+        executeFileOperations(operations)
+    }
+
+    private suspend fun onDelete(items: List<MediaItemUI>) {
+        val deletionConfirmed = try {
+            awaitForDeletionConfirmation(items = items)
+        } catch (e: CancellationException) {
+            false
+        }
+        val operations = when (deletionConfirmed) {
+            true -> items.map { FileOperation.Delete(it.path) }
+            false -> return
+        }
+        _uiState.update { it.copy(mode = UIState.Mode.Viewing) }
+        executeFileOperations(operations)
+    }
+
+    private suspend fun executeFileOperations(operations: List<FileOperation>) {
+        val completeOperations = mutableSetOf<FileOperation>()
+        mediaItemsRepo
+            .executeFileOperations(operations = operations)
+            .observeForever {
+                it.forEach { workInfo ->
+                    if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                        try {
+                            val operationJson = workInfo.outputData.getString(
+                                FileOperationWorker.Keys.FILE_OPERATION_JSON.name
+                            )
+                            val operation = Json.decodeFromString<FileOperation>(operationJson!!)
+                            if (!completeOperations.contains(operation)) {
+                                completeOperations += operation
+                                viewModelScope.launch { onRefresh() }
+                                // todo post notification here
+                            }
+                        } catch (e: Exception) {
+                            Timber.e(e, "Unable to parse operation object from work output")
+                        }
+                    }
+                }
+            }
+    }
+
+
+    private suspend fun awaitForNewPath(item: MediaItemUI): String = suspendCoroutine { cont ->
+        _uiState.update {
+            it.copy(
+                dialog = UIState.Dialog.Renaming(
+                    item = item,
+                    onConfirm = { newPath ->
+                        setDialog(UIState.Dialog.None)
+                        cont.resume(newPath)
+                    },
+                    onDismiss = {
+                        setDialog(UIState.Dialog.None)
+                        cont.resumeWithException(CancellationException())
+                    }
+                )
+            )
+        }
+    }
+
+    private suspend fun awaitForDeletionConfirmation(items: List<MediaItemUI>): Boolean =
+        suspendCoroutine { cont ->
+            setDialog(
+                UIState.Dialog.DeletionConfirmation(
+                    items = items,
+                    onConfirm = {
+                        setDialog(UIState.Dialog.None)
+                        cont.resume(true)
+                    },
+                    onDismiss = {
+                        setDialog(UIState.Dialog.None)
+                        cont.resumeWithException(CancellationException())
+                    }
+                )
+            )
+        }
+
+    private suspend fun awaitForDestinationPath(): String = suspendCoroutine { cont ->
+        setDialog(
+            UIState.Dialog.AlbumPicker(
+                onConfirm = { selectedPath ->
+                    setDialog(UIState.Dialog.None)
+                    cont.resume(selectedPath)
+                },
+                onDismiss = {
+                    setDialog(UIState.Dialog.None)
+                    cont.resumeWithException(CancellationException())
+                }
+            )
+        )
+    }
+
+    private suspend fun awaitForConflictResolution(conflictItem: MediaItemUI): ConflictResolution =
+        suspendCoroutine { cont ->
+            setDialog(
+                UIState.Dialog.ConflictResolver(
+                    conflictItem = conflictItem,
+                    onConfirm = { resolution ->
+                        setDialog(UIState.Dialog.None)
+                        cont.resume(resolution)
+                    },
+                    onDismiss = {
+                        setDialog(UIState.Dialog.None)
+                        cont.resumeWithException(CancellationException())
+                    }
+                )
+            )
+        }
+
+    private fun setDialog(dialog: UIState.Dialog) {
+        _uiState.update { it.copy(dialog = dialog) }
     }
 }

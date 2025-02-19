@@ -53,7 +53,7 @@ class AlbumPickerVm
     }
 
 
-    private val _navStack = MutableStateFlow(listOf<String>()) // todo add last entry to state?
+    private val _navStack = MutableStateFlow(listOf<String?>())
 
     private val _state = MutableStateFlow(UiState())
     val state = _state.asStateFlow()
@@ -75,15 +75,12 @@ class AlbumPickerVm
 
 
     private suspend fun onLaunch(initialAlbumPath: String?) {
-        val firstStackEntry = when (initialAlbumPath.isNullOrEmpty()) {
-            true -> "/storage/"
-            false -> initialAlbumPath
-        }
-        navigateIn(firstStackEntry)
+        _navStack.update { emptyList() }
+        navigateIn(initialAlbumPath)
         observeFlows()
     }
 
-    private fun navigateIn(albumPath: String) {
+    private fun navigateIn(albumPath: String?) {
         _navStack.update { it + albumPath }
     }
 
@@ -138,7 +135,6 @@ class AlbumPickerVm
         descendSortingEnabled: Boolean,
         showHidden: Boolean
     ): List<MediaItemUI> {
-
         val filesData = when (filesResource) {
             is Resource.Success -> filesResource.data
             is Resource.Loading -> filesResource.data

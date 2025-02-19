@@ -11,14 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,11 +20,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
+import nikmax.gallery.dialogs.conflict_resolver.ConflictResolverDialog
+import nikmax.gallery.dialogs.deletion.DeletionDialog
+import nikmax.gallery.dialogs.renaming.RenamingDialog
+import nikmax.gallery.viewer.components.ImageViewer
+import nikmax.gallery.viewer.components.VideoViewer
+import nikmax.gallery.viewer.components.ViewerBottomBar
+import nikmax.gallery.viewer.components.ViewerTopBar
 
 @Composable
 fun ViewerScreen(
@@ -43,6 +43,11 @@ fun ViewerScreen(
 
     LaunchedEffect(filePath) {
         vm.onAction(ViewerVm.UserAction.Launch(filePath))
+        vm.event.collectLatest { event ->
+            when (event) {
+                ViewerVm.Event.CloseViewer -> onBackCLick()
+            }
+        }
     }
 
     when (val content = state.content) {
@@ -55,25 +60,58 @@ fun ViewerScreen(
                     .indexOfFirst { it.path == filePath }
                     .coerceAtLeast(0)
             }
-            ViewerScreenContent(
+            ViewerContent(
                 files = content.files,
                 showControls = state.showControls,
                 onSwitchControls = { vm.onAction(ViewerVm.UserAction.SwitchControls) },
                 onBackCLick = { onBackCLick() },
-                initialPage = initialPage
+                initialPage = initialPage,
+                onCopyClick = { vm.onAction(ViewerVm.UserAction.Copy(content.files[initialPage])) },
+                onMoveClick = { vm.onAction(ViewerVm.UserAction.Move(content.files[initialPage])) },
+                onRenameClick = { vm.onAction(ViewerVm.UserAction.Rename(content.files[initialPage])) },
+                onDeleteClick = { vm.onAction(ViewerVm.UserAction.Delete(content.files[initialPage])) },
+                onShareClick = { vm.onAction(ViewerVm.UserAction.Share(content.files[initialPage])) }
             )
         }
+    }
+
+    when (val dialog = state.dialog) {
+        ViewerVm.UIState.Dialog.None -> {}
+        is ViewerVm.UIState.Dialog.AlbumPicker -> AlbumPickerFullScreenDialog(
+            onConfirm = { dialog.onConfirm(it) },
+            onDismiss = { dialog.onDismiss() }
+        )
+        is ViewerVm.UIState.Dialog.ConflictResolver -> ConflictResolverDialog(
+            conflictItem = dialog.conflictItem,
+            onResolve = { resolution, applyToAll -> dialog.onConfirm(resolution) },
+            onDismiss = { dialog.onDismiss }
+        )
+        is ViewerVm.UIState.Dialog.DeletionConfirmation -> DeletionDialog(
+            items = dialog.items,
+            onConfirm = { dialog.onConfirm() },
+            onDismiss = { dialog.onDismiss() }
+        )
+        is ViewerVm.UIState.Dialog.Renaming -> RenamingDialog(
+            mediaItem = dialog.item,
+            onConfirm = { dialog.onConfirm(it) },
+            onDismiss = { dialog.onDismiss() }
+        )
     }
 }
 
 @Composable
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") // to show appbars above the image
-fun ViewerScreenContent(
+private fun ViewerContent(
     files: List<MediaItemUI.File>,
     showControls: Boolean,
     onSwitchControls: () -> Unit,
     onBackCLick: () -> Unit,
     initialPage: Int,
+    onCopyClick: () -> Unit,
+    onMoveClick: () -> Unit,
+    onRenameClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onShareClick: () -> Unit
 ) {
     val pagerState = rememberPagerState(
         initialPage = initialPage,
@@ -92,6 +130,21 @@ fun ViewerScreenContent(
                 )
             }
         },
+        bottomBar = {
+            AnimatedVisibility(
+                visible = showControls,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            ) {
+                ViewerBottomBar(
+                    onCopyClick = { onCopyClick() },
+                    onMoveClick = { onMoveClick() },
+                    onRenameClick = { onRenameClick() },
+                    onDeleteClick = { onDeleteClick() },
+                    onShareClick = { onShareClick() }
+                )
+            }
+        }
     ) { paddings ->
         HorizontalPager(
             state = pagerState,
@@ -152,34 +205,16 @@ private fun ViewerContentPreview() {
         volume = MediaItemUI.Volume.PRIMARY
     )
     var showControls by remember { mutableStateOf(true) }
-    ViewerScreenContent(
+    ViewerContent(
         files = listOf(file1, file2, file3),
         showControls = showControls,
         onSwitchControls = { showControls = showControls.not() },
         onBackCLick = {},
-        initialPage = 0
-    )
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ViewerTopBar(
-    itemPath: String,
-    onBackCLick: () -> Unit
-) {
-    TopAppBar(
-        title = {
-            Text(
-                text = itemPath,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = { onBackCLick() }) {
-                Icon(Icons.Default.ArrowBack, stringResource(R.string.back))
-            }
-        }
+        initialPage = 0,
+        onCopyClick = {},
+        onMoveClick = {},
+        onRenameClick = {},
+        onDeleteClick = {},
+        onShareClick = {},
     )
 }

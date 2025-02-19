@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -39,6 +40,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":core:ui"))
     implementation(project(":core:data"))
+    implementation(project(":dialogs"))
 
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.core.ktx)
@@ -82,4 +84,8 @@ dependencies {
     androidTestImplementation(libs.hilt.android.testing)
     // Timber
     implementation(libs.timber)
+    // Worker
+    implementation(libs.androidx.work.runtime.ktx)
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
 }

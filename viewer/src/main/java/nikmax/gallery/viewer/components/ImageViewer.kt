@@ -1,4 +1,4 @@
-package nikmax.gallery.viewer
+package nikmax.gallery.viewer.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

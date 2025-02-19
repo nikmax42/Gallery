@@ -188,7 +188,7 @@ private fun GridItem(
                 )
                 if (isSelected) IconCorner(
                     icon = Icons.Default.CheckCircle,
-                    contentDescription = null, // todo add content description
+                    contentDescription = stringResource(R.string.item_selected),
                     bottomEndRadius = 30F,
                     modifier = Modifier.align(Alignment.TopStart)
                 )
