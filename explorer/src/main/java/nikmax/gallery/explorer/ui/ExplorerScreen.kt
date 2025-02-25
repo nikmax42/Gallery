@@ -110,7 +110,7 @@ private fun ExplorerContent(
                 }
                 // show selection topbar in selection mode
                 is ExplorerVm.UIState.Mode.Selection -> SelectionTopBar(
-                    items = state.items.toSet(),
+                    items = state.screenItems.toSet(),
                     selectedItems = mode.selectedItems.toSet(),
                     onClearSelectionClick = { onAction(ExplorerVm.UserAction.ClearSelection) },
                     onSelectAllClick = { onAction(ExplorerVm.UserAction.SelectAllItems) }
@@ -131,7 +131,7 @@ private fun ExplorerContent(
     ) { paddings ->
         when (val mode = state.mode) {
             ExplorerVm.UIState.Mode.Viewing -> ViewingContent(
-                items = state.items,
+                items = state.screenItems,
                 loading = state.loading,
                 onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
                 onItemClick = { onAction(ExplorerVm.UserAction.OpenItem(it)) },
@@ -167,7 +167,7 @@ private fun ExplorerContent(
                     )
             )
             is ExplorerVm.UIState.Mode.Selection -> SelectionContent(
-                items = mode.items,
+                items = state.screenItems,
                 selectedItems = mode.selectedItems,
                 loading = state.loading,
                 onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
@@ -216,7 +216,7 @@ private fun ExplorerContentPreview() {
     val scope = rememberCoroutineScope()
     var state by remember {
         mutableStateOf(
-            ExplorerVm.UIState(items = PreviewsData.items)
+            ExplorerVm.UIState(screenItems = PreviewsData.items)
         )
     }
 

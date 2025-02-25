@@ -46,19 +46,16 @@ class ExplorerVm
     private val prefsRepo: PreferencesRepo
 ) : ViewModel() {
     data class UIState(
-        val items: List<MediaItemUI> = emptyList(),
+        val screenItems: List<MediaItemUI> = emptyList(),
         val loading: Boolean = false,
-        val mode: Mode = Mode.Viewing,
         val preferences: GalleryPreferences = GalleryPreferences(),
+        val mode: Mode = Mode.Viewing,
         val dialog: Dialog = Dialog.None
     ) {
         sealed interface Mode {
             data object Viewing : Mode
 
-            data class Selection(
-                val items: List<MediaItemUI>,
-                val selectedItems: List<MediaItemUI>
-            ) : Mode
+            data class Selection(val selectedItems: List<MediaItemUI>) : Mode
 
             data class Searching(
                 val searchQuery: String = "",
@@ -169,7 +166,7 @@ class ExplorerVm
                 showHidden = prefs.showHidden
             )
             _uiState.value.copy(
-                items = newItems,
+                screenItems = newItems,
                 preferences = prefs,
                 loading = filesRes is Resource.Loading
             )
@@ -229,20 +226,10 @@ class ExplorerVm
 
     private fun changeItemSelection(item: MediaItemUI) {
         when (val mode = _uiState.value.mode) {
-            UIState.Mode.Viewing -> _uiState.update {
-                it.copy(
-                    mode = UIState.Mode.Selection(
-                        items = _uiState.value.items,
-                        selectedItems = listOf(item)
-                    )
-                )
-            }
+            UIState.Mode.Viewing,
             is UIState.Mode.Searching -> _uiState.update {
                 it.copy(
-                    mode = UIState.Mode.Selection(
-                        items = mode.foundedItems,
-                        selectedItems = listOf(item)
-                    )
+                    mode = UIState.Mode.Selection(selectedItems = listOf(item))
                 )
             }
             is UIState.Mode.Selection -> {
@@ -254,10 +241,7 @@ class ExplorerVm
                 val newState = when (newSelectedItems.isEmpty()) {
                     true -> _uiState.value.copy(mode = UIState.Mode.Viewing)
                     false -> _uiState.value.copy(
-                        mode = UIState.Mode.Selection(
-                            items = mode.items,
-                            selectedItems = newSelectedItems
-                        )
+                        mode = UIState.Mode.Selection(selectedItems = newSelectedItems)
                     )
                 }
                 _uiState.update { newState }
@@ -268,16 +252,10 @@ class ExplorerVm
     private fun selectAllItems() {
         val newState = when (val mode = _uiState.value.mode) {
             UIState.Mode.Viewing, is UIState.Mode.Selection -> _uiState.value.copy(
-                mode = UIState.Mode.Selection(
-                    items = _uiState.value.items,
-                    selectedItems = _uiState.value.items
-                )
+                mode = UIState.Mode.Selection(selectedItems = _uiState.value.screenItems)
             )
             is UIState.Mode.Searching -> _uiState.value.copy(
-                mode = UIState.Mode.Selection(
-                    items = mode.foundedItems,
-                    selectedItems = mode.foundedItems
-                )
+                mode = UIState.Mode.Selection(selectedItems = mode.foundedItems)
             )
         }
         _uiState.update { newState }
@@ -302,7 +280,7 @@ class ExplorerVm
     }
 
     private fun onSearch(query: String) {
-        val filteredItems = _uiState.value.items.filter {
+        val filteredItems = _uiState.value.screenItems.filter {
             it.path.contains(query, ignoreCase = true)
         }
         _uiState.update {
@@ -349,8 +327,8 @@ class ExplorerVm
                 false -> FileOperation.Copy(item.path, destinationFilePath, resolution)
             }
         }
-        // turn of selection mode if items moving
-        if (move) _uiState.update { it.copy(mode = UIState.Mode.Viewing) }
+        // turn of selection mode after operation performed
+        _uiState.update { it.copy(mode = UIState.Mode.Viewing) }
         executeFileOperations(operations)
     }
 
