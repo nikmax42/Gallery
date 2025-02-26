@@ -1,8 +1,8 @@
 package nikmax.gallery.explorer.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentCut
-import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.BottomAppBar
@@ -23,7 +23,7 @@ fun SelectionBottomBar(
     BottomAppBar(
         actions = {
             IconButton(onClick = { onCopyClick() }) {
-                Icon(imageVector = Icons.Default.CopyAll, contentDescription = stringResource(R.string.copy_selected))
+                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = stringResource(R.string.copy_selected))
             }
             IconButton(onClick = { onMoveClick() }) {
                 Icon(imageVector = Icons.Default.ContentCut, contentDescription = stringResource(R.string.move_selected))

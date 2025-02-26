@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.dialogs.R
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
@@ -111,7 +112,8 @@ fun RenamingDialog(
                     }
                     TextButton(
                         onClick = {
-                            val newPath = "${Path(mediaItem.path).parent.pathString}/$name${if (extension != null) ".$extension" else ""}"
+                            val newPath =
+                                "${Path(mediaItem.path).parent.pathString}/$name${if (extension != null) ".$extension" else ""}"
                             onConfirm(newPath)
                         },
                         enabled = nameIsValid && extensionIsValid
@@ -137,9 +139,12 @@ private fun DialogPreview() {
         volume = MediaItemUI.Volume.PRIMARY,
         mimetype = "image/png"
     )
-    RenamingDialog(
-        mediaItem = item,
-        onConfirm = {},
-        onDismiss = {}
-    )
+
+    GalleryTheme {
+        RenamingDialog(
+            mediaItem = item,
+            onConfirm = {},
+            onDismiss = {}
+        )
+    }
 }

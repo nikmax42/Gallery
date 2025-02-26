@@ -1,5 +1,7 @@
 package nikmax.gallery.core.ui.components
 
+import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -44,6 +47,7 @@ import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.core.ui.R
+import nikmax.gallery.core.ui.theme.GalleryTheme
 
 @Composable
 fun ItemsGrid(
@@ -58,35 +62,38 @@ fun ItemsGrid(
 ) {
     val orientation = LocalConfiguration.current.orientation
     val columnsAmount = when (orientation) {
-        android.content.res.Configuration.ORIENTATION_PORTRAIT -> columnsAmountPortrait
-        android.content.res.Configuration.ORIENTATION_LANDSCAPE -> columnsAmountLandscape
+        Configuration.ORIENTATION_PORTRAIT -> columnsAmountPortrait
+        Configuration.ORIENTATION_LANDSCAPE -> columnsAmountLandscape
         else -> columnsAmountPortrait
     }
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columnsAmount),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        state = gridState,
-        modifier = modifier,
-    ) {
-        items.forEach {
-            item {
-                GridItem(
-                    image = it.thumbnail,
-                    name = it.name,
-                    isVideo = it is MediaItemUI.File && it.mediaType == MediaItemUI.File.MediaType.VIDEO,
-                    isFolder = it is MediaItemUI.Album,
-                    folderFilesCount = if (it is MediaItemUI.Album) it.filesCount else 0,
-                    isSelected = selectedItems.contains(it),
-                    isSecondaryVolume = it.volume == MediaItemUI.Volume.SECONDARY,
-                    onClick = { onItemClick(it) },
-                    onLongClick = { onItemLongClick(it) }
-                )
+    Surface {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(columnsAmount),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            state = gridState,
+            modifier = modifier,
+        ) {
+            items.forEach {
+                item {
+                    GridItem(
+                        image = it.thumbnail,
+                        name = it.name,
+                        isVideo = it is MediaItemUI.File && it.mediaType == MediaItemUI.File.MediaType.VIDEO,
+                        isFolder = it is MediaItemUI.Album,
+                        folderFilesCount = if (it is MediaItemUI.Album) it.filesCount else 0,
+                        isSelected = selectedItems.contains(it),
+                        isSecondaryVolume = it.volume == MediaItemUI.Volume.SECONDARY,
+                        onClick = { onItemClick(it) },
+                        onLongClick = { onItemLongClick(it) }
+                    )
+                }
             }
         }
     }
 }
-@Preview
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL, showBackground = true)
 @Composable
 private fun ItemsGridPreview() {
     val image = remember {
@@ -136,12 +143,14 @@ private fun ItemsGridPreview() {
     val items = remember { listOf(image, video, gif, album) }
     val selectedItems = remember { listOf(album) }
 
-    ItemsGrid(
-        items = items,
-        selectedItems = selectedItems,
-        onItemClick = {},
-        onItemLongClick = {}
-    )
+    GalleryTheme {
+        ItemsGrid(
+            items = items,
+            selectedItems = selectedItems,
+            onItemClick = {},
+            onItemLongClick = {}
+        )
+    }
 }
 
 
@@ -160,6 +169,10 @@ private fun GridItem(
     modifier: Modifier = Modifier
 ) {
     OutlinedCard(
+        border = when (isSelected) {
+            true -> BorderStroke(2.dp, MaterialTheme.colorScheme.secondary)
+            false -> CardDefaults.outlinedCardBorder()
+        },
         modifier = modifier.combinedClickable(
             onClick = { onClick() },
             onLongClick = { onLongClick() }
@@ -228,17 +241,19 @@ private fun GridItem(
         }
     }
 }
-@Preview
+@Preview(showBackground = true)
 @Composable
 private fun MediaItemPreview() {
-    GridItem(
-        image = "",
-        name = "name",
-        isFolder = true,
-        folderFilesCount = 2,
-        onClick = {},
-        onLongClick = {},
-    )
+    GalleryTheme {
+        GridItem(
+            image = "",
+            name = "name",
+            isFolder = true,
+            folderFilesCount = 2,
+            onClick = {},
+            onLongClick = {},
+        )
+    }
 }
 
 
@@ -260,21 +275,24 @@ private fun IconCorner(
     )
 
     Surface(
+        color = MaterialTheme.colorScheme.secondary,
         modifier = modifier.clip(shape)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            modifier = Modifier.padding(2.dp)
+            modifier = Modifier.padding(4.dp)
         )
     }
 }
 @Preview
 @Composable
 private fun IconCornerPreview() {
-    IconCorner(
-        icon = Icons.Default.Videocam,
-        contentDescription = "",
-        bottomEndRadius = 25F
-    )
+    GalleryTheme {
+        IconCorner(
+            icon = Icons.Default.Videocam,
+            contentDescription = "",
+            bottomEndRadius = 25F
+        )
+    }
 }

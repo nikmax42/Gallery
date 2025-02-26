@@ -61,7 +61,11 @@ class PreferencesRepoImpl
                         GalleryPreferences.Filter.GIFS.name -> GalleryPreferences.Filter.GIFS
                         else -> GalleryPreferences.Filter.IMAGES
                     }
-                }?.toSet() ?: emptySet(),
+                }?.toSet() ?: setOf(
+                    GalleryPreferences.Filter.IMAGES,
+                    GalleryPreferences.Filter.VIDEOS,
+                    GalleryPreferences.Filter.GIFS
+                ),
                 showHidden = preferences[Keys.SHOW_HIDDEN] ?: false
             )
         }

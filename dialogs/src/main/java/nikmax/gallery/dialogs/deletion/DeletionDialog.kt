@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.dialogs.R
 
 
@@ -81,11 +82,14 @@ private fun DeletionDialogPreview() {
         dateModified = 0,
         volume = MediaItemUI.Volume.PRIMARY,
     )
-    DeletionDialog(
-        items = listOf(item),
-        onConfirm = {},
-        onDismiss = {}
-    )
+
+    GalleryTheme {
+        DeletionDialog(
+            items = listOf(item),
+            onConfirm = {},
+            onDismiss = {}
+        )
+    }
 }
 
 

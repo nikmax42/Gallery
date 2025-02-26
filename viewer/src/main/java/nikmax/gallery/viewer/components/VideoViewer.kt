@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -48,8 +49,10 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.request.videoFramePercent
 import dev.vivvvek.seeker.Seeker
+import dev.vivvvek.seeker.SeekerDefaults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import nikmax.gallery.core.ui.theme.GalleryTheme
 import kotlin.concurrent.timer
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
@@ -233,10 +236,13 @@ private fun PlayPauseButton(
 @Composable
 private fun PlayPauseButtonPreview() {
     var isPlaying by remember { mutableStateOf(true) }
-    PlayPauseButton(
-        isPlaying = isPlaying,
-        onClick = { isPlaying = isPlaying.not() }
-    )
+
+    GalleryTheme {
+        PlayPauseButton(
+            isPlaying = isPlaying,
+            onClick = { isPlaying = isPlaying.not() }
+        )
+    }
 }
 
 
@@ -294,6 +300,12 @@ private fun Seekbar(
                 onValueChangeFinished = {
                     onSeekFinished(currentValue.toMills())
                 },
+                colors = SeekerDefaults.seekerColors(
+                    progressColor = SliderDefaults.colors().activeTrackColor,
+                    disabledProgressColor = SliderDefaults.colors().disabledActiveTrackColor,
+                    thumbColor = SliderDefaults.colors().thumbColor,
+                    disabledThumbColor = SliderDefaults.colors().disabledThumbColor,
+                ),
                 modifier = Modifier.weight(1F)
             )
             Text(totalMilliseconds.toDuration(DurationUnit.MILLISECONDS).toHHMMSSString())
@@ -305,11 +317,14 @@ private fun Seekbar(
 private fun SeekbarPreview() {
     var currentMills by remember { mutableLongStateOf(6242) }
     val bufferedMills by remember { mutableLongStateOf(11103) }
-    Seekbar(
-        currentMillisecond = currentMills,
-        bufferedMilliseconds = bufferedMills,
-        totalMilliseconds = 16535,
-        onSeek = {},
-        onSeekFinished = { currentMills = it }
-    )
+
+    GalleryTheme {
+        Seekbar(
+            currentMillisecond = currentMills,
+            bufferedMilliseconds = bufferedMills,
+            totalMilliseconds = 16535,
+            onSeek = {},
+            onSeekFinished = { currentMills = it }
+        )
+    }
 }

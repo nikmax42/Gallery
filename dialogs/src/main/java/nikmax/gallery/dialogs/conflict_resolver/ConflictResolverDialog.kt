@@ -40,6 +40,7 @@ import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.data.media.ConflictResolution
 import nikmax.gallery.dialogs.R
 import kotlin.io.path.Path
@@ -172,19 +173,21 @@ private fun ConflictResolverPreview() {
     var selectedResolution by remember { mutableStateOf(ConflictResolution.entries.first()) }
     var applyToAll by remember { mutableStateOf(false) }
 
-    ContentWithInfo(
-        conflictsCount = 2,
-        conflictItemThumbnail = null,
-        conflictItemPath = "/storage/emulated/0/album/filename.png",
-        conflictItemCreationDate = 0,
-        conflictItemSize = 2244,
-        selectedResolution = selectedResolution,
-        onResolutionChange = { selectedResolution = it },
-        onDismiss = {},
-        applyToAll = applyToAll,
-        onApplyToAllChanges = { applyToAll = applyToAll.not() },
-        onConfirm = {}
-    )
+    GalleryTheme {
+        ContentWithInfo(
+            conflictsCount = 2,
+            conflictItemThumbnail = null,
+            conflictItemPath = "/storage/emulated/0/album/filename.png",
+            conflictItemCreationDate = 0,
+            conflictItemSize = 2244,
+            selectedResolution = selectedResolution,
+            onResolutionChange = { selectedResolution = it },
+            onDismiss = {},
+            applyToAll = applyToAll,
+            onApplyToAllChanges = { applyToAll = applyToAll.not() },
+            onConfirm = {}
+        )
+    }
 }
 
 

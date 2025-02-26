@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
 import nikmax.gallery.dialogs.conflict_resolver.ConflictResolverDialog
 import nikmax.gallery.dialogs.deletion.DeletionDialog
@@ -162,7 +163,8 @@ private fun ViewerContent(
                     VideoViewer(
                         videoUri = file.path,
                         showPlayerControls = showControls,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        seekBarBottomPadding = paddings.calculateBottomPadding()
                     )
                 } else if (file.mimetype.startsWith("image/")) {
                     ImageViewer(
@@ -205,16 +207,19 @@ private fun ViewerContentPreview() {
         volume = MediaItemUI.Volume.PRIMARY
     )
     var showControls by remember { mutableStateOf(true) }
-    ViewerContent(
-        files = listOf(file1, file2, file3),
-        showControls = showControls,
-        onSwitchControls = { showControls = showControls.not() },
-        onBackCLick = {},
-        initialPage = 0,
-        onCopyClick = {},
-        onMoveClick = {},
-        onRenameClick = {},
-        onDeleteClick = {},
-        onShareClick = {},
-    )
+
+    GalleryTheme {
+        ViewerContent(
+            files = listOf(file1, file2, file3),
+            showControls = showControls,
+            onSwitchControls = { showControls = showControls.not() },
+            onBackCLick = {},
+            initialPage = 0,
+            onCopyClick = {},
+            onMoveClick = {},
+            onRenameClick = {},
+            onDeleteClick = {},
+            onShareClick = {},
+        )
+    }
 }

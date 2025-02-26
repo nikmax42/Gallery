@@ -26,7 +26,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -104,4 +104,6 @@ dependencies {
     implementation(libs.coil.kt.coil.compose)
     implementation(libs.coil.video)
     implementation(libs.coil.gif)
+    // Splashscreen
+    implementation(libs.androidx.core.splashscreen)
 }

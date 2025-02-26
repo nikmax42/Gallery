@@ -1,13 +1,11 @@
 package nikmax.gallery.viewer.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentCut
-import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -27,7 +25,7 @@ fun ViewerBottomBar(
     BottomAppBar(
         actions = {
             IconButton(onClick = { onCopyClick() }) {
-                Icon(imageVector = Icons.Default.CopyAll, contentDescription = stringResource(R.string.copy))
+                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = stringResource(R.string.copy))
             }
             IconButton(onClick = { onMoveClick() }) {
                 Icon(imageVector = Icons.Default.ContentCut, contentDescription = stringResource(R.string.move))
@@ -39,13 +37,13 @@ fun ViewerBottomBar(
                 Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
             }
         },
-        floatingActionButton = {
+        /* floatingActionButton = {
             FloatingActionButton(onClick = { onShareClick() }) {
                 IconButton(onClick = { onDeleteClick() }) {
                     Icon(imageVector = Icons.Default.Share, contentDescription = stringResource(R.string.share))
                 }
             }
-        },
+        } */
     )
 }
 @Preview

@@ -1,10 +1,11 @@
 package nikmax.gallery.explorer.ui
 
+import android.Manifest
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,26 +18,30 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
+import nikmax.gallery.core.PermissionsUtils
 import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
 import nikmax.gallery.dialogs.conflict_resolver.ConflictResolverDialog
 import nikmax.gallery.dialogs.deletion.DeletionDialog
 import nikmax.gallery.dialogs.renaming.RenamingDialog
+import nikmax.gallery.explorer.ui.components.PermissionNotGrantedContent
 import nikmax.gallery.explorer.ui.components.SearchTopBar
 import nikmax.gallery.explorer.ui.components.SearchingContent
 import nikmax.gallery.explorer.ui.components.SelectionBottomBar
 import nikmax.gallery.explorer.ui.components.SelectionContent
 import nikmax.gallery.explorer.ui.components.SelectionTopBar
 import nikmax.gallery.explorer.ui.components.ViewingContent
+import kotlin.concurrent.timer
 
 
 @Composable
@@ -71,6 +76,15 @@ private fun ExplorerContent(
     state: ExplorerVm.UIState,
     onAction: (ExplorerVm.UserAction) -> Unit
 ) {
+    val context = LocalContext.current
+    var storagePermissionStatus by remember(state) {
+        mutableStateOf(
+            PermissionsUtils.checkPermission(
+                Manifest.permission.MANAGE_EXTERNAL_STORAGE,
+                context
+            )
+        )
+    }
     val topbarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
     )
@@ -81,6 +95,7 @@ private fun ExplorerContent(
         onAction(ExplorerVm.UserAction.SearchQueryChange(""))
         focusManager.clearFocus()
     }
+
     BackHandler(state.mode is ExplorerVm.UIState.Mode.Selection) {
         onAction(ExplorerVm.UserAction.ClearSelection)
     }
@@ -99,7 +114,7 @@ private fun ExplorerContent(
                         trailingIcon = {
                             IconButton(onClick = { showSheet = true }) {
                                 Icon(
-                                    imageVector = Icons.Default.Sort,
+                                    imageVector = Icons.AutoMirrored.Filled.Sort,
                                     contentDescription = "",
                                 )
                             }
@@ -129,7 +144,29 @@ private fun ExplorerContent(
             }
         }
     ) { paddings ->
-        when (val mode = state.mode) {
+        if (storagePermissionStatus == PermissionsUtils.PermissionStatus.DENIED) {
+            timer(period = 1000) {
+                storagePermissionStatus = PermissionsUtils.checkPermission(
+                    Manifest.permission.MANAGE_EXTERNAL_STORAGE,
+                    context
+                )
+                if (storagePermissionStatus == PermissionsUtils.PermissionStatus.GRANTED) {
+                    onAction(ExplorerVm.UserAction.Refresh)
+                    cancel()
+                }
+            }
+            PermissionNotGrantedContent(
+                onGrantClick = {
+                    PermissionsUtils.requestPermission(
+                        Manifest.permission.MANAGE_EXTERNAL_STORAGE,
+                        context
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            )
+        } else when (val mode = state.mode) {
             ExplorerVm.UIState.Mode.Viewing -> ViewingContent(
                 items = state.screenItems,
                 loading = state.loading,
@@ -209,21 +246,20 @@ private fun ExplorerContent(
         )
     }
 }
-@Preview(device = "spec:parent=pixel_5,orientation=portrait")
-// @Preview(device = "spec:parent=pixel_5,orientation=landscape")
+@Preview
 @Composable
 private fun ExplorerContentPreview() {
-    val scope = rememberCoroutineScope()
-    var state by remember {
+    val state by remember {
         mutableStateOf(
             ExplorerVm.UIState(screenItems = PreviewsData.items)
         )
     }
-
-    ExplorerContent(
-        state = state,
-        onAction = {}
-    )
+    GalleryTheme {
+        ExplorerContent(
+            state = state,
+            onAction = {}
+        )
+    }
 }
 
 

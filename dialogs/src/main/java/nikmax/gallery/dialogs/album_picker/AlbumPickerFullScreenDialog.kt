@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.core.ui.components.ItemsGrid
+import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.data.preferences.GalleryPreferences
 import nikmax.gallery.dialogs.R
 
@@ -121,22 +122,24 @@ private fun Preview() {
         )
     )
     var loading by remember { mutableStateOf(false) }
-    Content(
-        items = items,
-        loading = loading,
-        onRefresh = {
-            scope.launch {
-                loading = true
-                delay(3000)
-                loading = false
-            }
-        },
-        onItemClick = {},
-        onItemLongClick = {},
-        onDismiss = {},
-        onConfirm = {},
-        preferences = GalleryPreferences()
-    )
+    GalleryTheme {
+        Content(
+            items = items,
+            loading = loading,
+            onRefresh = {
+                scope.launch {
+                    loading = true
+                    delay(3000)
+                    loading = false
+                }
+            },
+            onItemClick = {},
+            onItemLongClick = {},
+            onDismiss = {},
+            onConfirm = {},
+            preferences = GalleryPreferences()
+        )
+    }
 }
 
 
