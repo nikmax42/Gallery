@@ -5,7 +5,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import nikmax.gallery.explorer.ui.ExplorerScreen
+import kotlinx.serialization.Serializable
+import nikmax.gallery.explorer.ExplorerScreen
 import nikmax.gallery.viewer.ViewerScreen
 
 @Composable
@@ -33,8 +34,16 @@ fun MainNavHost() {
             val args = entry.toRoute<NavRoutes.Viewer>()
             ViewerScreen(
                 filePath = args.filePath,
-                onBackCLick = { navController.popBackStack() }
+                onClose = { navController.popBackStack() }
             )
         }
     }
+}
+
+private object NavRoutes {
+    @Serializable
+    data class Explorer(val albumPath: String? = null)
+
+    @Serializable
+    data class Viewer(val filePath: String)
 }

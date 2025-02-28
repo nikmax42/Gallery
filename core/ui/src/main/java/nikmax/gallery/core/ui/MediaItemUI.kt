@@ -35,10 +35,14 @@ sealed interface MediaItemUI {
     ) : MediaItemUI {
         enum class MediaType { IMAGE, VIDEO, GIF }
 
+        val uri: String = "file://$path"
+
         val mediaType: MediaType
             get() = if (mimetype.startsWith("video/")) MediaType.VIDEO
             else if (mimetype == "image/gif") MediaType.GIF
             else MediaType.IMAGE
+
+        val isVideoOrGif = mediaType == MediaType.VIDEO || mediaType == MediaType.GIF
 
         val extension: String
             get() = Path(path).extension

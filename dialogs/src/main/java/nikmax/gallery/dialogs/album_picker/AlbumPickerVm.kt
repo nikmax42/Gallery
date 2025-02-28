@@ -102,7 +102,7 @@ class AlbumPickerVm
 
     private suspend fun observeFlows() {
         combine(
-            itemsRepo.getFilesFlow(),
+            itemsRepo.getFilesResourceFlow(),
             prefsRepo.getPreferencesFlow(),
             _navStack
         ) { filesRes, prefs, navStack ->

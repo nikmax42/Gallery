@@ -2,42 +2,33 @@ package nikmax.gallery.explorer.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import nikmax.gallery.core.ItemsUtils.Mapping.mapDataFilesToUiFiles
 import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.applyFilters
 import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createAlbumOwnFilesList
 import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createFlatAlbumsList
 import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createNestedAlbumsList
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.excludeHidden
 import nikmax.gallery.core.ItemsUtils.Sorting.applySorting
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.data.Resource
 import nikmax.gallery.data.media.ConflictResolution
 import nikmax.gallery.data.media.FileOperation
-import nikmax.gallery.data.media.FileOperationWorker
-import nikmax.gallery.data.media.MediaFileData
 import nikmax.gallery.data.media.MediaItemsRepo
 import nikmax.gallery.data.preferences.GalleryPreferences
 import nikmax.gallery.data.preferences.PreferencesRepo
-import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-
 
 @HiltViewModel
 class ExplorerVm
@@ -45,22 +36,23 @@ class ExplorerVm
     private val mediaItemsRepo: MediaItemsRepo,
     private val prefsRepo: PreferencesRepo
 ) : ViewModel() {
-    data class UIState(
-        val screenItems: List<MediaItemUI> = emptyList(),
-        val loading: Boolean = false,
-        val preferences: GalleryPreferences = GalleryPreferences(),
-        val mode: Mode = Mode.Viewing,
-        val dialog: Dialog = Dialog.None
-    ) {
-        sealed interface Mode {
-            data object Viewing : Mode
 
-            data class Selection(val selectedItems: List<MediaItemUI>) : Mode
+    data class UIState(
+        val items: List<MediaItemUI> = emptyList(),
+        val selectedItems: List<MediaItemUI> = emptyList(),
+        val isLoading: Boolean = false,
+        val appPreferences: GalleryPreferences = GalleryPreferences(),
+        val content: Content = Content.Exploring,
+        val dialog: Dialog = Dialog.None,
+        val error: Error = Error.None
+    ) {
+        sealed interface Content {
+            data object Exploring : Content
 
             data class Searching(
-                val searchQuery: String = "",
-                val foundedItems: List<MediaItemUI> = emptyList()
-            ) : Mode
+                val searchQuery: String,
+                val foundItems: List<MediaItemUI>
+            ) : Content
         }
 
         sealed interface Dialog {
@@ -89,319 +81,273 @@ class ExplorerVm
                 val onDismiss: () -> Unit
             ) : Dialog
         }
+
+        sealed interface Error {
+            data object None : Error
+            data class PermissionNotGranted(val onGrantClick: () -> Unit)
+            data class NoItemsToDisplayFound(val onRefreshClick: () -> Unit)
+        }
     }
+
 
     sealed interface UserAction {
-        data class Launch(val path: String?) : UserAction
+        data class ScreenLaunch(val folderPath: String?) : UserAction
         data object Refresh : UserAction
-        data class SearchQueryChange(val newQuery: String) : UserAction
-        data class Search(val query: String) : UserAction
-        data class UpdatePreferences(val preferences: GalleryPreferences) : UserAction
-        data class OpenItem(val item: MediaItemUI) : UserAction
-        data class ChangeItemSelection(val item: MediaItemUI) : UserAction
-        data object SelectAllItems : UserAction
-        data object ClearSelection : UserAction
-        data class Copy(val items: List<MediaItemUI>) : UserAction
-        data class Move(val items: List<MediaItemUI>) : UserAction
-        data class Rename(val items: List<MediaItemUI>) : UserAction
-        data class Delete(val items: List<MediaItemUI>) : UserAction
+        data class SearchQueryChange(val newQuery: String?) : UserAction
+        data class ItemsSelectionChange(val newSelection: List<MediaItemUI>) : UserAction
+        data class PreferencesChange(val newPreferences: GalleryPreferences) : UserAction
+        data class ItemsCopy(val itemsToCopy: List<MediaItemUI>) : UserAction
+        data class ItemsMove(val itemsToMove: List<MediaItemUI>) : UserAction
+        data class ItemsRename(val itemsToRename: List<MediaItemUI>) : UserAction
+        data class ItemsDelete(val itemsToDelete: List<MediaItemUI>) : UserAction
     }
 
-    sealed interface Event {
-        data class OpenFile(val file: MediaItemUI.File) : Event
-        data class OpenAlbum(val album: MediaItemUI.Album) : Event
-    }
+
+    // Raw data flows
+    private val _appPreferencesFlow = prefsRepo.getPreferencesFlow()
+    private val _dataResourceFlow = mediaItemsRepo.getFilesResourceFlow()
+
+    // UI-related data flows
+    private val _itemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
+    private val _isLoadingFlow = MutableStateFlow(false)
+    private val _searchQueryFlow = MutableStateFlow<String?>(null)
+    private val _selectedItemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
 
     private val _uiState = MutableStateFlow(UIState())
     val uiState = _uiState.asStateFlow()
 
-    private val _event = MutableSharedFlow<Event>()
-    val event = _event.asSharedFlow()
 
     fun onAction(action: UserAction) {
         viewModelScope.launch {
             when (action) {
-                is UserAction.Launch -> onLaunch(action.path)
+                is UserAction.ScreenLaunch -> onLaunch(action.folderPath)
                 UserAction.Refresh -> onRefresh()
-                is UserAction.OpenItem -> openItem(action.item)
                 is UserAction.SearchQueryChange -> onSearchQueryChange(action.newQuery)
-                is UserAction.Search -> onSearch(action.query)
-                is UserAction.UpdatePreferences -> updatePreferences(action.preferences)
-                is UserAction.ChangeItemSelection -> changeItemSelection(action.item)
-                UserAction.SelectAllItems -> selectAllItems()
-                UserAction.ClearSelection -> clearSelection()
-                is UserAction.Copy -> onCopyOrMove(action.items)
-                is UserAction.Move -> onCopyOrMove(action.items, move = true)
-                is UserAction.Rename -> onRename(action.items)
-                is UserAction.Delete -> onDelete(action.items)
+                is UserAction.PreferencesChange -> onPreferencesChange(action.newPreferences)
+                is UserAction.ItemsSelectionChange -> onSelectionChange(action.newSelection)
+                is UserAction.ItemsCopy -> onCopyOrMove(action.itemsToCopy)
+                is UserAction.ItemsMove -> onCopyOrMove(action.itemsToMove, move = true)
+                is UserAction.ItemsRename -> onRename(action.itemsToRename)
+                is UserAction.ItemsDelete -> onDelete(action.itemsToDelete)
             }
         }
     }
 
 
-    private fun onLaunch(albumPath: String?) {
-        viewModelScope.launch { observeFilesAndPreferences(albumPath) }
-        // initiate media scan if it's a first screen
-        if (albumPath == null) viewModelScope.launch { onRefresh() }
+    private fun onLaunch(folderPath: String?) {
+        /*  if (folderPath == null) */ viewModelScope.launch { onRefresh() }
+        // observe raw data flows changes
+        viewModelScope.launch { keepItemsFlowUpdated(folderPath) }
+        viewModelScope.launch { keepLoadingFlowUpdated() }
+        // reflect flows changes in UI
+        viewModelScope.launch { reflectItemsChanges() }
+        viewModelScope.launch { reflectLoadingChanges() }
+        viewModelScope.launch { reflectPreferencesChanges() }
+        viewModelScope.launch { reflectSelectedItemsChanges() }
+        viewModelScope.launch { reflectSearchQueryChanges() }
     }
 
     private suspend fun onRefresh() {
-        withContext(Dispatchers.IO) {
-            mediaItemsRepo.rescan()
-        }
+        mediaItemsRepo.rescan()
     }
 
-    private suspend fun observeFilesAndPreferences(albumPath: String?) {
-        combine(
-            mediaItemsRepo.getFilesFlow(),
-            prefsRepo.getPreferencesFlow()
-        ) { filesRes, prefs ->
-            val newItems = createItemsList(
-                filesResource = filesRes,
-                albumPath = albumPath,
-                albumsMode = prefs.albumsMode,
-                sortingOrder = prefs.sortingOrder,
-                descendSortingEnabled = prefs.descendSorting,
-                selectedFilters = prefs.enabledFilters,
-                showHidden = prefs.showHidden
-            )
-            _uiState.value.copy(
-                screenItems = newItems,
-                preferences = prefs,
-                loading = filesRes is Resource.Loading
-            )
-        }.collectLatest { newState ->
-            _uiState.update { newState }
-        }
+    private fun onSearchQueryChange(newQuery: String?) {
+        _searchQueryFlow.update { newQuery }
     }
 
-    private fun createItemsList(
-        filesResource: Resource<List<MediaFileData>>,
-        albumPath: String?,
-        albumsMode: GalleryPreferences.AlbumsMode,
-        selectedFilters: Set<GalleryPreferences.Filter>,
-        sortingOrder: GalleryPreferences.SortingOrder,
-        descendSortingEnabled: Boolean,
-        showHidden: Boolean
-    ): List<MediaItemUI> {
-
-        val filesData = when (filesResource) {
-            is Resource.Success -> filesResource.data
-            is Resource.Loading -> filesResource.data
-            is Resource.Error -> TODO()
-        }
-        // convert files data models to files ui models
-        val filesUi = filesData.mapDataFilesToUiFiles()
-        // apply primary filtering based on albums mode and target path
-        val itemsUi = when (albumsMode) {
-            GalleryPreferences.AlbumsMode.PLAIN -> {
-                when (albumPath == null) {
-                    true -> filesUi.createFlatAlbumsList()
-                    false -> filesUi.createAlbumOwnFilesList(albumPath)
-                }
-            }
-            GalleryPreferences.AlbumsMode.NESTED -> filesUi.createNestedAlbumsList(
-                albumPath = albumPath ?: "/storage/"
-            )
-        }.apply { if (!showHidden) this.excludeHidden() }
-        // apply secondary filtering based on selected preferences
-        val filteredItemsUi = itemsUi.applyFilters(selectedFilters = selectedFilters)
-        // apply sorting based on selected preference
-        val sortedItemsUi = filteredItemsUi.applySorting(
-            sortingOrder = sortingOrder,
-            descend = descendSortingEnabled
-        )
-        return sortedItemsUi
+    private fun onSelectionChange(newSelection: List<MediaItemUI>) {
+        _selectedItemsFlow.update { newSelection }
     }
 
-
-    private suspend fun openItem(item: MediaItemUI) {
-        val event = when (item) {
-            is MediaItemUI.File -> Event.OpenFile(item)
-            is MediaItemUI.Album -> Event.OpenAlbum(item)
-        }
-        _event.emit(event)
+    private suspend fun onPreferencesChange(newPreferences: GalleryPreferences) {
+        prefsRepo.savePreferences(newPreferences)
     }
 
-
-    private fun changeItemSelection(item: MediaItemUI) {
-        when (val mode = _uiState.value.mode) {
-            UIState.Mode.Viewing,
-            is UIState.Mode.Searching -> _uiState.update {
-                it.copy(
-                    mode = UIState.Mode.Selection(selectedItems = listOf(item))
-                )
-            }
-            is UIState.Mode.Selection -> {
-                val selectedItems = mode.selectedItems
-                val newSelectedItems = when (selectedItems.contains(item)) {
-                    true -> selectedItems - item
-                    false -> selectedItems + item
-                }
-                val newState = when (newSelectedItems.isEmpty()) {
-                    true -> _uiState.value.copy(mode = UIState.Mode.Viewing)
-                    false -> _uiState.value.copy(
-                        mode = UIState.Mode.Selection(selectedItems = newSelectedItems)
-                    )
-                }
-                _uiState.update { newState }
-            }
-        }
-    }
-
-    private fun selectAllItems() {
-        val newState = when (val mode = _uiState.value.mode) {
-            UIState.Mode.Viewing, is UIState.Mode.Selection -> _uiState.value.copy(
-                mode = UIState.Mode.Selection(selectedItems = _uiState.value.screenItems)
-            )
-            is UIState.Mode.Searching -> _uiState.value.copy(
-                mode = UIState.Mode.Selection(selectedItems = mode.foundedItems)
-            )
-        }
-        _uiState.update { newState }
-    }
-
-    private fun clearSelection() {
-        // todo return to previous mode instead of viewing (to return back to search mode, for example)
-        val mode = _uiState.value.mode
-        if (mode is UIState.Mode.Selection) {
-            _uiState.update {
-                it.copy(mode = UIState.Mode.Viewing)
-            }
-        }
-    }
-
-
-    private fun onSearchQueryChange(newQuery: String) {
-        when (newQuery.isEmpty()) {
-            true -> onSearchCancel()
-            false -> onSearch(newQuery)
-        }
-    }
-
-    private fun onSearch(query: String) {
-        val filteredItems = _uiState.value.screenItems.filter {
-            it.path.contains(query, ignoreCase = true)
-        }
-        _uiState.update {
-            it.copy(
-                mode = UIState.Mode.Searching(
-                    searchQuery = query,
-                    foundedItems = filteredItems
-                )
-            )
-        }
-    }
-
-    private fun onSearchCancel() {
-        _uiState.update {
-            it.copy(mode = UIState.Mode.Viewing)
-        }
-    }
-
-
-    private suspend fun updatePreferences(preferences: GalleryPreferences) {
-        prefsRepo.savePreferences(preferences)
-    }
-
-
-    private suspend fun onCopyOrMove(items: List<MediaItemUI>, move: Boolean = false) {
+    private suspend fun onCopyOrMove(itemsToCopyOrMove: List<MediaItemUI>, move: Boolean = false) {
+        // pick destination album
         val destinationAlbumPath = try {
-            awaitForDestinationPath()
+            awaitForAlbumPickerResult()
         } catch (e: CancellationException) {
             return
         }
-        val operations = items.map { item ->
-            val destinationFilePath = "$destinationAlbumPath/${item.name}"
-            val conflicts = mediaItemsRepo.checkExistence(destinationFilePath)
-            val resolution = when (conflicts) {
+        val destinationFilesPaths = itemsToCopyOrMove.map { item ->
+            "$destinationAlbumPath/${item.name}"
+        }
+        // check for conflict filenames in the picked album
+        // await for conflict resolutions
+        val conflictsResolutions = destinationFilesPaths.mapIndexed { index, destinationPath ->
+            val alreadyExists = mediaItemsRepo.checkExistence(destinationPath)
+            when (alreadyExists) {
                 true -> try {
-                    awaitForConflictResolution(item)
+                    awaitForConflictResolverDialogResult(itemsToCopyOrMove[index])
                 } catch (e: CancellationException) {
                     return
                 }
                 false -> ConflictResolution.KEEP_BOTH
             }
+        }
+        val fileOperations = itemsToCopyOrMove.mapIndexed { index, item ->
             when (move) {
-                true -> FileOperation.Move(item.path, destinationFilePath, resolution)
-                false -> FileOperation.Copy(item.path, destinationFilePath, resolution)
+                true -> FileOperation.Move(
+                    sourceFilePath = item.path,
+                    destinationFilePath = destinationFilesPaths[index],
+                    conflictResolution = conflictsResolutions[index]
+                )
+                false -> FileOperation.Copy(
+                    sourceFilePath = item.path,
+                    destinationFilePath = destinationFilesPaths[index],
+                    conflictResolution = conflictsResolutions[index]
+                )
             }
         }
-        // turn of selection mode after operation performed
-        _uiState.update { it.copy(mode = UIState.Mode.Viewing) }
-        executeFileOperations(operations)
+        performFileOperations(fileOperations)
     }
 
-    private suspend fun onRename(items: List<MediaItemUI>) {
-        val operations = items.map { item ->
-            val newPath = try {
-                awaitForNewPath(item = item)
+    private suspend fun onRename(itemsToRename: List<MediaItemUI>) {
+        // await for after-rename paths from dialogs
+        val newPaths = itemsToRename.map { item ->
+            try {
+                awaitForRenamerDialogResult(item)
             } catch (e: CancellationException) {
                 return
             }
-            val conflicts = mediaItemsRepo.checkExistence(newPath)
-            val resolution = when (conflicts) {
+        }
+        // check for filename conflicts and await for resolutions
+        val conflictsResolutions = newPaths.mapIndexed { index, newPath ->
+            val alreadyExists = mediaItemsRepo.checkExistence(newPath)
+            when (alreadyExists) {
                 true -> try {
-                    awaitForConflictResolution(item)
+                    awaitForConflictResolverDialogResult(itemsToRename[index])
                 } catch (e: CancellationException) {
                     return
                 }
                 false -> ConflictResolution.KEEP_BOTH
             }
-            FileOperation.Rename(item.path, newPath, resolution)
         }
-        _uiState.update { it.copy(mode = UIState.Mode.Viewing) }
-        executeFileOperations(operations)
+        val fileOperations = itemsToRename.mapIndexed { index, item ->
+            FileOperation.Rename(
+                originalFilePath = item.path,
+                newFilePath = newPaths[index],
+                conflictResolution = conflictsResolutions[index]
+            )
+        }
+        performFileOperations(fileOperations)
     }
 
-    private suspend fun onDelete(items: List<MediaItemUI>) {
-        val deletionConfirmed = try {
-            awaitForDeletionConfirmation(items = items)
+    private suspend fun onDelete(itemsToDelete: List<MediaItemUI>) {
+        try {
+            awaitForDeletionConfirmationDialogResult(itemsToDelete)
+            val fileOperations = itemsToDelete.map { FileOperation.Delete(it.path) }
+            performFileOperations(fileOperations)
         } catch (e: CancellationException) {
-            false
+            return
         }
-        val operations = when (deletionConfirmed) {
-            true -> items.map { FileOperation.Delete(it.path) }
-            false -> return
-        }
-        _uiState.update { it.copy(mode = UIState.Mode.Viewing) }
-        executeFileOperations(operations)
     }
 
-    private suspend fun executeFileOperations(operations: List<FileOperation>) {
-        val completeOperations = mutableSetOf<FileOperation>()
+    private suspend fun performFileOperations(operations: List<FileOperation>) {
+        var completeOperationsCount = 0
         mediaItemsRepo
-            .executeFileOperations(operations = operations)
-            .observeForever {
-                it.forEach { workInfo ->
-                    if (workInfo.state == WorkInfo.State.SUCCEEDED) {
-                        try {
-                            val operationJson = workInfo.outputData.getString(
-                                FileOperationWorker.Keys.FILE_OPERATION_JSON.name
-                            )
-                            val operation = Json.decodeFromString<FileOperation>(operationJson!!)
-                            if (!completeOperations.contains(operation)) {
-                                completeOperations += operation
-                                viewModelScope.launch { onRefresh() }
-                                // todo post notification here
-                            }
-                        } catch (e: Exception) {
-                            Timber.e(e, "Unable to parse operation object from work output")
-                        }
+            .executeFileOperations(operations)
+            .observeForever { workInfos ->
+                workInfos.count { it.state.isFinished }.let {
+                    if (it > completeOperationsCount) {
+                        completeOperationsCount = it
+                        viewModelScope.launch { mediaItemsRepo.rescan() }
                     }
                 }
+                /* TODO: post progress notification here */
             }
     }
 
 
-    private suspend fun awaitForNewPath(item: MediaItemUI): String = suspendCoroutine { cont ->
-        _uiState.update {
-            it.copy(
-                dialog = UIState.Dialog.Renaming(
-                    item = item,
-                    onConfirm = { newPath ->
+    // update album content based on raw data and preferences flows
+    private suspend fun keepItemsFlowUpdated(folderPath: String?) {
+        combine(_dataResourceFlow, _appPreferencesFlow) { dataRes, prefs ->
+            val allFilesData = when (dataRes) {
+                is Resource.Success -> dataRes.data
+                is Resource.Loading -> dataRes.data
+                is Resource.Error -> emptyList()
+            }
+            val allFilesUi = allFilesData.mapDataFilesToUiFiles()
+            val albumRelatedItems = allFilesUi.createAlbumRelatedItemsList(folderPath, prefs)
+            val filteredItems = albumRelatedItems.applyFilters(prefs.enabledFilters)
+            val sortedItems = filteredItems.applySorting(prefs.sortingOrder, prefs.descendSorting)
+            sortedItems
+        }.collectLatest { actualItemsList ->
+            _itemsFlow.update { actualItemsList }
+        }
+    }
+
+    private suspend fun keepLoadingFlowUpdated() {
+        _dataResourceFlow.collectLatest { filesDataResource ->
+            _isLoadingFlow.update {
+                filesDataResource is Resource.Loading
+            }
+        }
+    }
+
+
+    private suspend fun reflectItemsChanges() {
+        _itemsFlow.collectLatest { newItems ->
+            withContext(Dispatchers.Main) {
+                _uiState.update {
+                    it.copy(
+                        items = newItems,
+                        // remove selection from items that not exists anymore
+                        selectedItems = it.selectedItems.filter { selectedItem -> newItems.contains(selectedItem) }
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun reflectLoadingChanges() {
+        _isLoadingFlow.collectLatest { isLoading ->
+            withContext(Dispatchers.Main) {
+                _uiState.update { it.copy(isLoading = isLoading) }
+            }
+        }
+    }
+
+    private suspend fun reflectPreferencesChanges() {
+        _appPreferencesFlow.collectLatest { prefs ->
+            _uiState.update { it.copy(appPreferences = prefs) }
+        }
+    }
+
+    /**
+     * Reflect search results based on query and items
+     *
+     */
+    private suspend fun reflectSearchQueryChanges() {
+        combine(_searchQueryFlow, _itemsFlow) { query, items ->
+            if (query != null) items
+                .filter { item -> item.path.contains(query, ignoreCase = true) }
+                .let { foundItems -> UIState.Content.Searching(query, foundItems) }
+            else UIState.Content.Exploring
+        }.collectLatest { newContent ->
+            _uiState.update {
+                it.copy(content = newContent)
+            }
+        }
+    }
+
+    private suspend fun reflectSelectedItemsChanges() {
+        _selectedItemsFlow.collectLatest { selectedItems ->
+            _uiState.update {
+                it.copy(selectedItems = selectedItems)
+            }
+        }
+    }
+
+
+    private suspend fun awaitForAlbumPickerResult(): String {
+        return suspendCoroutine { cont ->
+            setDialog(
+                UIState.Dialog.AlbumPicker(
+                    onConfirm = { pickedAlbumPath ->
                         setDialog(UIState.Dialog.None)
-                        cont.resume(newPath)
+                        cont.resume(pickedAlbumPath)
                     },
                     onDismiss = {
                         setDialog(UIState.Dialog.None)
@@ -412,11 +358,31 @@ class ExplorerVm
         }
     }
 
-    private suspend fun awaitForDeletionConfirmation(items: List<MediaItemUI>): Boolean =
-        suspendCoroutine { cont ->
+    private suspend fun awaitForRenamerDialogResult(itemToRename: MediaItemUI): String {
+        return suspendCoroutine { cont ->
+            _uiState.update {
+                it.copy(
+                    dialog = UIState.Dialog.Renaming(
+                        item = itemToRename,
+                        onConfirm = { newPath ->
+                            setDialog(UIState.Dialog.None)
+                            cont.resume(newPath)
+                        },
+                        onDismiss = {
+                            setDialog(UIState.Dialog.None)
+                            cont.resumeWithException(CancellationException())
+                        }
+                    )
+                )
+            }
+        }
+    }
+
+    private suspend fun awaitForDeletionConfirmationDialogResult(itemsToDelete: List<MediaItemUI>): Boolean {
+        return suspendCoroutine { cont ->
             setDialog(
                 UIState.Dialog.DeletionConfirmation(
-                    items = items,
+                    items = itemsToDelete,
                     onConfirm = {
                         setDialog(UIState.Dialog.None)
                         cont.resume(true)
@@ -428,24 +394,10 @@ class ExplorerVm
                 )
             )
         }
-
-    private suspend fun awaitForDestinationPath(): String = suspendCoroutine { cont ->
-        setDialog(
-            UIState.Dialog.AlbumPicker(
-                onConfirm = { selectedPath ->
-                    setDialog(UIState.Dialog.None)
-                    cont.resume(selectedPath)
-                },
-                onDismiss = {
-                    setDialog(UIState.Dialog.None)
-                    cont.resumeWithException(CancellationException())
-                }
-            )
-        )
     }
 
-    private suspend fun awaitForConflictResolution(conflictItem: MediaItemUI): ConflictResolution =
-        suspendCoroutine { cont ->
+    private suspend fun awaitForConflictResolverDialogResult(conflictItem: MediaItemUI): ConflictResolution {
+        return suspendCoroutine { cont ->
             setDialog(
                 UIState.Dialog.ConflictResolver(
                     conflictItem = conflictItem,
@@ -460,8 +412,30 @@ class ExplorerVm
                 )
             )
         }
+    }
 
-    private fun setDialog(dialog: UIState.Dialog) {
-        _uiState.update { it.copy(dialog = dialog) }
+    private fun setDialog(newDialog: UIState.Dialog) {
+        _uiState.update { it.copy(dialog = newDialog) }
+    }
+
+
+    // todo move to utils object?
+    private fun List<MediaItemUI.File>.createAlbumRelatedItemsList(
+        folderPath: String?,
+        prefs: GalleryPreferences
+    ): List<MediaItemUI> {
+        // filter only items related to target album
+        val uiItems = when (prefs.albumsMode) {
+            GalleryPreferences.AlbumsMode.PLAIN -> when (folderPath.isNullOrEmpty()) {
+                true -> this.createFlatAlbumsList()
+                false -> this.createAlbumOwnFilesList(folderPath)
+            }
+            GalleryPreferences.AlbumsMode.NESTED -> this.createNestedAlbumsList(folderPath)
+        }
+        // apply filtering based on user preferences
+        val filteredItems = uiItems.applyFilters(prefs.enabledFilters)
+        // apply sorting based on user preferences
+        val sortedItems = filteredItems.applySorting(prefs.sortingOrder, prefs.descendSorting)
+        return sortedItems
     }
 }

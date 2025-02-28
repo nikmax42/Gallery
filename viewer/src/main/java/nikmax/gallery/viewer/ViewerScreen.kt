@@ -29,10 +29,10 @@ import nikmax.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
 import nikmax.gallery.dialogs.conflict_resolver.ConflictResolverDialog
 import nikmax.gallery.dialogs.deletion.DeletionDialog
 import nikmax.gallery.dialogs.renaming.RenamingDialog
-import nikmax.gallery.viewer.components.ImageViewer
-import nikmax.gallery.viewer.components.VideoViewer
-import nikmax.gallery.viewer.components.ViewerBottomBar
-import nikmax.gallery.viewer.components.ViewerTopBar
+import nikmax.gallery.viewer.components.bottom_bar.ViewerBottomBar
+import nikmax.gallery.viewer.components.top_bar.ViewerTopBar
+import nikmax.gallery.viewer.components.viewers.ImageViewer
+import nikmax.gallery.viewer.components.viewers.VideoViewer
 
 @Composable
 fun ViewerScreen(
@@ -163,7 +163,7 @@ private fun ViewerContent(
                     VideoViewer(
                         videoUri = file.path,
                         showPlayerControls = showControls,
-                        modifier = Modifier.fillMaxSize(),
+                        onShowControlsChange = { onSwitchControls() },
                         seekBarBottomPadding = paddings.calculateBottomPadding()
                     )
                 } else if (file.mimetype.startsWith("image/")) {

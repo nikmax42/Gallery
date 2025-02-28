@@ -55,8 +55,8 @@ android {
 
 dependencies {
     implementation(project(":core:ui"))
-    implementation(project(":explorer"))
-    implementation(project(":viewer"))
+    implementation(project(":gallery:explorer"))
+    implementation(project(":gallery:viewer"))
 
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.work.runtime.ktx)
@@ -106,4 +106,6 @@ dependencies {
     implementation(libs.coil.gif)
     // Splashscreen
     implementation(libs.androidx.core.splashscreen)
+    // Timber
+    implementation(libs.timber)
 }

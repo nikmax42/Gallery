@@ -21,7 +21,7 @@ interface MediaItemsRepo {
     /**
      * @return flow of [Resource] of [MediaFileData].
      */
-    fun getFilesFlow(): Flow<Resource<List<MediaFileData>>>
+    fun getFilesResourceFlow(): Flow<Resource<List<MediaFileData>>>
 
     /**
      * Use mediastore to update files flow with all available media files.
@@ -31,26 +31,6 @@ interface MediaItemsRepo {
     suspend fun checkExistence(filePath: String): Boolean
 
     suspend fun executeFileOperations(operations: List<FileOperation>): LiveData<List<WorkInfo>>
-
-    /* suspend fun copyFile(
-        sourceFilePath: String,
-        destinationFilePath: String,
-        conflictResolution: ConflictResolution
-    ): Result<File>
-
-    suspend fun moveFile(
-        sourceFilePath: String,
-        destinationFilePath: String,
-        conflictResolution: ConflictResolution
-    ): Result<File>
-
-    suspend fun renameFile(
-        sourceFilePath: String,
-        destinationFilePath: String,
-        conflictResolution: ConflictResolution
-    ): Result<File>
-
-    suspend fun deleteFile(filePath: String): Result<File> */
 }
 
 
@@ -61,7 +41,7 @@ internal class MediaItemRepoImpl(
     private val _filesFlow = MutableStateFlow<List<MediaFileData>>(emptyList())
     private val _loadingFlow = MutableStateFlow(false)
 
-    override fun getFilesFlow(): Flow<Resource<List<MediaFileData>>> {
+    override fun getFilesResourceFlow(): Flow<Resource<List<MediaFileData>>> {
         return combine(_filesFlow, _loadingFlow) { files, loading ->
             when (loading) {
                 true -> Resource.Loading(files)
@@ -84,42 +64,6 @@ internal class MediaItemRepoImpl(
     override suspend fun checkExistence(filePath: String): Boolean {
         return FilesUtils.checkExistence(filePath)
     }
-
-    /* override suspend fun copyFile(
-        sourceFilePath: String,
-        destinationFilePath: String,
-        conflictResolution: ConflictResolution
-    ): Result<File> {
-        val result = FilesUtils.copy(sourceFilePath, destinationFilePath, conflictResolution)
-        rescan()
-        return result
-    }
-
-    override suspend fun moveFile(
-        sourceFilePath: String,
-        destinationFilePath: String,
-        conflictResolution: ConflictResolution
-    ): Result<File> {
-        val result = FilesUtils.move(sourceFilePath, destinationFilePath, conflictResolution)
-        rescan()
-        return result
-    }
-
-    override suspend fun renameFile(
-        sourceFilePath: String,
-        destinationFilePath: String,
-        conflictResolution: ConflictResolution
-    ): Result<File> {
-        val result = FilesUtils.rename(sourceFilePath, destinationFilePath, conflictResolution)
-        rescan()
-        return result
-    }
-
-    override suspend fun deleteFile(filePath: String): Result<File> {
-        val result = FilesUtils.delete(filePath)
-        rescan()
-        return result
-    } */
 
     override suspend fun executeFileOperations(operations: List<FileOperation>): LiveData<List<WorkInfo>> {
         val workManager = WorkManager.getInstance(context)

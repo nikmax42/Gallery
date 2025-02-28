@@ -58,4 +58,6 @@ dependencies {
     implementation(libs.coil.gif)
     // Icons
     implementation(libs.material.icons.extended)
+    // Timber
+    implementation(libs.timber)
 }

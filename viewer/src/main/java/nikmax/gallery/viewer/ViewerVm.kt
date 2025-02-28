@@ -122,7 +122,7 @@ class ViewerVm
     private suspend fun observeAlbumContent(initialFilePath: String) {
         val albumPath = Path(initialFilePath).parent.pathString
         combine(
-            mediaItemsRepo.getFilesFlow(),
+            mediaItemsRepo.getFilesResourceFlow(),
             prefsRepo.getPreferencesFlow()
         ) { itemsResource, prefs ->
             val albumFiles = when (itemsResource) {

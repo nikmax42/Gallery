@@ -8,11 +8,13 @@ import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.util.DebugLogger
 import dagger.hilt.android.HiltAndroidApp
+import timber.log.Timber
 
 @HiltAndroidApp
 class App : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
+        Timber.plant(Timber.DebugTree())
     }
 
     override fun newImageLoader(): ImageLoader {
@@ -35,5 +37,4 @@ class App : Application(), ImageLoaderFactory {
             .respectCacheHeaders(false)
             .build()
     }
-
 }

@@ -1,6 +1,7 @@
 package nikmax.gallery.dialogs.album_picker
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -29,7 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import nikmax.gallery.core.ui.MediaItemUI
-import nikmax.gallery.core.ui.components.ItemsGrid
+import nikmax.gallery.core.ui.components.grid.ItemsGrid
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.data.preferences.GalleryPreferences
 import nikmax.gallery.dialogs.R
@@ -56,26 +57,26 @@ fun AlbumPickerFullScreenDialog(
 
     BackHandler { vm.onAction(AlbumPickerVm.UserAction.NavigateBack) }
 
-    Content(
-        items = state.items,
-        loading = state.loading,
-        onRefresh = { vm.onAction(AlbumPickerVm.UserAction.Refresh) },
-        onItemClick = { if (it is MediaItemUI.Album) vm.onAction(AlbumPickerVm.UserAction.NavigateIn(it.path)) },
-        onItemLongClick = { /* not in use */ },
-        onConfirm = { vm.onAction(AlbumPickerVm.UserAction.Confirm) },
-        onDismiss = { onDismiss() },
-        preferences = state.preferences
-    )
+    AnimatedVisibility(true) { // to show dialog with crossfade animation
+        AlbumPickerContent(
+            items = state.items,
+            loading = state.loading,
+            onRefresh = { vm.onAction(AlbumPickerVm.UserAction.Refresh) },
+            onItemClick = { if (it is MediaItemUI.Album) vm.onAction(AlbumPickerVm.UserAction.NavigateIn(it.path)) },
+            onConfirm = { vm.onAction(AlbumPickerVm.UserAction.Confirm) },
+            onDismiss = { onDismiss() },
+            preferences = state.preferences
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Content(
+private fun AlbumPickerContent(
     items: List<MediaItemUI>,
     loading: Boolean,
     onRefresh: () -> Unit,
     onItemClick: (MediaItemUI) -> Unit,
-    onItemLongClick: (MediaItemUI) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     preferences: GalleryPreferences,
@@ -95,8 +96,7 @@ private fun Content(
             ItemsGrid(
                 items = items,
                 selectedItems = emptyList(),
-                onItemClick = { onItemClick(it) },
-                onItemLongClick = { onItemLongClick(it) },
+                onItemOpen = { onItemClick(it) },
                 columnsAmountPortrait = preferences.gridColumnsPortrait,
                 columnsAmountLandscape = preferences.gridColumnsLandscape,
                 modifier = Modifier
@@ -123,7 +123,7 @@ private fun Preview() {
     )
     var loading by remember { mutableStateOf(false) }
     GalleryTheme {
-        Content(
+        AlbumPickerContent(
             items = items,
             loading = loading,
             onRefresh = {
@@ -134,7 +134,6 @@ private fun Preview() {
                 }
             },
             onItemClick = {},
-            onItemLongClick = {},
             onDismiss = {},
             onConfirm = {},
             preferences = GalleryPreferences()
