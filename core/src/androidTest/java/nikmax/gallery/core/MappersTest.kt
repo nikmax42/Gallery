@@ -3,7 +3,7 @@ package nikmax.gallery.core
 import nikmax.gallery.data.media.MediaFileData
 import org.junit.Before
 
-class MappingTest {
+class MappersTest {
     private lateinit var image1: MediaFileData
     private lateinit var video1: MediaFileData
 

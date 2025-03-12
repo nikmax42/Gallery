@@ -12,12 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import nikmax.gallery.core.ItemsUtils.Mapping.mapDataFilesToUiFiles
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.applyFilters
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createAlbumOwnFilesList
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createFlatAlbumsList
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createNestedAlbumsList
-import nikmax.gallery.core.ItemsUtils.Sorting.applySorting
+import nikmax.gallery.core.ItemsUtils.createItemsListToDisplay
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.data.Resource
 import nikmax.gallery.data.media.ConflictResolution
@@ -223,16 +218,18 @@ class ExplorerVm
     // update album content based on raw data and preferences flows
     private suspend fun keepItemsFlowUpdated(folderPath: String?) {
         combine(_dataResourceFlow, _appPreferencesFlow) { dataRes, prefs ->
-            val allFilesData = when (dataRes) {
+            when (dataRes) {
                 is Resource.Success -> dataRes.data
                 is Resource.Loading -> dataRes.data
                 is Resource.Error -> emptyList()
-            }
-            val allFilesUi = allFilesData.mapDataFilesToUiFiles()
-            val albumRelatedItems = allFilesUi.createAlbumRelatedItemsList(folderPath, prefs)
-            val filteredItems = albumRelatedItems.applyFilters(prefs.enabledFilters)
-            val sortedItems = filteredItems.applySorting(prefs.sortingOrder, prefs.descendSorting)
-            sortedItems
+            }.createItemsListToDisplay(
+                targetAlbumPath = folderPath,
+                albumsMode = prefs.albumsMode,
+                appliedFilters = prefs.enabledFilters,
+                sortingOrder = prefs.sortingOrder,
+                useDescendSorting = prefs.descendSorting,
+                includeHidden = prefs.showHidden
+            )
         }.collectLatest { actualItemsList ->
             _itemsFlow.update { actualItemsList }
         }
@@ -396,26 +393,5 @@ class ExplorerVm
                 }
                 /* TODO: post progress notification here */
             }
-    }
-
-
-    // todo move to utils object?
-    private fun List<MediaItemUI.File>.createAlbumRelatedItemsList(
-        folderPath: String?,
-        prefs: GalleryPreferences
-    ): List<MediaItemUI> {
-        // filter only items related to target album
-        val uiItems = when (prefs.albumsMode) {
-            GalleryPreferences.AlbumsMode.PLAIN -> when (folderPath.isNullOrEmpty()) {
-                true -> this.createFlatAlbumsList()
-                false -> this.createAlbumOwnFilesList(folderPath)
-            }
-            GalleryPreferences.AlbumsMode.NESTED -> this.createNestedAlbumsList(folderPath)
-        }
-        // apply filtering based on user preferences
-        val filteredItems = uiItems.applyFilters(prefs.enabledFilters)
-        // apply sorting based on user preferences
-        val sortedItems = filteredItems.applySorting(prefs.sortingOrder, prefs.descendSorting)
-        return sortedItems
     }
 }

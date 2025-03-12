@@ -15,7 +15,7 @@ internal object MediastoreUtils {
      *
      * @return a list of [MediaFileData] objects.
      */
-    fun getAllImagesAndVideos(context: Context): MutableList<MediaFileData> {
+    fun getAllImagesAndVideos(context: Context): List<MediaFileData> {
         val projection = arrayOf(
             MediaStore.MediaColumns.DATA,
             MediaStore.MediaColumns.DATE_ADDED,

@@ -60,4 +60,6 @@ dependencies {
     implementation(libs.material.icons.extended)
     // Timber
     implementation(libs.timber)
+    // Tika
+    implementation(libs.tika.core)
 }

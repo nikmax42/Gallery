@@ -1,6 +1,6 @@
 package nikmax.gallery.core.ui
 
-import android.webkit.MimeTypeMap
+import org.apache.tika.Tika
 import kotlin.io.path.Path
 import kotlin.io.path.extension
 import kotlin.io.path.name
@@ -16,22 +16,17 @@ sealed interface MediaItemUI {
     val dateCreated: Long
     val dateModified: Long
     val volume: Volume
-    val hidden
-        get() = path.contains("/.")
+    val hidden get() = path.contains("/.")
 
     data class File(
         override val path: String,
-        override val size: Long,
-        override val dateCreated: Long,
-        override val dateModified: Long,
-        override val volume: Volume,
+        override val size: Long = 0,
+        override val dateCreated: Long = 0,
+        override val dateModified: Long = 0,
+        override val volume: Volume = Volume.PRIMARY,
         override val name: String = Path(path).name,
         override val thumbnail: String? = null,
-        val mimetype: String = MimeTypeMap
-            .getSingleton()
-            .getMimeTypeFromExtension(
-                Path(path).extension
-            ) ?: ""
+        val mimetype: String = Tika().detect(path)
     ) : MediaItemUI {
         enum class MediaType { IMAGE, VIDEO, GIF }
 
@@ -52,11 +47,11 @@ sealed interface MediaItemUI {
 
     data class Album(
         override val path: String,
-        override val name: String,
-        override val size: Long,
-        override val dateCreated: Long,
-        override val dateModified: Long,
-        override val volume: Volume,
+        override val name: String = Path(path).name,
+        override val size: Long = 0,
+        override val dateCreated: Long = 0,
+        override val dateModified: Long = 0,
+        override val volume: Volume = Volume.PRIMARY,
         override val thumbnail: String? = null,
         val filesCount: Int = 0,
         val imagesCount: Int = 0,

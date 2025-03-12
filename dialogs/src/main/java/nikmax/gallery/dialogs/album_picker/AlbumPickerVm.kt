@@ -11,13 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.ItemsUtils.Mapping.mapDataFilesToUiFiles
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.applyFilters
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createAlbumOwnFilesList
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createFlatAlbumsList
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createNestedAlbumsList
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.excludeHidden
-import nikmax.gallery.core.ItemsUtils.Sorting.applySorting
+import nikmax.gallery.core.ItemsUtils.createItemsListToDisplay
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.data.Resource
 import nikmax.gallery.data.media.MediaFileData
@@ -135,32 +129,17 @@ class AlbumPickerVm
         descendSortingEnabled: Boolean,
         showHidden: Boolean
     ): List<MediaItemUI> {
-        val filesData = when (filesResource) {
+        return when (filesResource) {
             is Resource.Success -> filesResource.data
             is Resource.Loading -> filesResource.data
             is Resource.Error -> TODO()
-        }
-        // convert files data models to files ui models
-        val filesUi = filesData.mapDataFilesToUiFiles()
-        // apply primary filtering based on albums mode and target path
-        val itemsUi = when (albumsMode) {
-            GalleryPreferences.AlbumsMode.PLAIN -> {
-                when (albumPath == null) {
-                    true -> filesUi.createFlatAlbumsList()
-                    false -> filesUi.createAlbumOwnFilesList(albumPath)
-                }
-            }
-            GalleryPreferences.AlbumsMode.NESTED -> filesUi.createNestedAlbumsList(
-                albumPath = albumPath ?: "/storage/"
-            )
-        }.apply { if (!showHidden) this.excludeHidden() }
-        // apply secondary filtering based on selected preferences
-        val filteredItemsUi = itemsUi.applyFilters(selectedFilters = selectedFilters)
-        // apply sorting based on selected preference
-        val sortedItemsUi = filteredItemsUi.applySorting(
+        }.createItemsListToDisplay(
+            targetAlbumPath = albumPath,
+            albumsMode = albumsMode,
+            appliedFilters = selectedFilters,
             sortingOrder = sortingOrder,
-            descend = descendSortingEnabled
+            useDescendSorting = descendSortingEnabled,
+            includeHidden = showHidden
         )
-        return sortedItemsUi
     }
 }

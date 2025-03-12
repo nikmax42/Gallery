@@ -11,10 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import nikmax.gallery.core.ItemsUtils.Mapping.mapDataFilesToUiFiles
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.applyFilters
-import nikmax.gallery.core.ItemsUtils.SearchingAndFiltering.createAlbumOwnFilesList
-import nikmax.gallery.core.ItemsUtils.Sorting.applySorting
+import nikmax.gallery.core.ItemsUtils.createItemsListToDisplay
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.data.Resource
 import nikmax.gallery.data.media.ConflictResolution
@@ -176,16 +173,19 @@ class ViewerVm
 
     private suspend fun updateFilesFlow(albumPath: String) {
         combine(_dataResourceFlow, _appPreferencesFlow) { dataRes, prefs ->
-            val allFilesData = when (dataRes) {
+            when (dataRes) {
                 is Resource.Success -> dataRes.data
                 is Resource.Loading -> dataRes.data
                 is Resource.Error -> emptyList()
-            }
-            val allFilesUi = allFilesData.mapDataFilesToUiFiles()
-            val albumRelatedItems = allFilesUi.createAlbumOwnFilesList(albumPath)
-            val filteredItems = albumRelatedItems.applyFilters(prefs.enabledFilters)
-            val sortedItems = filteredItems.applySorting(prefs.sortingOrder, prefs.descendSorting)
-            sortedItems.map { it as MediaItemUI.File }
+            }.createItemsListToDisplay(
+                targetAlbumPath = albumPath,
+                albumsMode = prefs.albumsMode,
+                appliedFilters = prefs.enabledFilters,
+                sortingOrder = prefs.sortingOrder,
+                useDescendSorting = prefs.descendSorting,
+                includeHidden = prefs.showHidden,
+                includeFilesOnly = true
+            ).map { it as MediaItemUI.File }
         }.collectLatest { actualItemsList ->
             _filesFlow.update { actualItemsList }
         }
