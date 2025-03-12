@@ -1,5 +1,8 @@
 package nikmax.gallery
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -12,30 +15,45 @@ import nikmax.gallery.viewer.ViewerScreen
 @Composable
 fun MainNavHost() {
     val navController = rememberNavController()
-    NavHost(
-        navController = navController,
-        startDestination = NavRoutes.Explorer()
-    ) {
-        composable<NavRoutes.Explorer> { entry ->
-            val args = entry.toRoute<NavRoutes.Explorer>()
-            ExplorerScreen(
-                albumPath = args.albumPath,
-                onFileOpen = { file ->
-                    // navigate to viewer
-                    navController.navigate(NavRoutes.Viewer(file.path))
+    Surface {
+        NavHost(
+            navController = navController,
+            startDestination = NavRoutes.Explorer()
+        ) {
+            composable<NavRoutes.Explorer> { entry ->
+                val args = entry.toRoute<NavRoutes.Explorer>()
+                ExplorerScreen(
+                    albumPath = args.albumPath,
+                    onFileOpen = { file ->
+                        // navigate to viewer
+                        navController.navigate(NavRoutes.Viewer(file.path))
+                    },
+                    onAlbumOpen = { album ->
+                        // navigate to another explorer instance
+                        navController.navigate(NavRoutes.Explorer(album.path))
+                    }
+                )
+            }
+            composable<NavRoutes.Viewer>(
+                enterTransition = {
+                    slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Companion.Up,
+                        animationSpec = tween(500)
+                    )
                 },
-                onAlbumOpen = { album ->
-                    // navigate to another explorer instance
-                    navController.navigate(NavRoutes.Explorer(album.path))
+                exitTransition = {
+                    slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Companion.Down,
+                        animationSpec = tween(500)
+                    )
                 }
-            )
-        }
-        composable<NavRoutes.Viewer> { entry ->
-            val args = entry.toRoute<NavRoutes.Viewer>()
-            ViewerScreen(
-                filePath = args.filePath,
-                onClose = { navController.popBackStack() }
-            )
+            ) { entry ->
+                val args = entry.toRoute<NavRoutes.Viewer>()
+                ViewerScreen(
+                    filePath = args.filePath,
+                    onClose = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

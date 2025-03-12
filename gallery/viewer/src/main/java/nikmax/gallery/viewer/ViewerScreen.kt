@@ -12,6 +12,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.gestures.rememberTransformableState
@@ -63,6 +64,7 @@ import nikmax.gallery.viewer.components.Seekbar
 import nikmax.gallery.viewer.components.Video
 import nikmax.gallery.viewer.components.bottom_bar.ViewerBottomBar
 import nikmax.gallery.viewer.components.top_bar.ViewerTopBar
+import kotlin.math.roundToInt
 
 @Composable
 fun ViewerScreen(
@@ -328,18 +330,31 @@ fun ContentReady(
                     }
                 }
 
-                suspend fun resetZoomAndOffset() {
-                    animatableZoom.animateTo(1f)
-                    animatableOffsetX.animateTo(Offset.Zero.x)
-                    animatableOffsetY.animateTo(Offset.Zero.y)
+                fun zoomToDoubleTap(tapPoint: Offset) {
+                    val newZoom = 2.5f
+                    scope.launch { animatableZoom.animateTo(newZoom) }
+
+                    val centerX = this.constraints.maxWidth / 2
+                    val centerOffsetX = (tapPoint.x - centerX).roundToInt()
+                    val newX = (animatableOffsetX.value - centerOffsetX) * newZoom
+                    scope.launch { animatableOffsetX.animateTo(newX) }
+
+                    val centerY = this.constraints.maxHeight / 2
+                    val centerOffsetY = (tapPoint.y - centerY).roundToInt()
+                    val newY = (animatableOffsetX.value - centerOffsetY) * newZoom
+                    scope.launch { animatableOffsetY.animateTo(newY) }
+                }
+
+                fun resetZoomAndOffset() {
+                    scope.launch { animatableZoom.animateTo(1f) }
+                    scope.launch { animatableOffsetX.animateTo(Offset.Zero.x) }
+                    scope.launch { animatableOffsetY.animateTo(Offset.Zero.y) }
                 }
 
                 // reset transformation on file switch
                 LaunchedEffect(currentFile) { resetZoomAndOffset() }
                 // reset transformation on back press
-                BackHandler(animatableZoom.value != 1f) {
-                    scope.launch { resetZoomAndOffset() }
-                }
+                BackHandler(animatableZoom.value != 1f) { resetZoomAndOffset() }
 
                 // pager to swipe files
                 HorizontalPager(
@@ -354,14 +369,25 @@ fun ContentReady(
                             translationY = animatableOffsetY.value
                         }
                         .transformable(state = transformationState)
+                        // close viewer on vertical up-to-down swipe (if not in transformation mode)
+                        .pointerInput(key1 = animatableZoom.value == 1f) {
+                            var startPosition = Offset.Zero
+                            var isUpToDownDrag = false
+                            detectVerticalDragGestures(
+                                onDragStart = { offset -> startPosition = offset },
+                                onVerticalDrag = { change, dragAmount ->
+                                    isUpToDownDrag = change.position.y - startPosition.y > 0
+                                },
+                                onDragEnd = { if (isUpToDownDrag) onClose() }
+                            )
+                        }
+                        // switch UI on single tap, switch zoom on double tap
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onTap = { onSwitchUi() },
-                                onDoubleTap = {
-                                    scope.launch {
-                                        if (animatableZoom.value == 1f) animatableZoom.animateTo(2.5f)
-                                        else resetZoomAndOffset()
-                                    }
+                                onDoubleTap = { offset ->
+                                    if (animatableZoom.value == 1f) zoomToDoubleTap(offset)
+                                    else resetZoomAndOffset()
                                 }
                             )
                         }
