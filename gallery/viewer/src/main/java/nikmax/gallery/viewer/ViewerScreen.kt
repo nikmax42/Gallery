@@ -1,6 +1,9 @@
 package nikmax.gallery.viewer
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.media.AudioManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -10,11 +13,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
@@ -301,7 +300,7 @@ fun ContentReady(
                 }
             }
         }
-    ) { _ ->
+    ) {
         Box {
             BoxWithConstraints(
                 contentAlignment = Alignment.Center,
@@ -369,18 +368,6 @@ fun ContentReady(
                             translationY = animatableOffsetY.value
                         }
                         .transformable(state = transformationState)
-                        // close viewer on vertical up-to-down swipe (if not in transformation mode)
-                        .pointerInput(key1 = animatableZoom.value == 1f) {
-                            var startPosition = Offset.Zero
-                            var isUpToDownDrag = false
-                            detectVerticalDragGestures(
-                                onDragStart = { offset -> startPosition = offset },
-                                onVerticalDrag = { change, dragAmount ->
-                                    isUpToDownDrag = change.position.y - startPosition.y > 0
-                                },
-                                onDragEnd = { if (isUpToDownDrag) onClose() }
-                            )
-                        }
                         // switch UI on single tap, switch zoom on double tap
                         .pointerInput(Unit) {
                             detectTapGestures(
@@ -391,6 +378,23 @@ fun ContentReady(
                                 }
                             )
                         }
+                    // todo close viewer on vertical up-to-down swipe (if not in transformation mode)
+                    // fixme conflicts with transformation
+                    /* .then(
+                        if (animatableZoom.value == 1f)
+                            Modifier.pointerInput(Unit) {
+                                var startPosition = Offset.Zero
+                                var isUpToDownDrag = false
+                                detectVerticalDragGestures(
+                                    onDragStart = { offset -> startPosition = offset },
+                                    onVerticalDrag = { change, dragAmount ->
+                                        isUpToDownDrag = change.position.y - startPosition.y > 0
+                                    },
+                                    onDragEnd = { if (isUpToDownDrag) onClose() }
+                                )
+                            }
+                        else Modifier
+                    ) */
                 ) { page ->
                     val file = files[page]
                     when (file.isVideoOrGif) {
@@ -432,7 +436,7 @@ fun ContentReady(
                     Box(
                         Modifier
                             .fillMaxHeight()
-                            .fillMaxWidth(0.25F)
+                            .fillMaxWidth(0.2F)
                             .align(Alignment.CenterStart)
                             .clickable(
                                 onClick = {
@@ -443,10 +447,18 @@ fun ContentReady(
                                 interactionSource = null,
                                 indication = null
                             )
-                            .draggable(
-                                state = rememberDraggableState { /* TODO("call onDrag and pass float value here") */ },
-                                orientation = Orientation.Vertical
+                        /* .pointerInput(currentFile.isVideoOrGif) {
+                            detectVerticalDragGestures(
+                                onVerticalDrag = { change, amount ->
+                                    changeVolume(
+                                        context = context,
+                                        streamType = AudioManager.STREAM_MUSIC,
+                                        direction = if (change.position.y > change.previousPosition.y) AudioManager.ADJUST_LOWER
+                                        else AudioManager.ADJUST_RAISE
+                                    )
+                                }
                             )
+                        } */
                     )
                     Box(
                         Modifier
@@ -462,10 +474,13 @@ fun ContentReady(
                                 interactionSource = null,
                                 indication = null
                             )
-                            .draggable(
-                                state = rememberDraggableState { /* TODO("call onDrag and pass float value here") */ },
-                                orientation = Orientation.Vertical
+                        /* .pointerInput(currentFile.isVideoOrGif) {
+                            detectVerticalDragGestures(
+                                onVerticalDrag = { change, amount ->
+
+                                }
                             )
+                        } */
                     )
                 }
             }
@@ -484,4 +499,15 @@ fun ContentReady(
             }
         }
     }
+}
+
+private fun changeBrightness(context: Context, newBrightness: Float) {
+    (context as Activity).window.attributes.apply {
+        this.screenBrightness = newBrightness
+    }
+}
+
+private fun changeVolume(context: Context, streamType: Int, direction: Int) {
+    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    audioManager.adjustStreamVolume(streamType, direction, AudioManager.FLAG_SHOW_UI)
 }
