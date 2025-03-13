@@ -40,21 +40,12 @@ class ExplorerVm
         val albumPath: String? = null,
         val items: List<MediaItemUI> = emptyList(),
         val selectedItems: List<MediaItemUI> = emptyList(),
+        val searchQuery: String? = null,
         val isLoading: Boolean = false,
         val appPreferences: GalleryPreferences = GalleryPreferences(),
-        val content: Content = Content.Exploring,
         val dialog: Dialog = Dialog.None,
         val error: Error = Error.None
     ) {
-        sealed interface Content {
-            data object Exploring : Content
-
-            data class Searching(
-                val searchQuery: String,
-                val foundItems: List<MediaItemUI>
-            ) : Content
-        }
-
         sealed interface Error {
             data object None : Error
             data class PermissionNotGranted(val onGrantClick: () -> Unit)
@@ -319,14 +310,23 @@ class ExplorerVm
      */
     private suspend fun reflectSearchQueryChanges() {
         combine(_searchQueryFlow, _itemsFlow) { query, items ->
-            if (query != null) items
-                .filter { item -> item.path.contains(query, ignoreCase = true) }
-                .let { foundItems -> UIState.Content.Searching(query, foundItems) }
-            else UIState.Content.Exploring
-        }.collectLatest { newContent ->
-            _uiState.update {
-                it.copy(content = newContent)
+            when (query == null) {
+                true -> _uiState.value.copy(
+                    searchQuery = null,
+                    items = items,
+                    selectedItems = emptyList()
+                )
+                false -> {
+                    val foundItems = items.filter { it.path.contains(query, ignoreCase = true) }
+                    _uiState.value.copy(
+                        searchQuery = query,
+                        items = foundItems,
+                        selectedItems = emptyList()
+                    )
+                }
             }
+        }.collectLatest { newUiState ->
+            _uiState.update { newUiState }
         }
     }
 

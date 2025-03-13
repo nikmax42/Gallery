@@ -17,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,18 +26,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.core.ui.components.grid.ItemsGrid
 import nikmax.gallery.dialogs.Dialog
 import nikmax.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
 import nikmax.gallery.dialogs.conflict_resolver.ConflictResolverDialog
 import nikmax.gallery.dialogs.deletion.DeletionDialog
 import nikmax.gallery.dialogs.renaming.RenamingDialog
 import nikmax.gallery.explorer.components.bottom_bars.SelectionBottomBar
-import nikmax.gallery.explorer.components.main_contents.ExploringContent
-import nikmax.gallery.explorer.components.main_contents.SearchingContent
 import nikmax.gallery.explorer.components.sheets.AppearanceSheet
 import nikmax.gallery.explorer.components.top_bars.SearchTopBar
 import nikmax.gallery.explorer.components.top_bars.SelectionTopBar
@@ -71,6 +73,21 @@ private fun ExplorerScreenContent(
     onAction: (ExplorerVm.UserAction) -> Unit,
 ) {
     var showAppearanceSheet by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+
+    // if it's not a gallery root - display parent album content
+    BackHandler(state.albumPath != null) {
+        onAction(ExplorerVm.UserAction.NavigateOutOfAlbum)
+    }
+    // if it's gallery root - cancel search mode
+    BackHandler(state.searchQuery != null) {
+        onAction(ExplorerVm.UserAction.SearchQueryChange(null))
+        focusManager.clearFocus()
+    }
+    // if there are some selected items - clear selection
+    BackHandler(state.selectedItems.isNotEmpty()) {
+        onAction(ExplorerVm.UserAction.ItemsSelectionChange(emptyList()))
+    }
 
     Scaffold(
         topBar = {
@@ -85,12 +102,8 @@ private fun ExplorerScreenContent(
                     )
                     false -> {
                         // when selected items is empty - show searchbar
-                        val searchQuery = when (val content = state.content) {
-                            ExplorerVm.UIState.Content.Exploring -> null
-                            is ExplorerVm.UIState.Content.Searching -> content.searchQuery
-                        }
                         SearchTopBar(
-                            searchQuery = searchQuery,
+                            searchQuery = state.searchQuery,
                             onQueryChange = { onAction(ExplorerVm.UserAction.SearchQueryChange(it)) },
                             onSearch = { /* search performs on query change */ },
                             actions = {
@@ -102,7 +115,8 @@ private fun ExplorerScreenContent(
                                         )
                                     }
                                 }
-                            }
+                            },
+                            focusManager = focusManager
                         )
                     }
                 }
@@ -126,52 +140,34 @@ private fun ExplorerScreenContent(
     ) { paddings ->
         // box to display sheet above the main content
         Box {
-            when (val content = state.content) {
-                is ExplorerVm.UIState.Content.Exploring -> {
-                    ExploringContent(
-                        items = state.items,
-                        selectedItems = state.selectedItems,
-                        loading = state.isLoading,
-                        onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
-                        onItemOpen = { onAction(ExplorerVm.UserAction.ItemOpen(it)) },
-                        onSelectionChange = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
-                        portraitColumnsAmount = state.appPreferences.gridColumnsPortrait,
-                        landscapeColumnsAmount = state.appPreferences.gridColumnsLandscape,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddings)
-                    )
-                    // if it's not a gallery root - display parent album content
-                    BackHandler(state.albumPath != null) {
-                        onAction(ExplorerVm.UserAction.NavigateOutOfAlbum)
-                    }
-                }
-                is ExplorerVm.UIState.Content.Searching -> {
-                    SearchingContent(
-                        items = content.foundItems,
-                        loading = state.isLoading,
-                        onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
-                        onItemOpen = { onAction(ExplorerVm.UserAction.ItemOpen(it)) },
-                        onSelectionChange = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
-                        preferences = state.appPreferences,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddings)
-                    )
-                    // if it's not a gallery root - display parent album content
-                    // todo cancel search if query not empty and there is a gallery root
-                    BackHandler(state.albumPath != null) {
-                        onAction(ExplorerVm.UserAction.NavigateOutOfAlbum)
-                    }
-                }
-            }
-            // model sheet with ui preferences
-            if (showAppearanceSheet)
-                AppearanceSheet(
-                    appPreferences = state.appPreferences,
-                    onPreferencesChange = { onAction(ExplorerVm.UserAction.PreferencesChange(it)) },
-                    onShowSheetChange = { showAppearanceSheet = it }
+            PullToRefreshBox(
+                isRefreshing = state.isLoading,
+                onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
+            ) {
+                ItemsGrid(
+                    items = state.items,
+                    selectedItems = state.selectedItems,
+                    onItemOpen = { onAction(ExplorerVm.UserAction.ItemOpen(it)) },
+                    onSelectionChange = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
+                    columnsAmountPortrait = state.appPreferences.gridColumnsPortrait,
+                    columnsAmountLandscape = state.appPreferences.gridColumnsLandscape,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            top = paddings.calculateTopPadding(),
+                            bottom = paddings.calculateBottomPadding(),
+                            start = 8.dp,
+                            end = 8.dp
+                        )
                 )
+            }
+
+            // model sheet with ui preferences
+            if (showAppearanceSheet) AppearanceSheet(
+                appPreferences = state.appPreferences,
+                onPreferencesChange = { onAction(ExplorerVm.UserAction.PreferencesChange(it)) },
+                onShowSheetChange = { showAppearanceSheet = it }
+            )
         }
     }
 
@@ -197,10 +193,5 @@ private fun ExplorerScreenContent(
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }
         )
-    }
-
-    // clear selection with back press
-    BackHandler(state.selectedItems.isNotEmpty()) {
-        onAction(ExplorerVm.UserAction.ItemsSelectionChange(emptyList()))
     }
 }
