@@ -85,6 +85,7 @@ fun ItemsGrid(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             state = gridState,
             modifier = modifier.dragSelectable(
+                key = items,
                 lazyGridState = gridState,
                 selectedIndexes = selectedItems.map { items.indexOf(it) },
                 onSelectedIndexesChange = { draggedIndexes ->
@@ -195,13 +196,14 @@ private fun ItemsGridPreview() {
 }
 
 private fun Modifier.dragSelectable(
+    key: Any?, // to update on state changes
     lazyGridState: LazyGridState,
     selectedIndexes: List<Int>,
     onSelectedIndexesChange: (List<Int>) -> Unit,
     autoScrollSpeed: MutableState<Float>,
     autoScrollThreshold: Float,
     dragInProgress: MutableState<Boolean>
-) = pointerInput(Unit) {
+) = pointerInput(key) {
     var initialIndex: Int? = null
     var lastIndex: Int? = null
 
