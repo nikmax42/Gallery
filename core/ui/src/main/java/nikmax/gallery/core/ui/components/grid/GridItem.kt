@@ -1,5 +1,7 @@
 package nikmax.gallery.core.ui.components.grid
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +24,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,11 +53,17 @@ internal fun GridItem(
     isSecondaryVolume: Boolean = false,
     folderFilesCount: Int = 0
 ) {
+    val borderWidth by animateDpAsState(
+        if (isSelected) 2.dp
+        else CardDefaults.outlinedCardBorder().width
+    )
+    val borderColor by animateColorAsState(
+        if (isSelected) MaterialTheme.colorScheme.secondary
+        else MaterialTheme.colorScheme.outlineVariant
+    )
+
     OutlinedCard(
-        border = when (isSelected) {
-            true -> BorderStroke(2.dp, MaterialTheme.colorScheme.secondary)
-            false -> CardDefaults.outlinedCardBorder()
-        },
+        border = BorderStroke(borderWidth, borderColor),
         modifier = modifier
     ) {
         Column {
