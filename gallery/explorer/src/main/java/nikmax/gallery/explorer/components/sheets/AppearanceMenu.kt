@@ -41,7 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import nikmax.gallery.data.preferences.GalleryPreferences
-import nikmax.gallery.gallery.R
+import nikmax.gallery.explorer.R
 
 
 @Composable

@@ -8,18 +8,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.core.ui.components.grid.ItemsGrid
-import nikmax.gallery.data.preferences.GalleryPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ExploringContent(
     items: List<MediaItemUI>,
     selectedItems: List<MediaItemUI>,
-    preferences: GalleryPreferences,
     loading: Boolean,
     onRefresh: () -> Unit,
     onItemOpen: (MediaItemUI) -> Unit,
     onSelectionChange: (List<MediaItemUI>) -> Unit,
+    portraitColumnsAmount: Int,
+    landscapeColumnsAmount: Int,
     modifier: Modifier = Modifier
 ) {
     Surface {
@@ -34,8 +34,8 @@ internal fun ExploringContent(
                     selectedItems = selectedItems,
                     onItemOpen = { onItemOpen(it) },
                     onSelectionChange = { onSelectionChange(it) },
-                    columnsAmountPortrait = preferences.gridColumnsPortrait,
-                    columnsAmountLandscape = preferences.gridColumnsLandscape,
+                    columnsAmountPortrait = portraitColumnsAmount,
+                    columnsAmountLandscape = landscapeColumnsAmount,
                     modifier = modifier
                 )
             }

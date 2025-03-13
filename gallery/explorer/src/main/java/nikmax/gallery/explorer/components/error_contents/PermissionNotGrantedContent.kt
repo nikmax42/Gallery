@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.gallery.R
+import nikmax.gallery.explorer.R
 
 @Composable
 internal fun PermissionNotGrantedContent(

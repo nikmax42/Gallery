@@ -26,7 +26,7 @@ import dev.vivvvek.seeker.Seeker
 import dev.vivvvek.seeker.SeekerDefaults
 import kotlinx.coroutines.Dispatchers
 import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.gallery.R
+import nikmax.gallery.viewer.R
 import timber.log.Timber
 
 @Composable

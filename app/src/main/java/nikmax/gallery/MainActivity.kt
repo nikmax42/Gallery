@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             GalleryTheme(dynamicColor = true) { // todo create app preference for dynamic colors switch
-                MainNavHost()
+                GalleryNavHost()
             }
         }
     }

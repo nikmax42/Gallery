@@ -12,7 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.gallery.R
+import nikmax.gallery.viewer.R
 
 
 @OptIn(ExperimentalMaterial3Api::class)

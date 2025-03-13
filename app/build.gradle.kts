@@ -55,8 +55,7 @@ android {
 
 dependencies {
     implementation(project(":core:ui"))
-    implementation(project(":gallery:explorer"))
-    implementation(project(":gallery:viewer"))
+    implementation(project(":gallery"))
 
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.work.runtime.ktx)

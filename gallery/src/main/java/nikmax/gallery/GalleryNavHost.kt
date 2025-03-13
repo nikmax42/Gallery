@@ -13,28 +13,21 @@ import nikmax.gallery.explorer.ExplorerScreen
 import nikmax.gallery.viewer.ViewerScreen
 
 @Composable
-fun MainNavHost() {
+fun GalleryNavHost() {
     val navController = rememberNavController()
     Surface {
         NavHost(
             navController = navController,
-            startDestination = NavRoutes.Explorer()
+            startDestination = GalleryRoutes.Explorer()
         ) {
-            composable<NavRoutes.Explorer> { entry ->
-                val args = entry.toRoute<NavRoutes.Explorer>()
+            composable<GalleryRoutes.Explorer> { entry ->
+                val args = entry.toRoute<GalleryRoutes.Explorer>()
                 ExplorerScreen(
                     albumPath = args.albumPath,
-                    onFileOpen = { file ->
-                        // navigate to viewer
-                        navController.navigate(NavRoutes.Viewer(file.path))
-                    },
-                    onAlbumOpen = { album ->
-                        // navigate to another explorer instance
-                        navController.navigate(NavRoutes.Explorer(album.path))
-                    }
+                    onFileOpen = { file -> navController.navigate(GalleryRoutes.Viewer(file.path)) }
                 )
             }
-            composable<NavRoutes.Viewer>(
+            composable<GalleryRoutes.Viewer>(
                 enterTransition = {
                     slideIntoContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.Companion.Up,
@@ -48,7 +41,7 @@ fun MainNavHost() {
                     )
                 }
             ) { entry ->
-                val args = entry.toRoute<NavRoutes.Viewer>()
+                val args = entry.toRoute<GalleryRoutes.Viewer>()
                 ViewerScreen(
                     filePath = args.filePath,
                     onClose = { navController.popBackStack() }
@@ -58,7 +51,7 @@ fun MainNavHost() {
     }
 }
 
-private object NavRoutes {
+object GalleryRoutes {
     @Serializable
     data class Explorer(val albumPath: String? = null)
 

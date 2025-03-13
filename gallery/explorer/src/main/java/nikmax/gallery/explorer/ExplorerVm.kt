@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -35,6 +37,7 @@ class ExplorerVm
 ) : ViewModel() {
 
     data class UIState(
+        val albumPath: String? = null,
         val items: List<MediaItemUI> = emptyList(),
         val selectedItems: List<MediaItemUI> = emptyList(),
         val isLoading: Boolean = false,
@@ -63,6 +66,8 @@ class ExplorerVm
     sealed interface UserAction {
         data class ScreenLaunch(val folderPath: String?) : UserAction
         data object Refresh : UserAction
+        data class ItemOpen(val item: MediaItemUI) : UserAction
+        data object NavigateOutOfAlbum : UserAction
         data class SearchQueryChange(val newQuery: String?) : UserAction
         data class ItemsSelectionChange(val newSelection: List<MediaItemUI>) : UserAction
         data class PreferencesChange(val newPreferences: GalleryPreferences) : UserAction
@@ -73,11 +78,17 @@ class ExplorerVm
     }
 
 
+    sealed interface Event {
+        data class OpenViewer(val file: MediaItemUI.File) : Event
+    }
+
+
     // Raw data flows
     private val _appPreferencesFlow = prefsRepo.getPreferencesFlow()
     private val _dataResourceFlow = mediaItemsRepo.getFilesResourceFlow()
 
     // UI-related data flows
+    private val _navStackFlow = MutableStateFlow(emptyList<String>())
     private val _itemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
     private val _isLoadingFlow = MutableStateFlow(false)
     private val _searchQueryFlow = MutableStateFlow<String?>(null)
@@ -86,12 +97,17 @@ class ExplorerVm
     private val _uiState = MutableStateFlow(UIState())
     val uiState = _uiState.asStateFlow()
 
+    private val _event = MutableSharedFlow<Event>()
+    val event = _event.asSharedFlow()
+
 
     fun onAction(action: UserAction) {
         viewModelScope.launch {
             when (action) {
-                is UserAction.ScreenLaunch -> onLaunch(action.folderPath)
+                is UserAction.ScreenLaunch -> onLaunch()
                 UserAction.Refresh -> onRefresh()
+                is UserAction.ItemOpen -> onItemOpen(action.item)
+                UserAction.NavigateOutOfAlbum -> onNavigateBack()
                 is UserAction.SearchQueryChange -> onSearchQueryChange(action.newQuery)
                 is UserAction.PreferencesChange -> onPreferencesChange(action.newPreferences)
                 is UserAction.ItemsSelectionChange -> onSelectionChange(action.newSelection)
@@ -104,12 +120,13 @@ class ExplorerVm
     }
 
 
-    private fun onLaunch(folderPath: String?) {
-        /*  if (folderPath == null) */ viewModelScope.launch { onRefresh() }
+    private fun onLaunch() {
+        viewModelScope.launch { onRefresh() }
         // observe raw data flows changes
-        viewModelScope.launch { keepItemsFlowUpdated(folderPath) }
+        viewModelScope.launch { keepItemsFlowUpdated() }
         viewModelScope.launch { keepLoadingFlowUpdated() }
         // reflect flows changes in UI
+        viewModelScope.launch { reflectNavigationStackChanges() }
         viewModelScope.launch { reflectItemsChanges() }
         viewModelScope.launch { reflectLoadingChanges() }
         viewModelScope.launch { reflectPreferencesChanges() }
@@ -119,6 +136,17 @@ class ExplorerVm
 
     private suspend fun onRefresh() {
         mediaItemsRepo.rescan()
+    }
+
+    private suspend fun onItemOpen(item: MediaItemUI) {
+        when (item) {
+            is MediaItemUI.Album -> _navStackFlow.update { it.plus(item.path) }
+            is MediaItemUI.File -> _event.emit(Event.OpenViewer(item))
+        }
+    }
+
+    private fun onNavigateBack() {
+        _navStackFlow.update { it.dropLast(1) }
     }
 
     private fun onSearchQueryChange(newQuery: String?) {
@@ -215,15 +243,20 @@ class ExplorerVm
     }
 
 
-    // update album content based on raw data and preferences flows
-    private suspend fun keepItemsFlowUpdated(folderPath: String?) {
-        combine(_dataResourceFlow, _appPreferencesFlow) { dataRes, prefs ->
+    // update album data and preferences flows
+    private suspend fun keepItemsFlowUpdated() {
+        combine(
+            _dataResourceFlow,
+            _appPreferencesFlow,
+            _navStackFlow
+        ) { dataRes, prefs, navStack ->
+            val currentAlbumPath = navStack.lastOrNull()
             when (dataRes) {
                 is Resource.Success -> dataRes.data
                 is Resource.Loading -> dataRes.data
                 is Resource.Error -> emptyList()
-            }.createItemsListToDisplay(
-                targetAlbumPath = folderPath,
+            }.createItemsListToDisplay( // todo move to other function
+                targetAlbumPath = currentAlbumPath,
                 albumsMode = prefs.albumsMode,
                 appliedFilters = prefs.enabledFilters,
                 sortingOrder = prefs.sortingOrder,
@@ -243,6 +276,14 @@ class ExplorerVm
         }
     }
 
+
+
+    private suspend fun reflectNavigationStackChanges() {
+        _navStackFlow.collectLatest { navEntries ->
+            _uiState.update { it.copy(albumPath = navEntries.lastOrNull()) }
+            // todo update items list here
+        }
+    }
 
     private suspend fun reflectItemsChanges() {
         _itemsFlow.collectLatest { newItems ->

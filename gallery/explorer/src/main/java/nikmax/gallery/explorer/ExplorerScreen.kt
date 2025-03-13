@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.dialogs.Dialog
 import nikmax.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
@@ -44,20 +45,22 @@ import nikmax.gallery.explorer.components.top_bars.SelectionTopBar
 fun ExplorerScreen(
     albumPath: String?,
     onFileOpen: (MediaItemUI.File) -> Unit,
-    onAlbumOpen: (MediaItemUI.Album) -> Unit,
     vm: ExplorerVm = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
 
-    LaunchedEffect(albumPath) {
+    LaunchedEffect(Unit) {
         vm.onAction(ExplorerVm.UserAction.ScreenLaunch(albumPath))
+        vm.event.collectLatest { event ->
+            when (event) {
+                is ExplorerVm.Event.OpenViewer -> onFileOpen(event.file)
+            }
+        }
     }
 
     ExplorerScreenContent(
         state = state,
-        onAction = { vm.onAction(it) },
-        onFileOpen = { onFileOpen(it) },
-        onAlbumOpen = { onAlbumOpen(it) }
+        onAction = { vm.onAction(it) }
     )
 }
 
@@ -66,8 +69,6 @@ fun ExplorerScreen(
 private fun ExplorerScreenContent(
     state: ExplorerVm.UIState,
     onAction: (ExplorerVm.UserAction) -> Unit,
-    onFileOpen: (MediaItemUI.File) -> Unit,
-    onAlbumOpen: (MediaItemUI.Album) -> Unit,
 ) {
     var showAppearanceSheet by remember { mutableStateOf(false) }
 
@@ -97,7 +98,7 @@ private fun ExplorerScreenContent(
                                     IconButton(onClick = { showAppearanceSheet = !showAppearanceSheet }) {
                                         Icon(
                                             Icons.AutoMirrored.Filled.Sort,
-                                            stringResource(nikmax.gallery.gallery.R.string.appearance)
+                                            stringResource(R.string.appearance)
                                         )
                                     }
                                 }
@@ -126,43 +127,43 @@ private fun ExplorerScreenContent(
         // box to display sheet above the main content
         Box {
             when (val content = state.content) {
-                is ExplorerVm.UIState.Content.Exploring -> ExploringContent(
-                    items = state.items,
-                    selectedItems = state.selectedItems,
-                    preferences = state.appPreferences,
-                    loading = state.isLoading,
-                    onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
-                    onItemOpen = {
-                        when (it) {
-                            is MediaItemUI.Album -> onAlbumOpen(it)
-                            is MediaItemUI.File -> onFileOpen(it)
-                        }
-                    },
-                    onSelectionChange = { newSelection ->
-                        onAction(ExplorerVm.UserAction.ItemsSelectionChange(newSelection))
-                    },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddings)
-                )
-                is ExplorerVm.UIState.Content.Searching -> SearchingContent(
-                    items = content.foundItems,
-                    loading = state.isLoading,
-                    onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
-                    onItemOpen = {
-                        when (it) {
-                            is MediaItemUI.Album -> onAlbumOpen(it)
-                            is MediaItemUI.File -> onFileOpen(it)
-                        }
-                    },
-                    onSelectionChange = { newSelection ->
-                        onAction(ExplorerVm.UserAction.ItemsSelectionChange(newSelection))
-                    },
-                    preferences = state.appPreferences,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddings)
-                )
+                is ExplorerVm.UIState.Content.Exploring -> {
+                    ExploringContent(
+                        items = state.items,
+                        selectedItems = state.selectedItems,
+                        loading = state.isLoading,
+                        onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
+                        onItemOpen = { onAction(ExplorerVm.UserAction.ItemOpen(it)) },
+                        onSelectionChange = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
+                        portraitColumnsAmount = state.appPreferences.gridColumnsPortrait,
+                        landscapeColumnsAmount = state.appPreferences.gridColumnsLandscape,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddings)
+                    )
+                    // if it's not a gallery root - display parent album content
+                    BackHandler(state.albumPath != null) {
+                        onAction(ExplorerVm.UserAction.NavigateOutOfAlbum)
+                    }
+                }
+                is ExplorerVm.UIState.Content.Searching -> {
+                    SearchingContent(
+                        items = content.foundItems,
+                        loading = state.isLoading,
+                        onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
+                        onItemOpen = { onAction(ExplorerVm.UserAction.ItemOpen(it)) },
+                        onSelectionChange = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
+                        preferences = state.appPreferences,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddings)
+                    )
+                    // if it's not a gallery root - display parent album content
+                    // todo cancel search if query not empty and there is a gallery root
+                    BackHandler(state.albumPath != null) {
+                        onAction(ExplorerVm.UserAction.NavigateOutOfAlbum)
+                    }
+                }
             }
             // model sheet with ui preferences
             if (showAppearanceSheet)
