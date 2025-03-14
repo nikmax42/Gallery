@@ -18,7 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,17 +29,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import nikmax.gallery.core.ui.MediaItemUI
-import nikmax.gallery.core.ui.components.grid.ItemsGrid
+import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.dialogs.Dialog
 import nikmax.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
 import nikmax.gallery.dialogs.conflict_resolver.ConflictResolverDialog
 import nikmax.gallery.dialogs.deletion.DeletionDialog
 import nikmax.gallery.dialogs.renaming.RenamingDialog
 import nikmax.gallery.explorer.components.bottom_bars.SelectionBottomBar
+import nikmax.gallery.explorer.components.main_contents.LoadingContent
+import nikmax.gallery.explorer.components.main_contents.MainContent
 import nikmax.gallery.explorer.components.sheets.AppearanceSheet
 import nikmax.gallery.explorer.components.top_bars.SearchTopBar
 import nikmax.gallery.explorer.components.top_bars.SelectionTopBar
@@ -142,31 +145,36 @@ private fun ExplorerScreenContent(
             }
         }
     ) { paddings ->
-        // box to display sheet above the main content
         Box {
-            PullToRefreshBox(
-                isRefreshing = state.isLoading,
-                onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
-            ) {
-                ItemsGrid(
-                    items = state.items,
-                    selectedItems = state.selectedItems,
-                    onItemOpen = { onAction(ExplorerVm.UserAction.ItemOpen(it)) },
-                    onSelectionChange = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
-                    columnsAmountPortrait = state.appPreferences.gridColumnsPortrait,
-                    columnsAmountLandscape = state.appPreferences.gridColumnsLandscape,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            top = paddings.calculateTopPadding(),
-                            bottom = paddings.calculateBottomPadding(),
-                            start = 8.dp,
-                            end = 8.dp
-                        )
-                        .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
-                )
+            AnimatedContent(targetState = state.isLoading && state.items.isEmpty()) { screenIsNotInitialized ->
+                when (screenIsNotInitialized) {
+                    true -> LoadingContent(
+                        portraitColumnsAmount = state.appPreferences.gridColumnsPortrait,
+                        landscapeColumnsAmount = state.appPreferences.gridColumnsLandscape,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                top = paddings.calculateTopPadding(),
+                                bottom = paddings.calculateBottomPadding(),
+                                start = 16.dp,
+                                end = 16.dp
+                            )
+                    )
+                    false -> MainContent(
+                        state = state,
+                        onAction = onAction,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                top = paddings.calculateTopPadding(),
+                                bottom = paddings.calculateBottomPadding(),
+                                start = 8.dp,
+                                end = 8.dp
+                            )
+                            .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
+                    )
+                }
             }
-
             // model sheet with ui preferences
             if (showAppearanceSheet) AppearanceSheet(
                 appPreferences = state.appPreferences,
@@ -197,6 +205,34 @@ private fun ExplorerScreenContent(
             mediaItem = dialog.item,
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ExplorerContentPreview() {
+    var state by remember { mutableStateOf(ExplorerVm.UIState(isLoading = true)) }
+    fun onAction(action: ExplorerVm.UserAction) {}
+
+    LaunchedEffect(Unit) {
+        delay(5000)
+        state = state.copy(
+            isLoading = false,
+            items = listOf(
+                MediaItemUI.File(
+                    path = "path/to/file",
+                    name = "file name",
+                    size = 1024
+                )
+            )
+        )
+    }
+
+    GalleryTheme {
+        ExplorerScreenContent(
+            state = state,
+            onAction = { onAction(it) },
         )
     }
 }

@@ -41,7 +41,7 @@ class ExplorerVm
         val items: List<MediaItemUI> = emptyList(),
         val selectedItems: List<MediaItemUI> = emptyList(),
         val searchQuery: String? = null,
-        val isLoading: Boolean = false,
+        val isLoading: Boolean = true,
         val appPreferences: GalleryPreferences = GalleryPreferences(),
         val dialog: Dialog = Dialog.None,
         val error: Error = Error.None
@@ -81,7 +81,7 @@ class ExplorerVm
     // UI-related data flows
     private val _navStackFlow = MutableStateFlow(emptyList<String>())
     private val _itemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
-    private val _isLoadingFlow = MutableStateFlow(false)
+    private val _isLoadingFlow = MutableStateFlow(true)
     private val _searchQueryFlow = MutableStateFlow<String?>(null)
     private val _selectedItemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
 
