@@ -39,9 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import nikmax.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.data.media.ConflictResolution
 import nikmax.gallery.dialogs.R
 import kotlin.io.path.Path
 import kotlin.io.path.name

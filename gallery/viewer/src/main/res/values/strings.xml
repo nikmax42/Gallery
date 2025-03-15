@@ -1,37 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="back">Back</string>
-    <string name="search_placeholder">Search media…</string>
-    <string name="clear_search_query">Clear search query</string>
-    <string name="appearance">Appearance</string>
-    <string name="sorting">Sorting</string>
-    <string name="filtering">Filtering</string>
-    <string name="displaying_mode">Displaying mode</string>
-    <string name="plain_albums">Plain albums</string>
-    <string name="nested_albums">Nested albums</string>
-    <string name="grid_cols_portrait">Grid columns (portrait)</string>
-    <string name="grid_cols_landscape">Grid columns (landscape)</string>
-    <string name="descend">Descend</string>
-    <string name="ascend">Ascend</string>
     <string name="name">Name</string>
     <string name="size">Size</string>
     <string name="creation_date">Creation date</string>
     <string name="modification_date">Modification date</string>
-    <string name="images">Images</string>
-    <string name="videos">Videos</string>
-    <string name="gifs">GIFs</string>
-    <string name="hidden">Hidden</string>
-    <string name="copy_selected">Copy selected</string>
-    <string name="move_selected">Move selected</string>
-    <string name="rename_selected">Rename selected</string>
-    <string name="delete_selected">Delete selected</string>
-    <string name="storage_permission_not_granted">Storage access is not granted…</string>
-    <string name="storage_permission_explanation">This app requires external storage permission to read, copy, move, rename and delete images and folders on your device. Please grant permission below</string>
-    <string name="grant_permission">Grant permission</string>
     <string name="copy">Copy</string>
     <string name="move">Move</string>
     <string name="rename">Rename</string>
     <string name="delete">Delete</string>
+    <string name="share">Share</string>
     <string name="play">Play</string>
     <string name="pause">Pause</string>
 </resources>

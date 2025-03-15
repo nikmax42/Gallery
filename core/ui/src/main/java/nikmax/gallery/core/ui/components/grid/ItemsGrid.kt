@@ -107,6 +107,7 @@ fun ItemsGrid(
                     folderFilesCount = if (item is MediaItemUI.Album) item.filesCount else 0,
                     isSelected = selectedItems.contains(item),
                     isSecondaryVolume = item.volume == MediaItemUI.Volume.SECONDARY,
+                    isNotWritable = item.protected,
                     modifier = Modifier
                         .animateItem(
                             fadeInSpec = tween(),

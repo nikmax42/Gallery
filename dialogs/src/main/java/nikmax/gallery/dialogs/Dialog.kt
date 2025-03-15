@@ -1,7 +1,7 @@
 package nikmax.gallery.dialogs
 
+import nikmax.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.core.ui.MediaItemUI
-import nikmax.gallery.data.media.ConflictResolution
 
 sealed interface Dialog {
     data object None : Dialog

@@ -12,12 +12,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import nikmax.gallery.core.ItemsUtils.createItemsListToDisplay
+import nikmax.gallery.core.data.Resource
+import nikmax.gallery.core.data.media.MediaFileData
+import nikmax.gallery.core.data.media.MediaItemsRepo
+import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.PreferencesRepo
 import nikmax.gallery.core.ui.MediaItemUI
-import nikmax.gallery.data.Resource
-import nikmax.gallery.data.media.MediaFileData
-import nikmax.gallery.data.media.MediaItemsRepo
-import nikmax.gallery.data.preferences.GalleryPreferences
-import nikmax.gallery.data.preferences.PreferencesRepo
 import javax.inject.Inject
 
 @HiltViewModel

@@ -1,8 +1,8 @@
 package nikmax.gallery.core
 
+import nikmax.gallery.core.data.media.MediaFileData
+import nikmax.gallery.core.data.preferences.GalleryPreferences
 import nikmax.gallery.core.ui.MediaItemUI
-import nikmax.gallery.data.media.MediaFileData
-import nikmax.gallery.data.preferences.GalleryPreferences
 import kotlin.io.path.Path
 import kotlin.io.path.name
 import kotlin.io.path.pathString

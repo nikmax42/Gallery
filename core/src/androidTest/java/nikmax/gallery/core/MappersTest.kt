@@ -1,6 +1,6 @@
 package nikmax.gallery.core
 
-import nikmax.gallery.data.media.MediaFileData
+import nikmax.gallery.core.data.media.MediaFileData
 import org.junit.Before
 
 class MappersTest {

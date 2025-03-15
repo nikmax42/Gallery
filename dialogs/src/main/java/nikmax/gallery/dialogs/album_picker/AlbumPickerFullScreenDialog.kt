@@ -29,10 +29,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import nikmax.gallery.core.data.preferences.GalleryPreferences
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.core.ui.components.grid.ItemsGrid
 import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.data.preferences.GalleryPreferences
 import nikmax.gallery.dialogs.R
 
 

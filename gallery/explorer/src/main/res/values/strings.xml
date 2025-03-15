@@ -25,13 +25,10 @@
     <string name="move_selected">Move selected</string>
     <string name="rename_selected">Rename selected</string>
     <string name="delete_selected">Delete selected</string>
+    <string name="share">Share</string>
     <string name="storage_permission_not_granted">Storage access is not granted…</string>
     <string name="storage_permission_explanation">This app requires external storage permission to read, copy, move, rename and delete images and folders on your device. Please grant permission below</string>
     <string name="grant_permission">Grant permission</string>
-    <string name="copy">Copy</string>
-    <string name="move">Move</string>
-    <string name="rename">Rename</string>
-    <string name="delete">Delete</string>
-    <string name="play">Play</string>
-    <string name="pause">Pause</string>
+    <string name="protected_items_warning">Volumes cannot be changed></string>
+    <string name="unselect">Unselect</string>
 </resources>

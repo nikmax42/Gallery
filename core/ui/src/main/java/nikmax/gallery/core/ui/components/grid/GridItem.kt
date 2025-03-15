@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.Videocam
@@ -28,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -51,19 +53,23 @@ internal fun GridItem(
     isVideo: Boolean = false,
     isFolder: Boolean = false,
     isSecondaryVolume: Boolean = false,
-    folderFilesCount: Int = 0
+    folderFilesCount: Int = 0,
+    isNotWritable: Boolean = false
 ) {
     val borderWidth by animateDpAsState(
         if (isSelected) 2.dp
         else CardDefaults.outlinedCardBorder().width
     )
-    val borderColor by animateColorAsState(
-        if (isSelected) MaterialTheme.colorScheme.secondary
+    val selectionColor by animateColorAsState(
+        if (isSelected) when (isNotWritable) {
+            true -> MaterialTheme.colorScheme.error
+            false -> MaterialTheme.colorScheme.secondary
+        }
         else MaterialTheme.colorScheme.outlineVariant
     )
 
     OutlinedCard(
-        border = BorderStroke(borderWidth, borderColor),
+        border = BorderStroke(borderWidth, selectionColor),
         modifier = modifier
     ) {
         Column {
@@ -87,12 +93,23 @@ internal fun GridItem(
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(12.dp))
                 )
-                if (isSelected) IconCorner(
-                    icon = Icons.Default.CheckCircle,
-                    contentDescription = stringResource(R.string.item_selected),
-                    bottomEndRadius = 30F,
-                    modifier = Modifier.align(Alignment.TopStart)
-                )
+                if (isSelected) {
+                    when (isNotWritable) {
+                        true -> IconCorner(
+                            icon = Icons.Default.Lock,
+                            color = selectionColor,
+                            contentDescription = stringResource(R.string.item_selected),
+                            bottomEndRadius = 30F,
+                            modifier = Modifier.align(Alignment.TopStart)
+                        )
+                        false -> IconCorner(
+                            icon = Icons.Default.CheckCircle,
+                            contentDescription = stringResource(R.string.item_selected),
+                            bottomEndRadius = 30F,
+                            modifier = Modifier.align(Alignment.TopStart)
+                        )
+                    }
+                }
                 if (isVideo) IconCorner(
                     icon = Icons.Default.PlayCircle,
                     contentDescription = null,
@@ -164,6 +181,20 @@ private fun AlbumItemPreview() {
         )
     }
 }
+@Preview(showBackground = true)
+@Composable
+private fun ProtectedItemPreview() {
+    GalleryTheme {
+        GridItem(
+            image = "",
+            name = "system-directory",
+            isFolder = true,
+            isSelected = true,
+            isNotWritable = true,
+            folderFilesCount = 2
+        )
+    }
+}
 
 
 @Composable
@@ -171,6 +202,7 @@ private fun IconCorner(
     icon: ImageVector,
     contentDescription: String?,
     modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.secondary,
     topStartRadius: Float = 0F,
     topEndRadius: Float = 0F,
     bottomStartRadius: Float = 0F,
@@ -184,7 +216,7 @@ private fun IconCorner(
     )
 
     Surface(
-        color = MaterialTheme.colorScheme.secondary,
+        color = color,
         modifier = modifier.clip(shape)
     ) {
         Icon(
