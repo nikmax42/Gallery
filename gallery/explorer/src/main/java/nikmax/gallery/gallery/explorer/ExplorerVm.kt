@@ -301,7 +301,7 @@ class ExplorerVm
                 searchQuery = searchQuery
             )
         }.collectLatest { actualItemsList ->
-            _itemsFlow.update { actualItemsList }
+            _itemsFlow.update { actualItemsList.distinct() }
         }
     }
 

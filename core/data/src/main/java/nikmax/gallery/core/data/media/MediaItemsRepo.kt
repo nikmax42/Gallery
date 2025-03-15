@@ -62,22 +62,26 @@ internal class MediaItemRepoImpl(
     }
 
     override suspend fun checkExistence(filePath: String): Boolean {
-        return FilesUtils.checkExistence(filePath)
+        return withContext(Dispatchers.IO) {
+            FilesUtils.checkExistence(filePath)
+        }
     }
 
     override suspend fun executeFileOperations(operations: List<FileOperation>): LiveData<List<WorkInfo>> {
-        val workManager = WorkManager.getInstance(context)
-        val workTag = System.currentTimeMillis().toString()
-        val requests = operations.map {
-            OneTimeWorkRequestBuilder<FileOperationWorker>()
-                .setInputData(
-                    workDataOf(
-                        FileOperationWorker.Keys.FILE_OPERATION_JSON.name to Json.encodeToString(it)
-                    )
-                ).addTag(workTag)
-                .build()
+        return withContext(Dispatchers.IO) {
+            val workManager = WorkManager.getInstance(context)
+            val workTag = System.currentTimeMillis().toString()
+            val requests = operations.map {
+                OneTimeWorkRequestBuilder<FileOperationWorker>()
+                    .setInputData(
+                        workDataOf(
+                            FileOperationWorker.Keys.FILE_OPERATION_JSON.name to Json.encodeToString(it)
+                        )
+                    ).addTag(workTag)
+                    .build()
+            }
+            requests.forEach { workManager.enqueue(it) }
+            workManager.getWorkInfosByTagLiveData(workTag)
         }
-        requests.forEach { workManager.enqueue(it) }
-        return workManager.getWorkInfosByTagLiveData(workTag)
     }
 }

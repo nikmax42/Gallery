@@ -3,8 +3,8 @@ package nikmax.gallery.gallery.explorer.components.main_contents
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.CardDefaults
@@ -39,7 +39,7 @@ internal fun LoadingContent(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .size(96.dp)
+                    .aspectRatio(0.9f)
                     .clip(CardDefaults.outlinedShape)
                     .shimmerBackground()
             )
