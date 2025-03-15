@@ -234,25 +234,30 @@ class ExplorerVm
     }
 
 
-    // update album data and preferences flows
+    /**
+     * Updated screen items list based on mediastore data, app preferences, current album path and search query
+     *
+     */
     private suspend fun keepItemsFlowUpdated() {
         combine(
             _dataResourceFlow,
             _appPreferencesFlow,
-            _navStackFlow
-        ) { dataRes, prefs, navStack ->
+            _navStackFlow,
+            _searchQueryFlow
+        ) { dataRes, prefs, navStack, searchQuery ->
             val currentAlbumPath = navStack.lastOrNull()
             when (dataRes) {
                 is Resource.Success -> dataRes.data
                 is Resource.Loading -> dataRes.data
                 is Resource.Error -> emptyList()
-            }.createItemsListToDisplay( // todo move to other function
+            }.createItemsListToDisplay(
                 targetAlbumPath = currentAlbumPath,
                 albumsMode = prefs.albumsMode,
                 appliedFilters = prefs.enabledFilters,
                 sortingOrder = prefs.sortingOrder,
                 useDescendSorting = prefs.descendSorting,
-                includeHidden = prefs.showHidden
+                includeHidden = prefs.showHidden,
+                searchQuery = searchQuery
             )
         }.collectLatest { actualItemsList ->
             _itemsFlow.update { actualItemsList }
@@ -272,7 +277,6 @@ class ExplorerVm
     private suspend fun reflectNavigationStackChanges() {
         _navStackFlow.collectLatest { navEntries ->
             _uiState.update { it.copy(albumPath = navEntries.lastOrNull()) }
-            // todo update items list here
         }
     }
 
@@ -300,33 +304,17 @@ class ExplorerVm
 
     private suspend fun reflectPreferencesChanges() {
         _appPreferencesFlow.collectLatest { prefs ->
-            _uiState.update { it.copy(appPreferences = prefs) }
+            _uiState.update {
+                it.copy(appPreferences = prefs)
+            }
         }
     }
 
-    /**
-     * Reflect search results based on query and items
-     *
-     */
     private suspend fun reflectSearchQueryChanges() {
-        combine(_searchQueryFlow, _itemsFlow) { query, items ->
-            when (query == null) {
-                true -> _uiState.value.copy(
-                    searchQuery = null,
-                    items = items,
-                    selectedItems = emptyList()
-                )
-                false -> {
-                    val foundItems = items.filter { it.path.contains(query, ignoreCase = true) }
-                    _uiState.value.copy(
-                        searchQuery = query,
-                        items = foundItems,
-                        selectedItems = emptyList()
-                    )
-                }
+        _searchQueryFlow.collectLatest { newQuery ->
+            _uiState.update {
+                it.copy(searchQuery = newQuery)
             }
-        }.collectLatest { newUiState ->
-            _uiState.update { newUiState }
         }
     }
 

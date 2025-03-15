@@ -112,7 +112,7 @@ class ItemsUtilsTest {
             MediaItemUI.Album("/storage/emulated/0/Movies"),
             MediaItemUI.File("/storage/emulated/0/root-file.png")
         )
-        assert(realResult.toSet().map { it.path } == desiredResult.toSet().map { it.path })
+        assert(realResult.map { it.path }.toSet() == desiredResult.map { it.path }.toSet())
     }
 
     @Test
@@ -154,6 +154,43 @@ class ItemsUtilsTest {
             MediaItemUI.Album("/storage/emulated/0/SomeDirectory/DeepDir"),
             MediaItemUI.File("/storage/1712-4219/Pictures")
         )
-        assert(realResult.toSet().map { it.path } == desiredResult.toSet().map { it.path })
+        assert(realResult.map { it.path }.toSet() == desiredResult.map { it.path }.toSet())
+    }
+
+    @Test
+    fun `when search query != null and plain albums mode enabled, returns plain lists of albums whose files paths contains search query`() {
+        val realResult = files.createItemsListToDisplay(
+            targetAlbumPath = null,
+            albumsMode = GalleryPreferences.AlbumsMode.PLAIN,
+            appliedFilters = GalleryPreferences.Filter.entries.toSet(),
+            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            useDescendSorting = false,
+            includeHidden = true,
+            includeFilesOnly = false,
+            searchQuery = "movies"
+        )
+        val desiredResult = listOf(
+            MediaItemUI.Album("/storage/emulated/0/Movies"),
+            MediaItemUI.Album("/storage/emulated/0/Movies/EmptyAlbum/DeepAlbum"),
+        )
+        assert(realResult.map { it.path }.toSet() == desiredResult.map { it.path }.toSet())
+    }
+
+    @Test
+    fun `when search query != null and nested albums mode enabled, returns nested lists of albums whose files paths contains search query`() {
+        val realResult = files.createItemsListToDisplay(
+            targetAlbumPath = null,
+            albumsMode = GalleryPreferences.AlbumsMode.NESTED,
+            appliedFilters = GalleryPreferences.Filter.entries.toSet(),
+            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            useDescendSorting = false,
+            includeHidden = true,
+            includeFilesOnly = false,
+            searchQuery = "movies"
+        )
+        val desiredResult = listOf(
+            MediaItemUI.Album("/storage/emulated/0/Movies")
+        )
+        assert(realResult.map { it.path }.toSet() == desiredResult.map { it.path }.toSet())
     }
 }

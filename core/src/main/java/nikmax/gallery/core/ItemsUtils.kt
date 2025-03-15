@@ -33,28 +33,41 @@ object ItemsUtils {
         sortingOrder: GalleryPreferences.SortingOrder,
         useDescendSorting: Boolean,
         includeHidden: Boolean,
+        searchQuery: String? = null,
         includeFilesOnly: Boolean = false
     ): List<MediaItemUI> {
-        val uiModels = this.mapDataFilesToUiFiles()
-        // filter items based on albums mode and target path
-        val uiItems = when (albumsMode) {
-            GalleryPreferences.AlbumsMode.PLAIN -> when (targetAlbumPath.isNullOrEmpty()) {
-                true -> uiModels.createFlatAlbumsList()
-                false -> uiModels.createAlbumOwnFilesList(targetAlbumPath)
+        val itemsListToDisplay = this.mapDataFilesToUiFiles().let { uiFiles ->
+            val targetPathChildren = when (targetAlbumPath != null) {
+                true -> uiFiles.filter { it.path.startsWith(targetAlbumPath) }
+                false -> uiFiles
             }
-            GalleryPreferences.AlbumsMode.NESTED -> when (targetAlbumPath.isNullOrEmpty()) {
-                true -> uiModels.createNestedAlbumsList(ROOT_ALBUM_PATH)
-                false -> uiModels.createNestedAlbumsList(targetAlbumPath)
+            val searchFiltered = when (searchQuery != null) {
+                true -> targetPathChildren.filter { it.path.contains(searchQuery, ignoreCase = true) }
+                false -> targetPathChildren
             }
+            val albumsGrouped = when (albumsMode) {
+                GalleryPreferences.AlbumsMode.PLAIN -> when (targetAlbumPath.isNullOrEmpty()) {
+                    true -> searchFiltered.createFlatAlbumsList()
+                    false -> searchFiltered.createAlbumOwnFilesList(targetAlbumPath)
+                }
+                GalleryPreferences.AlbumsMode.NESTED -> when (targetAlbumPath.isNullOrEmpty()) {
+                    true -> searchFiltered.createNestedAlbumsList(ROOT_ALBUM_PATH)
+                    false -> searchFiltered.createNestedAlbumsList(targetAlbumPath)
+                }
+            }
+            val withFiltersApplied = albumsGrouped.applyFilters(appliedFilters)
+            val hiddenChecked = when (includeHidden) {
+                true -> withFiltersApplied
+                false -> withFiltersApplied.filterNot { it.hidden }
+            }
+            val filesOnlyChecked = when (includeFilesOnly) {
+                true -> hiddenChecked.filterIsInstance<MediaItemUI.File>()
+                false -> hiddenChecked
+            }
+            val sorted = filesOnlyChecked.applySorting(sortingOrder, useDescendSorting)
+            sorted
         }
-        // apply filters based on user preferences
-        val filteredItems = uiItems.applyFilters(appliedFilters)
-        // apply sorting based on user preferences
-        val sortedItems = filteredItems.applySorting(sortingOrder, useDescendSorting)
-        val hiddenFiltered = if (!includeHidden) sortedItems.filterNot { it.hidden } else sortedItems
-        val filesOnlyFiltered = if (includeFilesOnly) hiddenFiltered.filterIsInstance<MediaItemUI.File>()
-        else hiddenFiltered
-        return filesOnlyFiltered
+        return itemsListToDisplay
     }
 
 
