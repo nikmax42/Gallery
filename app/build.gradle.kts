@@ -54,7 +54,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:ui"))
+    implementation(project(":core"))
     implementation(project(":gallery"))
 
     implementation(libs.androidx.runtime)

@@ -49,14 +49,9 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.dialogs.Dialog
-import nikmax.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
-import nikmax.gallery.dialogs.conflict_resolver.ConflictResolverDialog
-import nikmax.gallery.dialogs.deletion.DeletionDialog
-import nikmax.gallery.dialogs.renaming.RenamingDialog
-import nikmax.gallery.gallery.core.SharingUtils
+import nikmax.gallery.gallery.core.ui.MediaItemUI
+import nikmax.gallery.gallery.core.utils.SharingUtils
 import nikmax.gallery.gallery.viewer.components.FramePreview
 import nikmax.gallery.gallery.viewer.components.Image
 import nikmax.gallery.gallery.viewer.components.PlayPauseButton
@@ -118,22 +113,22 @@ private fun ViewerContent(
 
     // dialogs block
     when (val dialog = state.dialog) {
-        Dialog.None -> {}
-        is Dialog.AlbumPicker -> AlbumPickerFullScreenDialog(
+        nikmax.material_tree.gallery.dialogs.Dialog.None -> {}
+        is nikmax.material_tree.gallery.dialogs.Dialog.AlbumPicker -> nikmax.material_tree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog(
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }
         )
-        is Dialog.ConflictResolver -> ConflictResolverDialog(
+        is nikmax.material_tree.gallery.dialogs.Dialog.ConflictResolver -> nikmax.material_tree.gallery.dialogs.conflict_resolver.ConflictResolverDialog(
             conflictItem = dialog.conflictItem,
             onResolve = { resolution, _ -> dialog.onConfirm(resolution) },
             onDismiss = { dialog.onDismiss() }
         )
-        is Dialog.DeletionConfirmation -> DeletionDialog(
+        is nikmax.material_tree.gallery.dialogs.Dialog.DeletionConfirmation -> nikmax.material_tree.gallery.dialogs.deletion.DeletionDialog(
             items = dialog.items,
             onConfirm = { dialog.onConfirm() },
             onDismiss = { dialog.onDismiss() }
         )
-        is Dialog.Renaming -> RenamingDialog(
+        is nikmax.material_tree.gallery.dialogs.Dialog.Renaming -> nikmax.material_tree.gallery.dialogs.renaming.RenamingDialog(
             mediaItem = dialog.item,
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }

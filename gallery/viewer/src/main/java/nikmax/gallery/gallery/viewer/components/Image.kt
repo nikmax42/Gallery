@@ -4,12 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
-import nikmax.gallery.core.ui.R
 
 @Composable
 internal fun Image(
@@ -29,10 +27,10 @@ internal fun Image(
     }
     AsyncImage(
         model = imageRequest,
-        error = painterResource(R.drawable.gallery_image_placeholder),
-        // todo replace with animated placeholder
-        placeholder = painterResource(R.drawable.gallery_image_placeholder),
-        // todo replace with animated placeholder
+        /*  error = painterResource(R.drawable.gallery_image_placeholder),
+         // todo replace with animated placeholder
+         placeholder = painterResource(R.drawable.gallery_image_placeholder),
+         // todo replace with animated placeholder */
         contentDescription = imagePath,
         modifier = modifier
     )

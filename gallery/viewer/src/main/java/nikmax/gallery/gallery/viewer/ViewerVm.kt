@@ -13,14 +13,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import nikmax.gallery.core.ItemsUtils.createItemsListToDisplay
 import nikmax.gallery.core.data.Resource
-import nikmax.gallery.core.data.media.ConflictResolution
-import nikmax.gallery.core.data.media.FileOperation
-import nikmax.gallery.core.data.media.MediaItemsRepo
-import nikmax.gallery.core.data.preferences.GalleryPreferencesUtils
-import nikmax.gallery.core.ui.MediaItemUI
-import nikmax.gallery.dialogs.Dialog
+import nikmax.gallery.gallery.core.data.media.ConflictResolution
+import nikmax.gallery.gallery.core.data.media.FileOperation
+import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
+import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
+import nikmax.gallery.gallery.core.ui.MediaItemUI
+import nikmax.gallery.gallery.core.utils.ItemsUtils.createItemsListToDisplay
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
@@ -40,7 +39,7 @@ class ViewerVm
         val files: List<MediaItemUI.File> = emptyList(),
         val isLoading: Boolean = false,
         val showControls: Boolean = true,
-        val dialog: Dialog = Dialog.None
+        val dialog: nikmax.material_tree.gallery.dialogs.Dialog = nikmax.material_tree.gallery.dialogs.Dialog.None
     )
 
 
@@ -180,10 +179,9 @@ class ViewerVm
                 includeVideos = prefs.filtering.includeVideos,
                 includeGifs = prefs.filtering.includeGifs,
                 includeHidden = prefs.filtering.includeHidden,
-                includeFilesOnly = prefs.filtering.includeFilesOnly,
+                includeFilesOnly = true,
                 sortingOrder = prefs.sorting.order,
                 descendSorting = prefs.sorting.descend,
-                searchQuery = null
             ).map { it as MediaItemUI.File }
         }.collectLatest { actualItemsList ->
             _filesFlow.update { actualItemsList }
@@ -225,13 +223,13 @@ class ViewerVm
     private suspend fun awaitForAlbumPickerResult(): String {
         return suspendCoroutine { cont ->
             setDialog(
-                Dialog.AlbumPicker(
+                nikmax.material_tree.gallery.dialogs.Dialog.AlbumPicker(
                     onConfirm = { pickedAlbumPath ->
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resume(pickedAlbumPath)
                     },
                     onDismiss = {
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
@@ -243,14 +241,14 @@ class ViewerVm
         return suspendCoroutine { cont ->
             _uiState.update {
                 it.copy(
-                    dialog = Dialog.Renaming(
+                    dialog = nikmax.material_tree.gallery.dialogs.Dialog.Renaming(
                         item = itemToRename,
                         onConfirm = { newPath ->
-                            setDialog(Dialog.None)
+                            setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                             cont.resume(newPath)
                         },
                         onDismiss = {
-                            setDialog(Dialog.None)
+                            setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                             cont.resumeWithException(CancellationException())
                         }
                     )
@@ -262,14 +260,14 @@ class ViewerVm
     private suspend fun awaitForDeletionConfirm(itemsToDelete: List<MediaItemUI>): Boolean {
         return suspendCoroutine { cont ->
             setDialog(
-                Dialog.DeletionConfirmation(
+                nikmax.material_tree.gallery.dialogs.Dialog.DeletionConfirmation(
                     items = itemsToDelete,
                     onConfirm = {
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resume(true)
                     },
                     onDismiss = {
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
@@ -280,14 +278,14 @@ class ViewerVm
     private suspend fun awaitForConflictResolverResult(conflictItem: MediaItemUI): ConflictResolution {
         return suspendCoroutine { cont ->
             setDialog(
-                Dialog.ConflictResolver(
+                nikmax.material_tree.gallery.dialogs.Dialog.ConflictResolver(
                     conflictItem = conflictItem,
                     onConfirm = { resolution ->
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resume(resolution)
                     },
                     onDismiss = {
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
@@ -295,7 +293,7 @@ class ViewerVm
         }
     }
 
-    private fun setDialog(newDialog: Dialog) {
+    private fun setDialog(newDialog: nikmax.material_tree.gallery.dialogs.Dialog) {
         _uiState.update { it.copy(dialog = newDialog) }
     }
 

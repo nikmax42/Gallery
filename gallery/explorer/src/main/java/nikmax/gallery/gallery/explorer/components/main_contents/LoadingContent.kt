@@ -17,10 +17,10 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import nikmax.gallery.core.data.preferences.GalleryPreferences
-import nikmax.gallery.core.data.preferences.GalleryPreferencesUtils
-import nikmax.gallery.core.ui.components.shimmerBackground
 import nikmax.gallery.core.ui.theme.GalleryTheme
+import nikmax.gallery.gallery.core.preferences.GalleryPreferences
+import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
+import nikmax.gallery.gallery.core.ui.components.shimmerBackground
 
 @Composable
 internal fun LoadingContent(

@@ -1,27 +1,27 @@
 package nikmax.gallery.core
 
-import nikmax.gallery.core.data.media.MediaFileData
+import nikmax.gallery.gallery.core.data.media.MediaFileData
 import org.junit.Before
 
 class MappersTest {
-    private lateinit var image1: MediaFileData
-    private lateinit var video1: MediaFileData
+    private lateinit var image1: nikmax.gallery.gallery.core.data.media.MediaFileData
+    private lateinit var video1: nikmax.gallery.gallery.core.data.media.MediaFileData
 
     @Before
     fun setup() {
-        image1 = MediaFileData(
+        image1 = nikmax.gallery.gallery.core.data.media.MediaFileData(
             path = "/image1.png",
             size = 123,
             dateCreated = 1733438400,
             dateModified = 1733438400,
-            volume = MediaFileData.Volume.PRIMARY,
+            volume = nikmax.gallery.gallery.core.data.media.MediaFileData.Volume.PRIMARY,
         )
-        video1 = MediaFileData(
+        video1 = nikmax.gallery.gallery.core.data.media.MediaFileData(
             path = "/video1.mp4",
             size = 456,
             dateCreated = 1643928000,
             dateModified = 1675528920,
-            volume = MediaFileData.Volume.PRIMARY,
+            volume = nikmax.gallery.gallery.core.data.media.MediaFileData.Volume.PRIMARY,
         )
     }
 

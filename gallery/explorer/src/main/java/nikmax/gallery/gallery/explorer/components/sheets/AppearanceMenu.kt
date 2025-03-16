@@ -39,8 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.data.preferences.GalleryPreferences
 import nikmax.gallery.explorer.R
+import nikmax.gallery.gallery.core.preferences.GalleryPreferences
 
 
 @Composable

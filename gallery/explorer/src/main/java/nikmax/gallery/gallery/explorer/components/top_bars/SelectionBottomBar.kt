@@ -13,7 +13,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import nikmax.gallery.core.ui.MediaItemUI
+import nikmax.gallery.gallery.core.ui.MediaItemUI
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

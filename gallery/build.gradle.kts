@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
-    // alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -35,8 +34,7 @@ android {
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":core:ui"))
-    implementation(project(":core:data"))
+    implementation(project(":gallery:core"))
     implementation(project(":gallery:explorer"))
     implementation(project(":gallery:viewer"))
 

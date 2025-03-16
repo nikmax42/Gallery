@@ -39,21 +39,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.dialogs.Dialog
-import nikmax.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
-import nikmax.gallery.dialogs.conflict_resolver.ConflictResolverDialog
-import nikmax.gallery.dialogs.deletion.DeletionDialog
-import nikmax.gallery.dialogs.renaming.RenamingDialog
 import nikmax.gallery.explorer.R
-import nikmax.gallery.gallery.core.SharingUtils
+import nikmax.gallery.gallery.core.ui.MediaItemUI
+import nikmax.gallery.gallery.core.utils.SharingUtils
 import nikmax.gallery.gallery.explorer.components.bottom_bars.SelectionBottomBar
 import nikmax.gallery.gallery.explorer.components.main_contents.LoadingContent
 import nikmax.gallery.gallery.explorer.components.main_contents.MainContent
 import nikmax.gallery.gallery.explorer.components.sheets.GalleryPreferencesSheet
 import nikmax.gallery.gallery.explorer.components.top_bars.SearchTopBar
 import nikmax.gallery.gallery.explorer.components.top_bars.SelectionTopBar
+import nikmax.material_tree.gallery.dialogs.Dialog
 
 @Composable
 fun ExplorerScreen(
@@ -214,21 +210,21 @@ private fun ExplorerScreenContent(
     // dialogs section
     when (val dialog = state.dialog) {
         Dialog.None -> {}
-        is Dialog.AlbumPicker -> AlbumPickerFullScreenDialog(
+        is Dialog.AlbumPicker -> nikmax.material_tree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog(
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }
         )
-        is Dialog.ConflictResolver -> ConflictResolverDialog(
+        is Dialog.ConflictResolver -> nikmax.material_tree.gallery.dialogs.conflict_resolver.ConflictResolverDialog(
             conflictItem = dialog.conflictItem,
             onResolve = { resolution, applyToAll -> dialog.onConfirm(resolution) }, // todo enable "apply to all functionality"
             onDismiss = { dialog.onDismiss() }
         )
-        is Dialog.DeletionConfirmation -> DeletionDialog(
+        is Dialog.DeletionConfirmation -> nikmax.material_tree.gallery.dialogs.deletion.DeletionDialog(
             items = dialog.items,
             onConfirm = { dialog.onConfirm() },
             onDismiss = { dialog.onDismiss() }
         )
-        is Dialog.Renaming -> RenamingDialog(
+        is Dialog.Renaming -> nikmax.material_tree.gallery.dialogs.renaming.RenamingDialog(
             mediaItem = dialog.item,
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }

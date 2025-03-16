@@ -16,15 +16,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import nikmax.gallery.core.ItemsUtils.createItemsListToDisplay
 import nikmax.gallery.core.data.Resource
-import nikmax.gallery.core.data.media.ConflictResolution
-import nikmax.gallery.core.data.media.FileOperation
-import nikmax.gallery.core.data.media.MediaItemsRepo
-import nikmax.gallery.core.data.preferences.GalleryPreferences
-import nikmax.gallery.core.data.preferences.GalleryPreferencesUtils
-import nikmax.gallery.core.ui.MediaItemUI
-import nikmax.gallery.dialogs.Dialog
+import nikmax.gallery.gallery.core.data.media.ConflictResolution
+import nikmax.gallery.gallery.core.data.media.FileOperation
+import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
+import nikmax.gallery.gallery.core.preferences.GalleryPreferences
+import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
+import nikmax.gallery.gallery.core.ui.MediaItemUI
+import nikmax.gallery.gallery.core.utils.ItemsUtils.createItemsListToDisplay
+import nikmax.material_tree.gallery.dialogs.Dialog
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
@@ -300,6 +300,7 @@ class ExplorerVm
                 includeFilesOnly = prefs.filtering.includeFilesOnly,
                 sortingOrder = prefs.sorting.order,
                 descendSorting = prefs.sorting.descend,
+                showAlbumsFirst = prefs.sorting.albumsFirst,
                 searchQuery = searchQuery
             )
         }.collectLatest { actualItemsList ->
@@ -365,13 +366,13 @@ class ExplorerVm
     private suspend fun awaitForAlbumPickerResult(): String {
         return suspendCoroutine { cont ->
             setDialog(
-                Dialog.AlbumPicker(
+                nikmax.material_tree.gallery.dialogs.Dialog.AlbumPicker(
                     onConfirm = { pickedAlbumPath ->
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resume(pickedAlbumPath)
                     },
                     onDismiss = {
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
@@ -383,14 +384,14 @@ class ExplorerVm
         return suspendCoroutine { cont ->
             _uiState.update {
                 it.copy(
-                    dialog = Dialog.Renaming(
+                    dialog = nikmax.material_tree.gallery.dialogs.Dialog.Renaming(
                         item = itemToRename,
                         onConfirm = { newPath ->
-                            setDialog(Dialog.None)
+                            setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                             cont.resume(newPath)
                         },
                         onDismiss = {
-                            setDialog(Dialog.None)
+                            setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                             cont.resumeWithException(CancellationException())
                         }
                     )
@@ -402,14 +403,14 @@ class ExplorerVm
     private suspend fun awaitForDeletionConfirmationDialogResult(itemsToDelete: List<MediaItemUI>): Boolean {
         return suspendCoroutine { cont ->
             setDialog(
-                Dialog.DeletionConfirmation(
+                nikmax.material_tree.gallery.dialogs.Dialog.DeletionConfirmation(
                     items = itemsToDelete,
                     onConfirm = {
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resume(true)
                     },
                     onDismiss = {
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
@@ -420,14 +421,14 @@ class ExplorerVm
     private suspend fun awaitForConflictResolverDialogResult(conflictItem: MediaItemUI): ConflictResolution {
         return suspendCoroutine { cont ->
             setDialog(
-                Dialog.ConflictResolver(
+                nikmax.material_tree.gallery.dialogs.Dialog.ConflictResolver(
                     conflictItem = conflictItem,
                     onConfirm = { resolution ->
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resume(resolution)
                     },
                     onDismiss = {
-                        setDialog(Dialog.None)
+                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
@@ -435,7 +436,7 @@ class ExplorerVm
         }
     }
 
-    private fun setDialog(newDialog: Dialog) {
+    private fun setDialog(newDialog: nikmax.material_tree.gallery.dialogs.Dialog) {
         _uiState.update { it.copy(dialog = newDialog) }
     }
 

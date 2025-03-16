@@ -11,8 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.data.preferences.GalleryPreferences
-import nikmax.gallery.core.data.preferences.GalleryPreferencesUtils
+import nikmax.gallery.gallery.core.preferences.GalleryPreferences
+import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

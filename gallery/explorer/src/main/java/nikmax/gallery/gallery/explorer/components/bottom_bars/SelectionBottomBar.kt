@@ -17,8 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.explorer.R
+import nikmax.gallery.gallery.core.ui.MediaItemUI
 
 @Composable
 fun SelectionBottomBar(
