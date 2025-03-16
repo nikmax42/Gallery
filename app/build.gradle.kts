@@ -107,4 +107,8 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     // Timber
     implementation(libs.timber)
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+    // Datastore
+    implementation(libs.androidx.datastore.preferences)
 }
