@@ -1,8 +1,10 @@
 package nikmax.gallery.gallery.explorer
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,8 +21,8 @@ import nikmax.gallery.core.data.Resource
 import nikmax.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.core.data.media.FileOperation
 import nikmax.gallery.core.data.media.MediaItemsRepo
-import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
-import nikmax.gallery.core.data.preferences.PreferencesRepo
+import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.dialogs.Dialog
 import javax.inject.Inject
@@ -32,8 +34,8 @@ import kotlin.coroutines.suspendCoroutine
 @HiltViewModel
 class ExplorerVm
 @Inject constructor(
-    private val mediaItemsRepo: MediaItemsRepo,
-    private val prefsRepo: PreferencesRepo
+    @ApplicationContext private val context: Context,
+    private val mediaItemsRepo: MediaItemsRepo
 ) : ViewModel() {
 
     data class UIState(
@@ -42,7 +44,6 @@ class ExplorerVm
         val selectedItems: List<MediaItemUI> = emptyList(),
         val searchQuery: String? = null,
         val isLoading: Boolean = true,
-        val appPreferences: OLDGalleryPreferences = OLDGalleryPreferences(),
         val dialog: Dialog = Dialog.None,
         val error: Error = Error.None
     ) {
@@ -61,7 +62,6 @@ class ExplorerVm
         data object NavigateOutOfAlbum : UserAction
         data class SearchQueryChange(val newQuery: String?) : UserAction
         data class ItemsSelectionChange(val newSelection: List<MediaItemUI>) : UserAction
-        data class PreferencesChange(val newPreferences: OLDGalleryPreferences) : UserAction
         data class ItemsCopy(val itemsToCopy: List<MediaItemUI>) : UserAction
         data class ItemsMove(val itemsToMove: List<MediaItemUI>) : UserAction
         data class ItemsRename(val itemsToRename: List<MediaItemUI>) : UserAction
@@ -84,7 +84,7 @@ class ExplorerVm
 
 
     // Raw data flows
-    private val _appPreferencesFlow = prefsRepo.getPreferencesFlow()
+    private val _galleryPreferencesFlow = GalleryPreferencesUtils.getPreferencesFlow(context)
     private val _dataResourceFlow = mediaItemsRepo.getFilesResourceFlow()
 
     // UI-related data flows
@@ -109,7 +109,7 @@ class ExplorerVm
                 is UserAction.ItemOpen -> onItemOpen(action.item)
                 UserAction.NavigateOutOfAlbum -> onNavigateBack()
                 is UserAction.SearchQueryChange -> onSearchQueryChange(action.newQuery)
-                is UserAction.PreferencesChange -> onPreferencesChange(action.newPreferences)
+                // is UserAction.PreferencesChange -> onPreferencesChange(action.newPreferences)
                 is UserAction.ItemsSelectionChange -> onSelectionChange(action.newSelection)
                 is UserAction.ItemsCopy -> onCopyOrMove(action.itemsToCopy)
                 is UserAction.ItemsMove -> onCopyOrMove(action.itemsToMove, move = true)
@@ -129,7 +129,6 @@ class ExplorerVm
         viewModelScope.launch { reflectNavigationStackChanges() }
         viewModelScope.launch { reflectItemsChanges() }
         viewModelScope.launch { reflectLoadingChanges() }
-        viewModelScope.launch { reflectPreferencesChanges() }
         viewModelScope.launch { reflectSelectedItemsChanges() }
         viewModelScope.launch { reflectSearchQueryChanges() }
     }
@@ -157,8 +156,8 @@ class ExplorerVm
         _selectedItemsFlow.update { newSelection }
     }
 
-    private suspend fun onPreferencesChange(newPreferences: OLDGalleryPreferences) {
-        prefsRepo.savePreferences(newPreferences)
+    private suspend fun onPreferencesChange(newPreferences: GalleryPreferences) {
+        GalleryPreferencesUtils.savePreferences(newPreferences, context)
     }
 
     private suspend fun onCopyOrMove(itemsToCopyOrMove: List<MediaItemUI>, move: Boolean = false) {
@@ -282,7 +281,7 @@ class ExplorerVm
     private suspend fun keepItemsFlowUpdated() {
         combine(
             _dataResourceFlow,
-            _appPreferencesFlow,
+            _galleryPreferencesFlow,
             _navStackFlow,
             _searchQueryFlow
         ) { dataRes, prefs, navStack, searchQuery ->
@@ -293,11 +292,14 @@ class ExplorerVm
                 is Resource.Error -> emptyList()
             }.createItemsListToDisplay(
                 targetAlbumPath = currentAlbumPath,
-                albumsMode = prefs.albumsMode,
-                appliedFilters = prefs.enabledFilters,
-                sortingOrder = prefs.sortingOrder,
-                useDescendSorting = prefs.descendSorting,
-                includeHidden = prefs.showHidden,
+                nestedAlbumsEnabled = prefs.appearance.nestedAlbumsEnabled,
+                includeImages = prefs.filtering.includeImages,
+                includeVideos = prefs.filtering.includeVideos,
+                includeGifs = prefs.filtering.includeGifs,
+                includeHidden = prefs.filtering.includeHidden,
+                includeFilesOnly = prefs.filtering.includeFilesOnly,
+                sortingOrder = prefs.sorting.order,
+                descendSorting = prefs.sorting.descend,
                 searchQuery = searchQuery
             )
         }.collectLatest { actualItemsList ->
@@ -339,14 +341,6 @@ class ExplorerVm
         _isLoadingFlow.collectLatest { isLoading ->
             withContext(Dispatchers.Main) {
                 _uiState.update { it.copy(isLoading = isLoading) }
-            }
-        }
-    }
-
-    private suspend fun reflectPreferencesChanges() {
-        _appPreferencesFlow.collectLatest { prefs ->
-            _uiState.update {
-                it.copy(appPreferences = prefs)
             }
         }
     }

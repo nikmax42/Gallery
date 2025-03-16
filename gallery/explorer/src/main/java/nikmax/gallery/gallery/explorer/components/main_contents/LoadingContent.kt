@@ -9,24 +9,29 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.ui.components.shimmerBackground
 import nikmax.gallery.core.ui.theme.GalleryTheme
 
 @Composable
 internal fun LoadingContent(
     modifier: Modifier = Modifier,
-    portraitColumnsAmount: Int = 3,
-    landscapeColumnsAmount: Int = 4
 ) {
-    val orientation = LocalConfiguration.current.orientation
-    val columnsAmount = when (orientation) {
-        Configuration.ORIENTATION_LANDSCAPE -> landscapeColumnsAmount
-        else -> portraitColumnsAmount
+    val preferences by GalleryPreferencesUtils
+        .getPreferencesFlow(LocalContext.current)
+        .collectAsState(GalleryPreferences())
+    val columnsAmount = when (LocalConfiguration.current.orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> preferences.appearance.grid.landscapeColumns
+        else -> preferences.appearance.grid.portraitColumns
     }
 
     LazyVerticalGrid(

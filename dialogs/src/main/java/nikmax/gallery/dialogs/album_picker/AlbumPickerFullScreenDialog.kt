@@ -23,13 +23,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
+import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.core.ui.components.grid.ItemsGrid
 import nikmax.gallery.core.ui.theme.GalleryTheme
@@ -44,6 +46,9 @@ fun AlbumPickerFullScreenDialog(
     vm: AlbumPickerVm = hiltViewModel()
 ) {
     val state by vm.state.collectAsState()
+    val preferences by GalleryPreferencesUtils
+        .getPreferencesFlow(LocalContext.current)
+        .collectAsState(GalleryPreferences())
 
     LaunchedEffect(null) {
         vm.onAction(AlbumPickerVm.UserAction.Launch(initialPath))
@@ -65,7 +70,8 @@ fun AlbumPickerFullScreenDialog(
             onItemClick = { if (it is MediaItemUI.Album) vm.onAction(AlbumPickerVm.UserAction.NavigateIn(it.path)) },
             onConfirm = { vm.onAction(AlbumPickerVm.UserAction.Confirm) },
             onDismiss = { onDismiss() },
-            preferences = state.preferences
+            gridColumnsPortrait = preferences.appearance.grid.portraitColumns,
+            gridColumnsLandscape = preferences.appearance.grid.landscapeColumns
         )
     }
 }
@@ -79,7 +85,8 @@ private fun AlbumPickerContent(
     onItemClick: (MediaItemUI) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    preferences: OLDGalleryPreferences,
+    gridColumnsPortrait: Int,
+    gridColumnsLandscape: Int
 ) {
     Scaffold(
         topBar = {
@@ -97,8 +104,8 @@ private fun AlbumPickerContent(
                 items = items,
                 selectedItems = emptyList(),
                 onItemOpen = { onItemClick(it) },
-                columnsAmountPortrait = preferences.gridColumnsPortrait,
-                columnsAmountLandscape = preferences.gridColumnsLandscape,
+                columnsAmountPortrait = gridColumnsPortrait,
+                columnsAmountLandscape = gridColumnsLandscape,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddings)
@@ -136,7 +143,8 @@ private fun Preview() {
             onItemClick = {},
             onDismiss = {},
             onConfirm = {},
-            preferences = OLDGalleryPreferences()
+            gridColumnsPortrait = 3,
+            gridColumnsLandscape = 4,
         )
     }
 }

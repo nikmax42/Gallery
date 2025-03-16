@@ -1,19 +1,20 @@
 package nikmax.gallery.gallery.explorer.components.sheets
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -27,8 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -40,24 +39,28 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
+import nikmax.gallery.core.data.preferences.GalleryPreferences
 import nikmax.gallery.explorer.R
 
 
 @Composable
 fun GalleryAppearanceMenu(
-    selectedAlbumsMode: OLDGalleryPreferences.AlbumsMode,
-    onAlbumsModeChange: (OLDGalleryPreferences.AlbumsMode) -> Unit,
+    nestedAlbumsEnabled: Boolean,
+    onNestedAlbumsChange: (Boolean) -> Unit,
     gridPortraitColumnsAmount: Int,
     onGridPortraitColumnsAmountChange: (Int) -> Unit,
     gridLandscapeColumnsAmount: Int,
     onGridLandscapeColumnsAmountChange: (Int) -> Unit,
-    selectedSortingType: OLDGalleryPreferences.SortingOrder,
-    onSortingTypeChange: (OLDGalleryPreferences.SortingOrder) -> Unit,
-    descend: Boolean,
+    selectedSortingOrder: GalleryPreferences.Sorting.Order,
+    onSortingOrderChange: (GalleryPreferences.Sorting.Order) -> Unit,
+    descendSortingEnabled: Boolean,
     onDescendChange: (Boolean) -> Unit,
-    selectedFilters: Set<OLDGalleryPreferences.Filter>,
-    onFilterSelectionChange: (OLDGalleryPreferences.Filter) -> Unit,
+    includeImages: Boolean,
+    onIncludeImagesChange: (Boolean) -> Unit,
+    includeVideos: Boolean,
+    onIncludeVideosChange: (Boolean) -> Unit,
+    includeGifs: Boolean,
+    onIncludeGifsChange: (Boolean) -> Unit,
     showHidden: Boolean,
     onHiddenChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -83,8 +86,8 @@ fun GalleryAppearanceMenu(
                 // appearance
                 0 -> AnimatedVisibility(visible = selectedTab == 0) {
                     AppearanceMenu(
-                        selectedAlbumsMode = selectedAlbumsMode,
-                        onAlbumsModeChange = { onAlbumsModeChange(it) },
+                        nestedAlbumsEnabled = nestedAlbumsEnabled,
+                        onAlbumsModeChange = { onNestedAlbumsChange(it) },
                         gridPortraitColumnsAmount = gridPortraitColumnsAmount,
                         onGridPortraitColumnsAmountChange = { onGridPortraitColumnsAmountChange(it) },
                         gridLandscapeColumnsAmount = gridLandscapeColumnsAmount,
@@ -94,18 +97,22 @@ fun GalleryAppearanceMenu(
                 // sorting
                 1 -> AnimatedVisibility(visible = selectedTab == 1) {
                     SortingMenu(
-                        selectedType = selectedSortingType,
-                        onSortingTypeChange = { onSortingTypeChange(it) },
-                        descend = descend,
+                        sortingOrder = selectedSortingOrder,
+                        onSortingTypeChange = { onSortingOrderChange(it) },
+                        descend = descendSortingEnabled,
                         onDescendChange = { onDescendChange(it) }
                     )
                 }
                 2 -> AnimatedVisibility(visible = selectedTab == 2) {
                     FilteringMenu(
-                        selectedFilters = selectedFilters,
-                        onSelectionChange = { onFilterSelectionChange(it) },
-                        hiddenEnabled = showHidden,
-                        onHiddenChange = { onHiddenChange(it) }
+                        includeImages = includeImages,
+                        onIncludeImagesChange = { onIncludeImagesChange(it) },
+                        includeVideos = includeVideos,
+                        onIncludeVideosChange = { onIncludeVideosChange(it) },
+                        includeGifs = includeGifs,
+                        onIncludeGifsChange = { onIncludeGifsChange(it) },
+                        includeHidden = showHidden,
+                        onIncludeHiddenChange = { onHiddenChange(it) }
                     )
                 }
             }
@@ -121,18 +128,22 @@ private fun GalleryAppearanceMenuPreview() {
     val scope = rememberCoroutineScope()
     scope.launch { sheetState.show() }
     GalleryAppearanceMenu(
-        selectedAlbumsMode = OLDGalleryPreferences.AlbumsMode.entries.first(),
-        onAlbumsModeChange = {},
+        nestedAlbumsEnabled = true,
+        onNestedAlbumsChange = {},
         gridPortraitColumnsAmount = 3,
         gridLandscapeColumnsAmount = 4,
         onGridPortraitColumnsAmountChange = {},
         onGridLandscapeColumnsAmountChange = {},
-        selectedSortingType = OLDGalleryPreferences.SortingOrder.entries.first(),
-        onSortingTypeChange = {},
-        descend = false,
+        selectedSortingOrder = GalleryPreferences.Sorting.Order.NAME,
+        onSortingOrderChange = {},
+        descendSortingEnabled = false,
         onDescendChange = {},
-        selectedFilters = emptySet(),
-        onFilterSelectionChange = {},
+        includeImages = true,
+        onIncludeImagesChange = {},
+        includeVideos = true,
+        onIncludeVideosChange = {},
+        includeGifs = true,
+        onIncludeGifsChange = {},
         showHidden = false,
         onHiddenChange = {}
     )
@@ -141,8 +152,8 @@ private fun GalleryAppearanceMenuPreview() {
 
 @Composable
 private fun AppearanceMenu(
-    selectedAlbumsMode: OLDGalleryPreferences.AlbumsMode,
-    onAlbumsModeChange: (OLDGalleryPreferences.AlbumsMode) -> Unit,
+    nestedAlbumsEnabled: Boolean,
+    onAlbumsModeChange: (Boolean) -> Unit,
     gridPortraitColumnsAmount: Int,
     onGridPortraitColumnsAmountChange: (Int) -> Unit,
     gridLandscapeColumnsAmount: Int,
@@ -153,25 +164,26 @@ private fun AppearanceMenu(
 
     Column(modifier = modifier) {
         // displaying mode
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OLDGalleryPreferences.AlbumsMode.entries.forEachIndexed { index, mode ->
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            item {
                 FilterChip(
-                    selected = mode == selectedAlbumsMode,
-                    onClick = { onAlbumsModeChange(mode) },
-                    label = {
-                        val modeName = when (mode) {
-                            OLDGalleryPreferences.AlbumsMode.PLAIN -> stringResource(R.string.plain_albums)
-                            OLDGalleryPreferences.AlbumsMode.NESTED -> stringResource(R.string.nested_albums)
-                        }
-                        Text(modeName)
-                    }
+                    selected = nestedAlbumsEnabled,
+                    onClick = { onAlbumsModeChange(true) },
+                    label = { Text(stringResource(R.string.nested_albums)) }
+                )
+            }
+            item {
+                FilterChip(
+                    selected = !nestedAlbumsEnabled,
+                    onClick = { onAlbumsModeChange(false) },
+                    label = { Text(stringResource(R.string.plain_albums)) }
                 )
             }
         }
 
         // grid appearance
         when (orientation) {
-            android.content.res.Configuration.ORIENTATION_PORTRAIT -> Row(
+            Configuration.ORIENTATION_PORTRAIT -> Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -216,27 +228,12 @@ private fun AppearanceMenu(
         }
     }
 }
-@Preview(showBackground = true)
-@Composable
-private fun AppearanceMenuPreview() {
-    var selectedAlbumsMode by remember { mutableStateOf(OLDGalleryPreferences.AlbumsMode.entries.first()) }
-    var gridPortraitColumnsAmount by remember { mutableIntStateOf(3) }
-    var gridLandscapeColumnsAmount by remember { mutableIntStateOf(4) }
-    AppearanceMenu(
-        selectedAlbumsMode = selectedAlbumsMode,
-        onAlbumsModeChange = { selectedAlbumsMode = it },
-        gridPortraitColumnsAmount = gridPortraitColumnsAmount,
-        onGridPortraitColumnsAmountChange = { gridPortraitColumnsAmount = it },
-        gridLandscapeColumnsAmount = gridLandscapeColumnsAmount,
-        onGridLandscapeColumnsAmountChange = { gridLandscapeColumnsAmount = it }
-    )
-}
 
 
 @Composable
 private fun SortingMenu(
-    selectedType: OLDGalleryPreferences.SortingOrder,
-    onSortingTypeChange: (OLDGalleryPreferences.SortingOrder) -> Unit,
+    sortingOrder: GalleryPreferences.Sorting.Order,
+    onSortingTypeChange: (GalleryPreferences.Sorting.Order) -> Unit,
     descend: Boolean,
     onDescendChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -245,10 +242,10 @@ private fun SortingMenu(
         horizontalAlignment = Alignment.Start,
         modifier = modifier
     ) {
-        OLDGalleryPreferences.SortingOrder.entries.forEach { sorting ->
+        GalleryPreferences.Sorting.Order.entries.forEach { sorting ->
             TextButton(
                 onClick = {
-                    if (sorting == selectedType) onDescendChange(descend.not())
+                    if (sorting == sortingOrder) onDescendChange(descend.not())
                     else onSortingTypeChange(sorting)
                 }
             ) {
@@ -257,7 +254,7 @@ private fun SortingMenu(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (sorting == selectedType) {
+                    if (sorting == sortingOrder) {
                         Icon(
                             imageVector = if (descend) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
                             contentDescription = if (descend) stringResource(R.string.descend)
@@ -265,10 +262,11 @@ private fun SortingMenu(
                         )
                     } else Spacer(modifier = Modifier.width(24.dp))
                     val sortingName = when (sorting) {
-                        OLDGalleryPreferences.SortingOrder.CREATION_DATE -> stringResource(R.string.creation_date)
-                        OLDGalleryPreferences.SortingOrder.MODIFICATION_DATE -> stringResource(R.string.modification_date)
-                        OLDGalleryPreferences.SortingOrder.NAME -> stringResource(R.string.name)
-                        OLDGalleryPreferences.SortingOrder.SIZE -> stringResource(R.string.size)
+                        GalleryPreferences.Sorting.Order.CREATION_DATE -> stringResource(R.string.creation_date)
+                        GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> stringResource(R.string.modification_date)
+                        GalleryPreferences.Sorting.Order.NAME -> stringResource(R.string.name)
+                        GalleryPreferences.Sorting.Order.SIZE -> stringResource(R.string.size)
+                        GalleryPreferences.Sorting.Order.RANDOM -> stringResource(R.string.random)
                     }
                     Text(sortingName)
                 }
@@ -276,80 +274,51 @@ private fun SortingMenu(
         }
     }
 }
-@Preview(showSystemUi = false, showBackground = true)
-@Composable
-private fun SortingMenuPreview() {
-    var selectedType by remember { mutableStateOf(OLDGalleryPreferences.SortingOrder.entries.first()) }
-    var descend by remember { mutableStateOf(false) }
-    SortingMenu(
-        selectedType = selectedType,
-        onSortingTypeChange = { selectedType = it },
-        descend = descend,
-        onDescendChange = { descend = it }
-    )
-}
 
 
 @Composable
 private fun FilteringMenu(
-    selectedFilters: Set<OLDGalleryPreferences.Filter>,
-    onSelectionChange: (OLDGalleryPreferences.Filter) -> Unit,
-    hiddenEnabled: Boolean,
-    onHiddenChange: (Boolean) -> Unit,
+    includeImages: Boolean,
+    onIncludeImagesChange: (Boolean) -> Unit,
+    includeVideos: Boolean,
+    onIncludeVideosChange: (Boolean) -> Unit,
+    includeGifs: Boolean,
+    onIncludeGifsChange: (Boolean) -> Unit,
+    includeHidden: Boolean,
+    onIncludeHiddenChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(modifier = modifier) {
-        OLDGalleryPreferences.Filter.entries.forEach { filter ->
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSelectionChange(filter) }
-                ) {
-                    Checkbox(
-                        checked = selectedFilters.contains(filter),
-                        onCheckedChange = { onSelectionChange(filter) }
-                    )
-                    val text = when (filter) {
-                        OLDGalleryPreferences.Filter.IMAGES -> stringResource(R.string.images)
-                        OLDGalleryPreferences.Filter.VIDEOS -> stringResource(R.string.videos)
-                        OLDGalleryPreferences.Filter.GIFS -> stringResource(R.string.gifs)
-                    }
-                    Text(text)
-                }
-            }
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier
+    ) {
+        item {
+            FilterChip(
+                selected = includeImages,
+                onClick = { onIncludeImagesChange(includeImages.not()) },
+                label = { Text(stringResource(R.string.images)) }
+            )
         }
         item {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onHiddenChange(hiddenEnabled.not()) }
-            ) {
-                Checkbox(
-                    checked = hiddenEnabled,
-                    onCheckedChange = { onHiddenChange(hiddenEnabled.not()) },
-                )
-                Text(stringResource(R.string.hidden))
-            }
+            FilterChip(
+                selected = includeVideos,
+                onClick = { onIncludeVideosChange(includeVideos.not()) },
+                label = { Text(stringResource(R.string.videos)) }
+            )
+        }
+        item {
+            FilterChip(
+                selected = includeGifs,
+                onClick = { onIncludeGifsChange(includeGifs.not()) },
+                label = { Text(stringResource(R.string.gifs)) }
+            )
+        }
+        item {
+            FilterChip(
+                selected = includeHidden,
+                onClick = { onIncludeHiddenChange(includeHidden.not()) },
+                label = { Text(stringResource(R.string.hidden)) }
+            )
         }
     }
-}
-@Preview(showBackground = true)
-@Composable
-private fun FilteringMenuPreview() {
-    var selectedFilters = remember { mutableStateListOf(OLDGalleryPreferences.Filter.entries.first()) }
-    var hiddenEnabled by remember { mutableStateOf(false) }
-    FilteringMenu(
-        selectedFilters = selectedFilters.toSet(),
-        onSelectionChange = {
-            when (selectedFilters.contains(it)) {
-                true -> selectedFilters -= it
-                false -> selectedFilters += it
-            }
-        },
-        hiddenEnabled = hiddenEnabled,
-        onHiddenChange = { hiddenEnabled = it }
-    )
 }

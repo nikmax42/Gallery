@@ -16,7 +16,7 @@ object GalleryPreferencesUtils {
         return context.datastore.data
     }
 
-    suspend fun savePreferences(context: Context, preferences: GalleryPreferences) {
+    suspend fun savePreferences(preferences: GalleryPreferences, context: Context) {
         withContext(Dispatchers.IO) {
             context.datastore.updateData { preferences }
         }

@@ -11,12 +11,13 @@ data class GalleryPreferences(
     @Serializable
     data class Appearance(
         val dynamicColorsEnabled: Boolean = true,
-        val grid: Grid = Grid()
+        val grid: Grid = Grid(),
+        val nestedAlbumsEnabled: Boolean = true
     ) {
         @Serializable
         data class Grid(
-            val portrait: Int = 3,
-            val landscape: Int = 4
+            val portraitColumns: Int = 3,
+            val landscapeColumns: Int = 4
         )
     }
 
@@ -34,6 +35,7 @@ data class GalleryPreferences(
         val includeImages: Boolean = true,
         val includeVideos: Boolean = true,
         val includeGifs: Boolean = true,
-        val includeHidden: Boolean = false
+        val includeHidden: Boolean = false,
+        val includeFilesOnly: Boolean = false
     )
 }

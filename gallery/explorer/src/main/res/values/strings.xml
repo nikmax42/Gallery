@@ -17,6 +17,7 @@
     <string name="size">Size</string>
     <string name="creation_date">Creation date</string>
     <string name="modification_date">Modification date</string>
+    <string name="random">Random</string>
     <string name="images">Images</string>
     <string name="videos">Videos</string>
     <string name="gifs">GIFs</string>

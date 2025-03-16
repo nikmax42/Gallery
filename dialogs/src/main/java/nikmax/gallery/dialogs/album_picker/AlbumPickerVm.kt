@@ -1,8 +1,10 @@
 package nikmax.gallery.dialogs.album_picker
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -13,24 +15,21 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import nikmax.gallery.core.ItemsUtils.createItemsListToDisplay
 import nikmax.gallery.core.data.Resource
-import nikmax.gallery.core.data.media.MediaFileData
 import nikmax.gallery.core.data.media.MediaItemsRepo
-import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
-import nikmax.gallery.core.data.preferences.PreferencesRepo
+import nikmax.gallery.core.data.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.ui.MediaItemUI
 import javax.inject.Inject
 
 @HiltViewModel
 class AlbumPickerVm
 @Inject constructor(
-    private val itemsRepo: MediaItemsRepo,
-    private val prefsRepo: PreferencesRepo
+    @ApplicationContext private val context: Context,
+    private val itemsRepo: MediaItemsRepo
 ) : ViewModel() {
 
     data class UiState(
         val items: List<MediaItemUI> = listOf(),
         val loading: Boolean = false,
-        val preferences: OLDGalleryPreferences = OLDGalleryPreferences()
     )
 
     sealed interface UserAction {
@@ -97,49 +96,31 @@ class AlbumPickerVm
     private suspend fun observeFlows() {
         combine(
             itemsRepo.getFilesResourceFlow(),
-            prefsRepo.getPreferencesFlow(),
+            GalleryPreferencesUtils.getPreferencesFlow(context),
             _navStack
         ) { filesRes, prefs, navStack ->
-            val currentPath = navStack.lastOrNull()
-            val newItems = createItemsList(
-                filesResource = filesRes,
-                albumPath = currentPath,
-                albumsMode = prefs.albumsMode,
-                sortingOrder = prefs.sortingOrder,
-                descendSortingEnabled = prefs.descendSorting,
-                selectedFilters = prefs.enabledFilters,
-                showHidden = prefs.showHidden
+            val newItems = when (filesRes) {
+                is Resource.Success -> filesRes.data
+                is Resource.Loading -> filesRes.data
+                is Resource.Error -> TODO()
+            }.createItemsListToDisplay(
+                targetAlbumPath = navStack.lastOrNull(),
+                nestedAlbumsEnabled = prefs.appearance.nestedAlbumsEnabled,
+                includeImages = prefs.filtering.includeImages,
+                includeVideos = prefs.filtering.includeVideos,
+                includeGifs = prefs.filtering.includeGifs,
+                includeHidden = prefs.filtering.includeHidden,
+                includeFilesOnly = prefs.filtering.includeFilesOnly,
+                sortingOrder = prefs.sorting.order,
+                descendSorting = prefs.sorting.descend,
+                searchQuery = null
             )
             _state.value.copy(
                 items = newItems,
-                preferences = prefs,
                 loading = filesRes is Resource.Loading
             )
         }.collectLatest { newState ->
             _state.update { newState }
         }
-    }
-
-    private fun createItemsList(
-        filesResource: Resource<List<MediaFileData>>,
-        albumPath: String?,
-        albumsMode: OLDGalleryPreferences.AlbumsMode,
-        selectedFilters: Set<OLDGalleryPreferences.Filter>,
-        sortingOrder: OLDGalleryPreferences.SortingOrder,
-        descendSortingEnabled: Boolean,
-        showHidden: Boolean
-    ): List<MediaItemUI> {
-        return when (filesResource) {
-            is Resource.Success -> filesResource.data
-            is Resource.Loading -> filesResource.data
-            is Resource.Error -> TODO()
-        }.createItemsListToDisplay(
-            targetAlbumPath = albumPath,
-            albumsMode = albumsMode,
-            appliedFilters = selectedFilters,
-            sortingOrder = sortingOrder,
-            useDescendSorting = descendSortingEnabled,
-            includeHidden = showHidden
-        )
     }
 }

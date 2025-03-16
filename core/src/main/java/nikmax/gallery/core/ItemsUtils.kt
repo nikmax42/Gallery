@@ -1,11 +1,12 @@
 package nikmax.gallery.core
 
 import nikmax.gallery.core.data.media.MediaFileData
-import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
+import nikmax.gallery.core.data.preferences.GalleryPreferences
 import nikmax.gallery.core.ui.MediaItemUI
 import kotlin.io.path.Path
 import kotlin.io.path.name
 import kotlin.io.path.pathString
+import kotlin.random.Random
 
 /**
  * Contains utility functions for working with [MediaItemUI].
@@ -16,25 +17,17 @@ object ItemsUtils {
      */
     private const val ROOT_ALBUM_PATH = "/storage/"
 
-    /**
-     * Create list of [MediaItemUI] based on target album path, albums mode (plain/nested), applied filters, sorting order
-     *
-     * @param targetAlbumPath include only files and albums inside this album (if null [ROOT_ALBUM_PATH] will be used)
-     * @param albumsMode create "classic" plain list of all albums found on device or nested list based on [targetAlbumPath]
-     * @param appliedFilters set of [OLDGalleryPreferences.Filter]
-     * @param sortingOrder sort created list by [OLDGalleryPreferences.SortingOrder]
-     * @param useDescendSorting reverse sorting or not
-     * @return list of [MediaItemUI] ready to display
-     */
     fun List<MediaFileData>.createItemsListToDisplay(
         targetAlbumPath: String?,
-        albumsMode: OLDGalleryPreferences.AlbumsMode,
-        appliedFilters: Set<OLDGalleryPreferences.Filter>,
-        sortingOrder: OLDGalleryPreferences.SortingOrder,
-        useDescendSorting: Boolean,
+        nestedAlbumsEnabled: Boolean,
+        includeImages: Boolean,
+        includeVideos: Boolean,
+        includeGifs: Boolean,
         includeHidden: Boolean,
-        searchQuery: String? = null,
-        includeFilesOnly: Boolean = false
+        includeFilesOnly: Boolean,
+        sortingOrder: GalleryPreferences.Sorting.Order,
+        descendSorting: Boolean,
+        searchQuery: String?
     ): List<MediaItemUI> {
         val itemsListToDisplay = this.mapDataFilesToUiFiles().let { uiFiles ->
             val targetPathChildren = when (targetAlbumPath != null) {
@@ -45,26 +38,24 @@ object ItemsUtils {
                 true -> targetPathChildren.filter { it.path.contains(searchQuery, ignoreCase = true) }
                 false -> targetPathChildren
             }
-            val albumsGrouped = when (albumsMode) {
-                OLDGalleryPreferences.AlbumsMode.PLAIN -> when (targetAlbumPath.isNullOrEmpty()) {
-                    true -> searchFiltered.createFlatAlbumsList()
-                    false -> searchFiltered.createAlbumOwnFilesList(targetAlbumPath)
-                }
-                OLDGalleryPreferences.AlbumsMode.NESTED -> when (targetAlbumPath.isNullOrEmpty()) {
+            val albumsGrouped = when (nestedAlbumsEnabled) {
+                true -> when (targetAlbumPath.isNullOrEmpty()) {
                     true -> searchFiltered.createNestedAlbumsList(ROOT_ALBUM_PATH)
                     false -> searchFiltered.createNestedAlbumsList(targetAlbumPath)
                 }
+                false -> when (targetAlbumPath.isNullOrEmpty()) {
+                    true -> searchFiltered.createFlatAlbumsList()
+                    false -> searchFiltered.createAlbumOwnFilesList(targetAlbumPath)
+                }
             }
-            val withFiltersApplied = albumsGrouped.applyFilters(appliedFilters)
-            val hiddenChecked = when (includeHidden) {
-                true -> withFiltersApplied
-                false -> withFiltersApplied.filterNot { it.hidden }
-            }
-            val filesOnlyChecked = when (includeFilesOnly) {
-                true -> hiddenChecked.filterIsInstance<MediaItemUI.File>()
-                false -> hiddenChecked
-            }
-            val sorted = filesOnlyChecked.applySorting(sortingOrder, useDescendSorting)
+            val withFiltersApplied = albumsGrouped.applyFilters(
+                includeImages = includeImages,
+                includeVideos = includeVideos,
+                includeGifs = includeGifs,
+                includeHidden = includeHidden,
+                includeFilesOnly = includeFilesOnly
+            )
+            val sorted = withFiltersApplied.applySorting(sortingOrder, descendSorting)
             sorted
         }
         return itemsListToDisplay
@@ -163,18 +154,16 @@ object ItemsUtils {
     }
 
 
-    /**
-     * Sorts the list of [MediaItemUI] by [OLDGalleryPreferences.SortingOrder].
-     */
     private fun List<MediaItemUI>.applySorting(
-        sortingOrder: OLDGalleryPreferences.SortingOrder,
+        sortingOrder: GalleryPreferences.Sorting.Order,
         descend: Boolean
     ): List<MediaItemUI> {
         return when (sortingOrder) {
-            OLDGalleryPreferences.SortingOrder.CREATION_DATE -> this.sortedBy { it.dateCreated }
-            OLDGalleryPreferences.SortingOrder.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
-            OLDGalleryPreferences.SortingOrder.NAME -> this.sortedBy { it.name }
-            OLDGalleryPreferences.SortingOrder.SIZE -> this.sortedBy { it.size }
+            GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.dateCreated }
+            GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
+            GalleryPreferences.Sorting.Order.NAME -> this.sortedBy { it.name }
+            GalleryPreferences.Sorting.Order.SIZE -> this.sortedBy { it.size }
+            GalleryPreferences.Sorting.Order.RANDOM -> this.sortedBy { Random.Default.nextInt() }
         }.let {
             when (descend) {
                 true -> it.reversed()
@@ -183,40 +172,45 @@ object ItemsUtils {
         }
     }
 
-    /**
-     * Filter list of [MediaItemUI] depends on provided [OLDGalleryPreferences.Filter] filters .
-     */
     private fun List<MediaItemUI>.applyFilters(
-        selectedFilters: Set<OLDGalleryPreferences.Filter>
+        includeImages: Boolean,
+        includeVideos: Boolean,
+        includeGifs: Boolean,
+        includeHidden: Boolean,
+        includeFilesOnly: Boolean = false,
     ): List<MediaItemUI> {
-        val imagesFiltered = when (selectedFilters.contains(OLDGalleryPreferences.Filter.IMAGES)) {
-            true -> this.filter { item ->
-                when (item) {
-                    is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.IMAGE
-                    is MediaItemUI.Album -> item.imagesCount > 0
-                }
+        val imagesFiltered = if (includeImages) this.filter { item ->
+            when (item) {
+                is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.IMAGE
+                is MediaItemUI.Album -> item.imagesCount > 0
             }
-            false -> emptyList()
-        }
-        val videosFiltered = when (selectedFilters.contains(OLDGalleryPreferences.Filter.VIDEOS)) {
-            true -> this.filter { item ->
-                when (item) {
-                    is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.VIDEO
-                    is MediaItemUI.Album -> item.videosCount > 0
-                }
+        } else emptyList()
+
+        val videosFiltered = if (includeVideos) this.filter { item ->
+            when (item) {
+                is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.VIDEO
+                is MediaItemUI.Album -> item.videosCount > 0
             }
-            false -> emptyList()
-        }
-        val gifsFiltered = when (selectedFilters.contains(OLDGalleryPreferences.Filter.GIFS)) {
-            true -> this.filter { item ->
-                when (item) {
-                    is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.GIF
-                    is MediaItemUI.Album -> item.gifsCount > 0
-                }
+        } else emptyList()
+
+        val gifsFiltered = if (includeGifs) this.filter { item ->
+            when (item) {
+                is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.GIF
+                is MediaItemUI.Album -> item.gifsCount > 0
             }
-            false -> emptyList()
+        } else emptyList()
+
+        val hiddenFiltered = when (includeHidden) {
+            true -> imagesFiltered + videosFiltered + gifsFiltered
+            false -> (imagesFiltered + videosFiltered + gifsFiltered).filterNot { it.hidden }
         }
-        return imagesFiltered + videosFiltered + gifsFiltered
+
+        val filesOnlyFiltered = when (includeFilesOnly) {
+            true -> hiddenFiltered.filterIsInstance<MediaItemUI.File>()
+            false -> hiddenFiltered
+        }
+
+        return filesOnlyFiltered
     }
 
 

@@ -51,7 +51,7 @@ import nikmax.gallery.gallery.core.SharingUtils
 import nikmax.gallery.gallery.explorer.components.bottom_bars.SelectionBottomBar
 import nikmax.gallery.gallery.explorer.components.main_contents.LoadingContent
 import nikmax.gallery.gallery.explorer.components.main_contents.MainContent
-import nikmax.gallery.gallery.explorer.components.sheets.AppearanceSheet
+import nikmax.gallery.gallery.explorer.components.sheets.GalleryPreferencesSheet
 import nikmax.gallery.gallery.explorer.components.top_bars.SearchTopBar
 import nikmax.gallery.gallery.explorer.components.top_bars.SelectionTopBar
 
@@ -180,8 +180,6 @@ private fun ExplorerScreenContent(
             AnimatedContent(targetState = state.isLoading && state.items.isEmpty()) { screenIsNotInitialized ->
                 when (screenIsNotInitialized) {
                     true -> LoadingContent(
-                        portraitColumnsAmount = state.appPreferences.gridColumnsPortrait,
-                        landscapeColumnsAmount = state.appPreferences.gridColumnsLandscape,
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(
@@ -207,9 +205,7 @@ private fun ExplorerScreenContent(
                 }
             }
             // model sheet with ui preferences
-            if (showAppearanceSheet) AppearanceSheet(
-                appPreferences = state.appPreferences,
-                onPreferencesChange = { onAction(ExplorerVm.UserAction.PreferencesChange(it)) },
+            if (showAppearanceSheet) GalleryPreferencesSheet(
                 onShowSheetChange = { showAppearanceSheet = it }
             )
         }

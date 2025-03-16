@@ -1,8 +1,10 @@
 package nikmax.gallery.gallery.viewer
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +18,7 @@ import nikmax.gallery.core.data.Resource
 import nikmax.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.core.data.media.FileOperation
 import nikmax.gallery.core.data.media.MediaItemsRepo
-import nikmax.gallery.core.data.preferences.PreferencesRepo
+import nikmax.gallery.core.data.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.dialogs.Dialog
 import javax.inject.Inject
@@ -30,8 +32,8 @@ import kotlin.io.path.pathString
 @HiltViewModel
 class ViewerVm
 @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val mediaItemsRepo: MediaItemsRepo,
-    private val prefsRepo: PreferencesRepo
 ) : ViewModel() {
 
     data class UIState(
@@ -58,7 +60,7 @@ class ViewerVm
 
 
     // Raw data flows
-    private val _appPreferencesFlow = prefsRepo.getPreferencesFlow()
+    private val _galleryPreferencesFlow = GalleryPreferencesUtils.getPreferencesFlow(context)
     private val _dataResourceFlow = mediaItemsRepo.getFilesResourceFlow()
 
     // UI-related data flows
@@ -166,19 +168,22 @@ class ViewerVm
 
 
     private suspend fun updateFilesFlow(albumPath: String) {
-        combine(_dataResourceFlow, _appPreferencesFlow) { dataRes, prefs ->
+        combine(_dataResourceFlow, _galleryPreferencesFlow) { dataRes, prefs ->
             when (dataRes) {
                 is Resource.Success -> dataRes.data
                 is Resource.Loading -> dataRes.data
                 is Resource.Error -> emptyList()
             }.createItemsListToDisplay(
                 targetAlbumPath = albumPath,
-                albumsMode = prefs.albumsMode,
-                appliedFilters = prefs.enabledFilters,
-                sortingOrder = prefs.sortingOrder,
-                useDescendSorting = prefs.descendSorting,
-                includeHidden = prefs.showHidden,
-                includeFilesOnly = true
+                nestedAlbumsEnabled = prefs.appearance.nestedAlbumsEnabled,
+                includeImages = prefs.filtering.includeImages,
+                includeVideos = prefs.filtering.includeVideos,
+                includeGifs = prefs.filtering.includeGifs,
+                includeHidden = prefs.filtering.includeHidden,
+                includeFilesOnly = prefs.filtering.includeFilesOnly,
+                sortingOrder = prefs.sorting.order,
+                descendSorting = prefs.sorting.descend,
+                searchQuery = null
             ).map { it as MediaItemUI.File }
         }.collectLatest { actualItemsList ->
             _filesFlow.update { actualItemsList }
