@@ -1,7 +1,7 @@
 package nikmax.gallery.core
 
 import nikmax.gallery.core.data.media.MediaFileData
-import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
 import nikmax.gallery.core.ui.MediaItemUI
 import kotlin.io.path.Path
 import kotlin.io.path.name
@@ -21,16 +21,16 @@ object ItemsUtils {
      *
      * @param targetAlbumPath include only files and albums inside this album (if null [ROOT_ALBUM_PATH] will be used)
      * @param albumsMode create "classic" plain list of all albums found on device or nested list based on [targetAlbumPath]
-     * @param appliedFilters set of [GalleryPreferences.Filter]
-     * @param sortingOrder sort created list by [GalleryPreferences.SortingOrder]
+     * @param appliedFilters set of [OLDGalleryPreferences.Filter]
+     * @param sortingOrder sort created list by [OLDGalleryPreferences.SortingOrder]
      * @param useDescendSorting reverse sorting or not
      * @return list of [MediaItemUI] ready to display
      */
     fun List<MediaFileData>.createItemsListToDisplay(
         targetAlbumPath: String?,
-        albumsMode: GalleryPreferences.AlbumsMode,
-        appliedFilters: Set<GalleryPreferences.Filter>,
-        sortingOrder: GalleryPreferences.SortingOrder,
+        albumsMode: OLDGalleryPreferences.AlbumsMode,
+        appliedFilters: Set<OLDGalleryPreferences.Filter>,
+        sortingOrder: OLDGalleryPreferences.SortingOrder,
         useDescendSorting: Boolean,
         includeHidden: Boolean,
         searchQuery: String? = null,
@@ -46,11 +46,11 @@ object ItemsUtils {
                 false -> targetPathChildren
             }
             val albumsGrouped = when (albumsMode) {
-                GalleryPreferences.AlbumsMode.PLAIN -> when (targetAlbumPath.isNullOrEmpty()) {
+                OLDGalleryPreferences.AlbumsMode.PLAIN -> when (targetAlbumPath.isNullOrEmpty()) {
                     true -> searchFiltered.createFlatAlbumsList()
                     false -> searchFiltered.createAlbumOwnFilesList(targetAlbumPath)
                 }
-                GalleryPreferences.AlbumsMode.NESTED -> when (targetAlbumPath.isNullOrEmpty()) {
+                OLDGalleryPreferences.AlbumsMode.NESTED -> when (targetAlbumPath.isNullOrEmpty()) {
                     true -> searchFiltered.createNestedAlbumsList(ROOT_ALBUM_PATH)
                     false -> searchFiltered.createNestedAlbumsList(targetAlbumPath)
                 }
@@ -164,17 +164,17 @@ object ItemsUtils {
 
 
     /**
-     * Sorts the list of [MediaItemUI] by [GalleryPreferences.SortingOrder].
+     * Sorts the list of [MediaItemUI] by [OLDGalleryPreferences.SortingOrder].
      */
     private fun List<MediaItemUI>.applySorting(
-        sortingOrder: GalleryPreferences.SortingOrder,
+        sortingOrder: OLDGalleryPreferences.SortingOrder,
         descend: Boolean
     ): List<MediaItemUI> {
         return when (sortingOrder) {
-            GalleryPreferences.SortingOrder.CREATION_DATE -> this.sortedBy { it.dateCreated }
-            GalleryPreferences.SortingOrder.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
-            GalleryPreferences.SortingOrder.NAME -> this.sortedBy { it.name }
-            GalleryPreferences.SortingOrder.SIZE -> this.sortedBy { it.size }
+            OLDGalleryPreferences.SortingOrder.CREATION_DATE -> this.sortedBy { it.dateCreated }
+            OLDGalleryPreferences.SortingOrder.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
+            OLDGalleryPreferences.SortingOrder.NAME -> this.sortedBy { it.name }
+            OLDGalleryPreferences.SortingOrder.SIZE -> this.sortedBy { it.size }
         }.let {
             when (descend) {
                 true -> it.reversed()
@@ -184,12 +184,12 @@ object ItemsUtils {
     }
 
     /**
-     * Filter list of [MediaItemUI] depends on provided [GalleryPreferences.Filter] filters .
+     * Filter list of [MediaItemUI] depends on provided [OLDGalleryPreferences.Filter] filters .
      */
     private fun List<MediaItemUI>.applyFilters(
-        selectedFilters: Set<GalleryPreferences.Filter>
+        selectedFilters: Set<OLDGalleryPreferences.Filter>
     ): List<MediaItemUI> {
-        val imagesFiltered = when (selectedFilters.contains(GalleryPreferences.Filter.IMAGES)) {
+        val imagesFiltered = when (selectedFilters.contains(OLDGalleryPreferences.Filter.IMAGES)) {
             true -> this.filter { item ->
                 when (item) {
                     is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.IMAGE
@@ -198,7 +198,7 @@ object ItemsUtils {
             }
             false -> emptyList()
         }
-        val videosFiltered = when (selectedFilters.contains(GalleryPreferences.Filter.VIDEOS)) {
+        val videosFiltered = when (selectedFilters.contains(OLDGalleryPreferences.Filter.VIDEOS)) {
             true -> this.filter { item ->
                 when (item) {
                     is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.VIDEO
@@ -207,7 +207,7 @@ object ItemsUtils {
             }
             false -> emptyList()
         }
-        val gifsFiltered = when (selectedFilters.contains(GalleryPreferences.Filter.GIFS)) {
+        val gifsFiltered = when (selectedFilters.contains(OLDGalleryPreferences.Filter.GIFS)) {
             true -> this.filter { item ->
                 when (item) {
                     is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.GIF

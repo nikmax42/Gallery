@@ -15,7 +15,7 @@ import nikmax.gallery.core.ItemsUtils.createItemsListToDisplay
 import nikmax.gallery.core.data.Resource
 import nikmax.gallery.core.data.media.MediaFileData
 import nikmax.gallery.core.data.media.MediaItemsRepo
-import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
 import nikmax.gallery.core.data.preferences.PreferencesRepo
 import nikmax.gallery.core.ui.MediaItemUI
 import javax.inject.Inject
@@ -30,7 +30,7 @@ class AlbumPickerVm
     data class UiState(
         val items: List<MediaItemUI> = listOf(),
         val loading: Boolean = false,
-        val preferences: GalleryPreferences = GalleryPreferences()
+        val preferences: OLDGalleryPreferences = OLDGalleryPreferences()
     )
 
     sealed interface UserAction {
@@ -123,9 +123,9 @@ class AlbumPickerVm
     private fun createItemsList(
         filesResource: Resource<List<MediaFileData>>,
         albumPath: String?,
-        albumsMode: GalleryPreferences.AlbumsMode,
-        selectedFilters: Set<GalleryPreferences.Filter>,
-        sortingOrder: GalleryPreferences.SortingOrder,
+        albumsMode: OLDGalleryPreferences.AlbumsMode,
+        selectedFilters: Set<OLDGalleryPreferences.Filter>,
+        sortingOrder: OLDGalleryPreferences.SortingOrder,
         descendSortingEnabled: Boolean,
         showHidden: Boolean
     ): List<MediaItemUI> {

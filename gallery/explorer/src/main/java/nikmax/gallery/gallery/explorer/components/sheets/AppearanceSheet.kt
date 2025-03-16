@@ -6,13 +6,13 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AppearanceSheet(
-    appPreferences: GalleryPreferences,
-    onPreferencesChange: (newPreferences: GalleryPreferences) -> Unit,
+    appPreferences: OLDGalleryPreferences,
+    onPreferencesChange: (newPreferences: OLDGalleryPreferences) -> Unit,
     onShowSheetChange: (showSheet: Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {

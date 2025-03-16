@@ -29,7 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.core.ui.components.grid.ItemsGrid
 import nikmax.gallery.core.ui.theme.GalleryTheme
@@ -79,7 +79,7 @@ private fun AlbumPickerContent(
     onItemClick: (MediaItemUI) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    preferences: GalleryPreferences,
+    preferences: OLDGalleryPreferences,
 ) {
     Scaffold(
         topBar = {
@@ -136,7 +136,7 @@ private fun Preview() {
             onItemClick = {},
             onDismiss = {},
             onConfirm = {},
-            preferences = GalleryPreferences()
+            preferences = OLDGalleryPreferences()
         )
     }
 }

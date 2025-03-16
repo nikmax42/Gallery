@@ -1,15 +1,39 @@
 package nikmax.gallery.core.data.preferences
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class GalleryPreferences(
-    val albumsMode: AlbumsMode = AlbumsMode.PLAIN,
-    val sortingOrder: SortingOrder = SortingOrder.CREATION_DATE,
-    val descendSorting: Boolean = false,
-    val gridColumnsPortrait: Int = 3,
-    val gridColumnsLandscape: Int = 4,
-    val enabledFilters: Set<Filter> = setOf(Filter.IMAGES, Filter.VIDEOS, Filter.GIFS),
-    val showHidden: Boolean = false
+    val appearance: Appearance = Appearance(),
+    val sorting: Sorting = Sorting(),
+    val filtering: Filtering = Filtering()
 ) {
-    enum class AlbumsMode { PLAIN, NESTED }
-    enum class SortingOrder { NAME, SIZE, CREATION_DATE, MODIFICATION_DATE }
-    enum class Filter { IMAGES, VIDEOS, GIFS }
+    @Serializable
+    data class Appearance(
+        val dynamicColorsEnabled: Boolean = true,
+        val grid: Grid = Grid()
+    ) {
+        @Serializable
+        data class Grid(
+            val portrait: Int = 3,
+            val landscape: Int = 4
+        )
+    }
+
+    @Serializable
+    data class Sorting(
+        val order: Order = Order.CREATION_DATE,
+        val descend: Boolean = false,
+        val albumsFirst: Boolean = true
+    ) {
+        enum class Order { CREATION_DATE, MODIFICATION_DATE, NAME, SIZE, RANDOM }
+    }
+
+    @Serializable
+    data class Filtering(
+        val includeImages: Boolean = true,
+        val includeVideos: Boolean = true,
+        val includeGifs: Boolean = true,
+        val includeHidden: Boolean = false
+    )
 }

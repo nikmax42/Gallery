@@ -40,24 +40,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
 import nikmax.gallery.explorer.R
 
 
 @Composable
 fun GalleryAppearanceMenu(
-    selectedAlbumsMode: GalleryPreferences.AlbumsMode,
-    onAlbumsModeChange: (GalleryPreferences.AlbumsMode) -> Unit,
+    selectedAlbumsMode: OLDGalleryPreferences.AlbumsMode,
+    onAlbumsModeChange: (OLDGalleryPreferences.AlbumsMode) -> Unit,
     gridPortraitColumnsAmount: Int,
     onGridPortraitColumnsAmountChange: (Int) -> Unit,
     gridLandscapeColumnsAmount: Int,
     onGridLandscapeColumnsAmountChange: (Int) -> Unit,
-    selectedSortingType: GalleryPreferences.SortingOrder,
-    onSortingTypeChange: (GalleryPreferences.SortingOrder) -> Unit,
+    selectedSortingType: OLDGalleryPreferences.SortingOrder,
+    onSortingTypeChange: (OLDGalleryPreferences.SortingOrder) -> Unit,
     descend: Boolean,
     onDescendChange: (Boolean) -> Unit,
-    selectedFilters: Set<GalleryPreferences.Filter>,
-    onFilterSelectionChange: (GalleryPreferences.Filter) -> Unit,
+    selectedFilters: Set<OLDGalleryPreferences.Filter>,
+    onFilterSelectionChange: (OLDGalleryPreferences.Filter) -> Unit,
     showHidden: Boolean,
     onHiddenChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -121,13 +121,13 @@ private fun GalleryAppearanceMenuPreview() {
     val scope = rememberCoroutineScope()
     scope.launch { sheetState.show() }
     GalleryAppearanceMenu(
-        selectedAlbumsMode = GalleryPreferences.AlbumsMode.entries.first(),
+        selectedAlbumsMode = OLDGalleryPreferences.AlbumsMode.entries.first(),
         onAlbumsModeChange = {},
         gridPortraitColumnsAmount = 3,
         gridLandscapeColumnsAmount = 4,
         onGridPortraitColumnsAmountChange = {},
         onGridLandscapeColumnsAmountChange = {},
-        selectedSortingType = GalleryPreferences.SortingOrder.entries.first(),
+        selectedSortingType = OLDGalleryPreferences.SortingOrder.entries.first(),
         onSortingTypeChange = {},
         descend = false,
         onDescendChange = {},
@@ -141,8 +141,8 @@ private fun GalleryAppearanceMenuPreview() {
 
 @Composable
 private fun AppearanceMenu(
-    selectedAlbumsMode: GalleryPreferences.AlbumsMode,
-    onAlbumsModeChange: (GalleryPreferences.AlbumsMode) -> Unit,
+    selectedAlbumsMode: OLDGalleryPreferences.AlbumsMode,
+    onAlbumsModeChange: (OLDGalleryPreferences.AlbumsMode) -> Unit,
     gridPortraitColumnsAmount: Int,
     onGridPortraitColumnsAmountChange: (Int) -> Unit,
     gridLandscapeColumnsAmount: Int,
@@ -154,14 +154,14 @@ private fun AppearanceMenu(
     Column(modifier = modifier) {
         // displaying mode
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            GalleryPreferences.AlbumsMode.entries.forEachIndexed { index, mode ->
+            OLDGalleryPreferences.AlbumsMode.entries.forEachIndexed { index, mode ->
                 FilterChip(
                     selected = mode == selectedAlbumsMode,
                     onClick = { onAlbumsModeChange(mode) },
                     label = {
                         val modeName = when (mode) {
-                            GalleryPreferences.AlbumsMode.PLAIN -> stringResource(R.string.plain_albums)
-                            GalleryPreferences.AlbumsMode.NESTED -> stringResource(R.string.nested_albums)
+                            OLDGalleryPreferences.AlbumsMode.PLAIN -> stringResource(R.string.plain_albums)
+                            OLDGalleryPreferences.AlbumsMode.NESTED -> stringResource(R.string.nested_albums)
                         }
                         Text(modeName)
                     }
@@ -219,7 +219,7 @@ private fun AppearanceMenu(
 @Preview(showBackground = true)
 @Composable
 private fun AppearanceMenuPreview() {
-    var selectedAlbumsMode by remember { mutableStateOf(GalleryPreferences.AlbumsMode.entries.first()) }
+    var selectedAlbumsMode by remember { mutableStateOf(OLDGalleryPreferences.AlbumsMode.entries.first()) }
     var gridPortraitColumnsAmount by remember { mutableIntStateOf(3) }
     var gridLandscapeColumnsAmount by remember { mutableIntStateOf(4) }
     AppearanceMenu(
@@ -235,8 +235,8 @@ private fun AppearanceMenuPreview() {
 
 @Composable
 private fun SortingMenu(
-    selectedType: GalleryPreferences.SortingOrder,
-    onSortingTypeChange: (GalleryPreferences.SortingOrder) -> Unit,
+    selectedType: OLDGalleryPreferences.SortingOrder,
+    onSortingTypeChange: (OLDGalleryPreferences.SortingOrder) -> Unit,
     descend: Boolean,
     onDescendChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -245,7 +245,7 @@ private fun SortingMenu(
         horizontalAlignment = Alignment.Start,
         modifier = modifier
     ) {
-        GalleryPreferences.SortingOrder.entries.forEach { sorting ->
+        OLDGalleryPreferences.SortingOrder.entries.forEach { sorting ->
             TextButton(
                 onClick = {
                     if (sorting == selectedType) onDescendChange(descend.not())
@@ -265,10 +265,10 @@ private fun SortingMenu(
                         )
                     } else Spacer(modifier = Modifier.width(24.dp))
                     val sortingName = when (sorting) {
-                        GalleryPreferences.SortingOrder.CREATION_DATE -> stringResource(R.string.creation_date)
-                        GalleryPreferences.SortingOrder.MODIFICATION_DATE -> stringResource(R.string.modification_date)
-                        GalleryPreferences.SortingOrder.NAME -> stringResource(R.string.name)
-                        GalleryPreferences.SortingOrder.SIZE -> stringResource(R.string.size)
+                        OLDGalleryPreferences.SortingOrder.CREATION_DATE -> stringResource(R.string.creation_date)
+                        OLDGalleryPreferences.SortingOrder.MODIFICATION_DATE -> stringResource(R.string.modification_date)
+                        OLDGalleryPreferences.SortingOrder.NAME -> stringResource(R.string.name)
+                        OLDGalleryPreferences.SortingOrder.SIZE -> stringResource(R.string.size)
                     }
                     Text(sortingName)
                 }
@@ -279,7 +279,7 @@ private fun SortingMenu(
 @Preview(showSystemUi = false, showBackground = true)
 @Composable
 private fun SortingMenuPreview() {
-    var selectedType by remember { mutableStateOf(GalleryPreferences.SortingOrder.entries.first()) }
+    var selectedType by remember { mutableStateOf(OLDGalleryPreferences.SortingOrder.entries.first()) }
     var descend by remember { mutableStateOf(false) }
     SortingMenu(
         selectedType = selectedType,
@@ -292,14 +292,14 @@ private fun SortingMenuPreview() {
 
 @Composable
 private fun FilteringMenu(
-    selectedFilters: Set<GalleryPreferences.Filter>,
-    onSelectionChange: (GalleryPreferences.Filter) -> Unit,
+    selectedFilters: Set<OLDGalleryPreferences.Filter>,
+    onSelectionChange: (OLDGalleryPreferences.Filter) -> Unit,
     hiddenEnabled: Boolean,
     onHiddenChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(modifier = modifier) {
-        GalleryPreferences.Filter.entries.forEach { filter ->
+        OLDGalleryPreferences.Filter.entries.forEach { filter ->
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -312,9 +312,9 @@ private fun FilteringMenu(
                         onCheckedChange = { onSelectionChange(filter) }
                     )
                     val text = when (filter) {
-                        GalleryPreferences.Filter.IMAGES -> stringResource(R.string.images)
-                        GalleryPreferences.Filter.VIDEOS -> stringResource(R.string.videos)
-                        GalleryPreferences.Filter.GIFS -> stringResource(R.string.gifs)
+                        OLDGalleryPreferences.Filter.IMAGES -> stringResource(R.string.images)
+                        OLDGalleryPreferences.Filter.VIDEOS -> stringResource(R.string.videos)
+                        OLDGalleryPreferences.Filter.GIFS -> stringResource(R.string.gifs)
                     }
                     Text(text)
                 }
@@ -339,7 +339,7 @@ private fun FilteringMenu(
 @Preview(showBackground = true)
 @Composable
 private fun FilteringMenuPreview() {
-    var selectedFilters = remember { mutableStateListOf(GalleryPreferences.Filter.entries.first()) }
+    var selectedFilters = remember { mutableStateListOf(OLDGalleryPreferences.Filter.entries.first()) }
     var hiddenEnabled by remember { mutableStateOf(false) }
     FilteringMenu(
         selectedFilters = selectedFilters.toSet(),

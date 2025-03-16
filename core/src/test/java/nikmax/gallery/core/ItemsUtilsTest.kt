@@ -2,7 +2,7 @@ package nikmax.gallery.core
 
 import nikmax.gallery.core.ItemsUtils.createItemsListToDisplay
 import nikmax.gallery.core.data.media.MediaFileData
-import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
 import nikmax.gallery.core.ui.MediaItemUI
 import org.junit.Test
 
@@ -31,9 +31,9 @@ class ItemsUtilsTest {
     fun `returns correct plain albums list when target album is null and plain albums argument provided`(): Unit {
         val realResult = files.createItemsListToDisplay(
             targetAlbumPath = null,
-            albumsMode = GalleryPreferences.AlbumsMode.PLAIN,
-            appliedFilters = GalleryPreferences.Filter.entries.toSet(),
-            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            albumsMode = OLDGalleryPreferences.AlbumsMode.PLAIN,
+            appliedFilters = OLDGalleryPreferences.Filter.entries.toSet(),
+            sortingOrder = OLDGalleryPreferences.SortingOrder.NAME,
             useDescendSorting = false,
             includeHidden = true,
             includeFilesOnly = false
@@ -55,9 +55,9 @@ class ItemsUtilsTest {
     fun `returns correct album own files list when target album != null`(): Unit {
         val realResultFor0 = files.createItemsListToDisplay(
             targetAlbumPath = "/storage/emulated/0",
-            albumsMode = GalleryPreferences.AlbumsMode.PLAIN,
-            appliedFilters = GalleryPreferences.Filter.entries.toSet(),
-            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            albumsMode = OLDGalleryPreferences.AlbumsMode.PLAIN,
+            appliedFilters = OLDGalleryPreferences.Filter.entries.toSet(),
+            sortingOrder = OLDGalleryPreferences.SortingOrder.NAME,
             useDescendSorting = false,
             includeHidden = true,
             includeFilesOnly = false
@@ -67,9 +67,9 @@ class ItemsUtilsTest {
 
         val realResultForMovies = files.createItemsListToDisplay(
             targetAlbumPath = "/storage/emulated/0/Movies",
-            albumsMode = GalleryPreferences.AlbumsMode.PLAIN,
-            appliedFilters = GalleryPreferences.Filter.entries.toSet(),
-            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            albumsMode = OLDGalleryPreferences.AlbumsMode.PLAIN,
+            appliedFilters = OLDGalleryPreferences.Filter.entries.toSet(),
+            sortingOrder = OLDGalleryPreferences.SortingOrder.NAME,
             useDescendSorting = false,
             includeHidden = true,
             includeFilesOnly = false
@@ -82,9 +82,9 @@ class ItemsUtilsTest {
     fun `returns correct nested albums list when target path == null`(): Unit {
         val realResult = files.createItemsListToDisplay(
             targetAlbumPath = null,
-            albumsMode = GalleryPreferences.AlbumsMode.NESTED,
-            appliedFilters = GalleryPreferences.Filter.entries.toSet(),
-            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            albumsMode = OLDGalleryPreferences.AlbumsMode.NESTED,
+            appliedFilters = OLDGalleryPreferences.Filter.entries.toSet(),
+            sortingOrder = OLDGalleryPreferences.SortingOrder.NAME,
             useDescendSorting = false,
             includeHidden = true,
             includeFilesOnly = false
@@ -100,9 +100,9 @@ class ItemsUtilsTest {
     fun `returns correct nested albums list when target path != null`(): Unit {
         val realResult = files.createItemsListToDisplay(
             targetAlbumPath = "/storage/emulated/0",
-            albumsMode = GalleryPreferences.AlbumsMode.NESTED,
-            appliedFilters = GalleryPreferences.Filter.entries.toSet(),
-            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            albumsMode = OLDGalleryPreferences.AlbumsMode.NESTED,
+            appliedFilters = OLDGalleryPreferences.Filter.entries.toSet(),
+            sortingOrder = OLDGalleryPreferences.SortingOrder.NAME,
             useDescendSorting = false,
             includeHidden = true,
             includeFilesOnly = false
@@ -119,9 +119,9 @@ class ItemsUtilsTest {
     fun `sorting works correctly`(): Unit {
         val realResult = files.createItemsListToDisplay(
             targetAlbumPath = null,
-            albumsMode = GalleryPreferences.AlbumsMode.PLAIN,
-            appliedFilters = GalleryPreferences.Filter.entries.toSet(),
-            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            albumsMode = OLDGalleryPreferences.AlbumsMode.PLAIN,
+            appliedFilters = OLDGalleryPreferences.Filter.entries.toSet(),
+            sortingOrder = OLDGalleryPreferences.SortingOrder.NAME,
             useDescendSorting = true,
             includeHidden = true,
             includeFilesOnly = false
@@ -141,9 +141,9 @@ class ItemsUtilsTest {
     fun `filtering works correctly`(): Unit {
         val realResult = files.createItemsListToDisplay(
             targetAlbumPath = null,
-            albumsMode = GalleryPreferences.AlbumsMode.PLAIN,
-            appliedFilters = setOf(GalleryPreferences.Filter.IMAGES),
-            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            albumsMode = OLDGalleryPreferences.AlbumsMode.PLAIN,
+            appliedFilters = setOf(OLDGalleryPreferences.Filter.IMAGES),
+            sortingOrder = OLDGalleryPreferences.SortingOrder.NAME,
             useDescendSorting = false,
             includeHidden = true,
             includeFilesOnly = false
@@ -161,9 +161,9 @@ class ItemsUtilsTest {
     fun `when search query != null and plain albums mode enabled, returns plain lists of albums whose files paths contains search query`() {
         val realResult = files.createItemsListToDisplay(
             targetAlbumPath = null,
-            albumsMode = GalleryPreferences.AlbumsMode.PLAIN,
-            appliedFilters = GalleryPreferences.Filter.entries.toSet(),
-            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            albumsMode = OLDGalleryPreferences.AlbumsMode.PLAIN,
+            appliedFilters = OLDGalleryPreferences.Filter.entries.toSet(),
+            sortingOrder = OLDGalleryPreferences.SortingOrder.NAME,
             useDescendSorting = false,
             includeHidden = true,
             includeFilesOnly = false,
@@ -180,9 +180,9 @@ class ItemsUtilsTest {
     fun `when search query != null and nested albums mode enabled, returns nested lists of albums whose files paths contains search query`() {
         val realResult = files.createItemsListToDisplay(
             targetAlbumPath = null,
-            albumsMode = GalleryPreferences.AlbumsMode.NESTED,
-            appliedFilters = GalleryPreferences.Filter.entries.toSet(),
-            sortingOrder = GalleryPreferences.SortingOrder.NAME,
+            albumsMode = OLDGalleryPreferences.AlbumsMode.NESTED,
+            appliedFilters = OLDGalleryPreferences.Filter.entries.toSet(),
+            sortingOrder = OLDGalleryPreferences.SortingOrder.NAME,
             useDescendSorting = false,
             includeHidden = true,
             includeFilesOnly = false,

@@ -19,7 +19,7 @@ import nikmax.gallery.core.data.Resource
 import nikmax.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.core.data.media.FileOperation
 import nikmax.gallery.core.data.media.MediaItemsRepo
-import nikmax.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.core.data.preferences.OLDGalleryPreferences
 import nikmax.gallery.core.data.preferences.PreferencesRepo
 import nikmax.gallery.core.ui.MediaItemUI
 import nikmax.gallery.dialogs.Dialog
@@ -42,7 +42,7 @@ class ExplorerVm
         val selectedItems: List<MediaItemUI> = emptyList(),
         val searchQuery: String? = null,
         val isLoading: Boolean = true,
-        val appPreferences: GalleryPreferences = GalleryPreferences(),
+        val appPreferences: OLDGalleryPreferences = OLDGalleryPreferences(),
         val dialog: Dialog = Dialog.None,
         val error: Error = Error.None
     ) {
@@ -61,7 +61,7 @@ class ExplorerVm
         data object NavigateOutOfAlbum : UserAction
         data class SearchQueryChange(val newQuery: String?) : UserAction
         data class ItemsSelectionChange(val newSelection: List<MediaItemUI>) : UserAction
-        data class PreferencesChange(val newPreferences: GalleryPreferences) : UserAction
+        data class PreferencesChange(val newPreferences: OLDGalleryPreferences) : UserAction
         data class ItemsCopy(val itemsToCopy: List<MediaItemUI>) : UserAction
         data class ItemsMove(val itemsToMove: List<MediaItemUI>) : UserAction
         data class ItemsRename(val itemsToRename: List<MediaItemUI>) : UserAction
@@ -157,7 +157,7 @@ class ExplorerVm
         _selectedItemsFlow.update { newSelection }
     }
 
-    private suspend fun onPreferencesChange(newPreferences: GalleryPreferences) {
+    private suspend fun onPreferencesChange(newPreferences: OLDGalleryPreferences) {
         prefsRepo.savePreferences(newPreferences)
     }
 
