@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nikmax.gallery.core.data.Resource
+import nikmax.gallery.core.utils.PermissionsUtils
 import nikmax.gallery.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.gallery.core.data.media.FileOperation
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
@@ -26,6 +27,7 @@ import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.utils.ItemsUtils.createItemsListToDisplay
 import nikmax.material_tree.gallery.dialogs.Dialog
 import javax.inject.Inject
+import kotlin.concurrent.timer
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -44,13 +46,16 @@ class ExplorerVm
         val selectedItems: List<MediaItemUI> = emptyList(),
         val searchQuery: String? = null,
         val isLoading: Boolean = true,
+        val content: Content = Content.Initialization,
         val dialog: Dialog = Dialog.None,
-        val error: Error = Error.None
     ) {
-        sealed interface Error {
-            data object None : Error
-            data class PermissionNotGranted(val onGrantClick: () -> Unit)
-            data class NoItemsToDisplayFound(val onRefreshClick: () -> Unit)
+        sealed interface Content {
+            data object Initialization : Content
+            data object Normal : Content
+            sealed interface Error : Content {
+                data class PermissionNotGranted(val onGrantClick: () -> Unit) : Error
+                data object NothingFound : Error
+            }
         }
     }
 
@@ -93,6 +98,8 @@ class ExplorerVm
     private val _isLoadingFlow = MutableStateFlow(true)
     private val _searchQueryFlow = MutableStateFlow<String?>(null)
     private val _selectedItemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
+    private val _contentFlow = MutableStateFlow(UIState.Content.Initialization)
+    private val _permissionStatusFlow = MutableStateFlow(PermissionsUtils.PermissionStatus.GRANTED)
 
     private val _uiState = MutableStateFlow(UIState())
     val uiState = _uiState.asStateFlow()
@@ -122,10 +129,13 @@ class ExplorerVm
 
     private fun onLaunch() {
         viewModelScope.launch { onRefresh() }
-        // observe raw data flows changes
+
         viewModelScope.launch { keepItemsFlowUpdated() }
         viewModelScope.launch { keepLoadingFlowUpdated() }
-        // reflect flows changes in UI
+        viewModelScope.launch { keepContentTypeFlowUpdated() }
+        viewModelScope.launch { keepPermissionStatusFlowUpdated() }
+
+        viewModelScope.launch { reflectContentTypeChanges() }
         viewModelScope.launch { reflectNavigationStackChanges() }
         viewModelScope.launch { reflectItemsChanges() }
         viewModelScope.launch { reflectLoadingChanges() }
@@ -316,6 +326,45 @@ class ExplorerVm
         }
     }
 
+    private suspend fun keepContentTypeFlowUpdated() {
+        combine(
+            _isLoadingFlow,
+            _itemsFlow,
+            _navStackFlow,
+            _permissionStatusFlow
+        ) { isLoading, items, navStack, permissionStatus ->
+            if (isLoading && navStack.isEmpty() && items.isEmpty())
+                UIState.Content.Initialization
+            else if (permissionStatus == PermissionsUtils.PermissionStatus.DENIED)
+                UIState.Content.Error.PermissionNotGranted(
+                    onGrantClick = {
+                        PermissionsUtils.requestPermission(
+                            PermissionsUtils.AppPermissions.MANAGE_EXTERNAL_STORAGE,
+                            context
+                        )
+                    }
+                )
+            else if (!isLoading && items.isEmpty())
+                UIState.Content.Error.NothingFound
+            else
+                UIState.Content.Normal
+        }.collectLatest { newContentType ->
+            _uiState.update {
+                it.copy(content = newContentType)
+            }
+        }
+    }
+
+    private suspend fun keepPermissionStatusFlowUpdated() {
+        timer(period = 3000) {
+            val storageStatus = PermissionsUtils.checkPermission(
+                PermissionsUtils.AppPermissions.MANAGE_EXTERNAL_STORAGE,
+                context
+            )
+            _permissionStatusFlow.update { storageStatus }
+        }
+    }
+
 
 
     private suspend fun reflectNavigationStackChanges() {
@@ -358,6 +407,14 @@ class ExplorerVm
         _selectedItemsFlow.collectLatest { selectedItems ->
             _uiState.update {
                 it.copy(selectedItems = selectedItems)
+            }
+        }
+    }
+
+    private suspend fun reflectContentTypeChanges() {
+        _contentFlow.collectLatest { contentType ->
+            _uiState.update {
+                it.copy(content = contentType)
             }
         }
     }
@@ -436,7 +493,7 @@ class ExplorerVm
         }
     }
 
-    private fun setDialog(newDialog: nikmax.material_tree.gallery.dialogs.Dialog) {
+    private fun setDialog(newDialog: Dialog) {
         _uiState.update { it.copy(dialog = newDialog) }
     }
 

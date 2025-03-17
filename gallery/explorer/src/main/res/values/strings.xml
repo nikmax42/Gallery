@@ -27,9 +27,11 @@
     <string name="rename_selected">Rename selected</string>
     <string name="delete_selected">Delete selected</string>
     <string name="share">Share</string>
-    <string name="storage_permission_not_granted">Storage access is not granted…</string>
-    <string name="storage_permission_explanation">This app requires external storage permission to read, copy, move, rename and delete images and folders on your device. Please grant permission below</string>
-    <string name="grant_permission">Grant permission</string>
+    <string name="not_storage_access">Storage permission not granted</string>
+    <string name="storage_permission_explanation">Material tree requires external storage permission to read, copy, move, rename and delete images and folders on your device. Please grant permission below</string>
+    <string name="grant">Grant</string>
+    <string name="no_media_found">Nothing found</string>
     <string name="protected_items_warning">Volumes cannot be changed></string>
     <string name="unselect">Unselect</string>
+    <string name="refresh">Refresh</string>
 </resources>

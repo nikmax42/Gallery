@@ -9,7 +9,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -44,12 +43,18 @@ import nikmax.gallery.explorer.R
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.utils.SharingUtils
 import nikmax.gallery.gallery.explorer.components.bottom_bars.SelectionBottomBar
-import nikmax.gallery.gallery.explorer.components.main_contents.LoadingContent
+import nikmax.gallery.gallery.explorer.components.error_contents.NothingFoundContent
+import nikmax.gallery.gallery.explorer.components.error_contents.PermissionNotGrantedContent
+import nikmax.gallery.gallery.explorer.components.main_contents.InitializationContent
 import nikmax.gallery.gallery.explorer.components.main_contents.MainContent
 import nikmax.gallery.gallery.explorer.components.sheets.GalleryPreferencesSheet
 import nikmax.gallery.gallery.explorer.components.top_bars.SearchTopBar
 import nikmax.gallery.gallery.explorer.components.top_bars.SelectionTopBar
 import nikmax.material_tree.gallery.dialogs.Dialog
+import nikmax.material_tree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
+import nikmax.material_tree.gallery.dialogs.conflict_resolver.ConflictResolverDialog
+import nikmax.material_tree.gallery.dialogs.deletion.DeletionDialog
+import nikmax.material_tree.gallery.dialogs.renaming.RenamingDialog
 
 @Composable
 fun ExplorerScreen(
@@ -173,23 +178,20 @@ private fun ExplorerScreenContent(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddings ->
         Box {
-            AnimatedContent(targetState = state.isLoading && state.items.isEmpty()) { screenIsNotInitialized ->
-                when (screenIsNotInitialized) {
-                    true -> LoadingContent(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(
-                                top = paddings.calculateTopPadding(),
-                                bottom = paddings.calculateBottomPadding(),
-                                start = 16.dp,
-                                end = 16.dp
-                            )
+            AnimatedContent(state.content) { content ->
+                when (content) {
+                    ExplorerVm.UIState.Content.Initialization -> InitializationContent(
+                        modifier = Modifier.padding(
+                            top = paddings.calculateTopPadding(),
+                            bottom = paddings.calculateBottomPadding(),
+                            start = 16.dp,
+                            end = 16.dp
+                        )
                     )
-                    false -> MainContent(
+                    ExplorerVm.UIState.Content.Normal -> MainContent(
                         state = state,
                         onAction = onAction,
                         modifier = Modifier
-                            .fillMaxSize()
                             .padding(
                                 top = paddings.calculateTopPadding(),
                                 bottom = paddings.calculateBottomPadding(),
@@ -197,6 +199,24 @@ private fun ExplorerScreenContent(
                                 end = 8.dp
                             )
                             .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
+                    )
+                    ExplorerVm.UIState.Content.Error.NothingFound -> NothingFoundContent(
+                        onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
+                        modifier = Modifier.padding(
+                            top = paddings.calculateTopPadding(),
+                            bottom = paddings.calculateBottomPadding(),
+                            start = 16.dp,
+                            end = 16.dp
+                        )
+                    )
+                    is ExplorerVm.UIState.Content.Error.PermissionNotGranted -> PermissionNotGrantedContent(
+                        onGrantClick = { content.onGrantClick() },
+                        modifier = Modifier.padding(
+                            top = paddings.calculateTopPadding(),
+                            bottom = paddings.calculateBottomPadding(),
+                            start = 16.dp,
+                            end = 16.dp
+                        )
                     )
                 }
             }
@@ -210,21 +230,21 @@ private fun ExplorerScreenContent(
     // dialogs section
     when (val dialog = state.dialog) {
         Dialog.None -> {}
-        is Dialog.AlbumPicker -> nikmax.material_tree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog(
+        is Dialog.AlbumPicker -> AlbumPickerFullScreenDialog(
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }
         )
-        is Dialog.ConflictResolver -> nikmax.material_tree.gallery.dialogs.conflict_resolver.ConflictResolverDialog(
+        is Dialog.ConflictResolver -> ConflictResolverDialog(
             conflictItem = dialog.conflictItem,
             onResolve = { resolution, applyToAll -> dialog.onConfirm(resolution) }, // todo enable "apply to all functionality"
             onDismiss = { dialog.onDismiss() }
         )
-        is Dialog.DeletionConfirmation -> nikmax.material_tree.gallery.dialogs.deletion.DeletionDialog(
+        is Dialog.DeletionConfirmation -> DeletionDialog(
             items = dialog.items,
             onConfirm = { dialog.onConfirm() },
             onDismiss = { dialog.onDismiss() }
         )
-        is Dialog.Renaming -> nikmax.material_tree.gallery.dialogs.renaming.RenamingDialog(
+        is Dialog.Renaming -> RenamingDialog(
             mediaItem = dialog.item,
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }

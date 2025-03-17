@@ -23,7 +23,7 @@ import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.core.ui.components.shimmerBackground
 
 @Composable
-internal fun LoadingContent(
+internal fun InitializationContent(
     modifier: Modifier = Modifier,
 ) {
     val preferences by GalleryPreferencesUtils
@@ -56,6 +56,6 @@ internal fun LoadingContent(
 @Composable
 private fun ExplorerLoadingContentPreview() {
     GalleryTheme {
-        LoadingContent()
+        InitializationContent()
     }
 }

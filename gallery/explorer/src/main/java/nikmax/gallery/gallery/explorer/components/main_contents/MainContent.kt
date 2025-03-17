@@ -1,6 +1,7 @@
 package nikmax.gallery.gallery.explorer.components.main_contents
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -36,7 +37,7 @@ internal fun MainContent(
                 onSelectionChange = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
                 columnsAmountPortrait = preferences.appearance.grid.portraitColumns,
                 columnsAmountLandscape = preferences.appearance.grid.landscapeColumns,
-                modifier = modifier
+                modifier = modifier.fillMaxSize()
             )
         }
     }
