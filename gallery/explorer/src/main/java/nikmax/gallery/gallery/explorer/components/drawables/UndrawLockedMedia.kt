@@ -2,6 +2,7 @@ package nikmax.gallery.gallery.explorer.components.drawables
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -13,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import nikmax.gallery.core.ui.theme.GalleryTheme
 
 val UndrawLockedMedia: ImageVector
+    @Composable
     get() {
         if (_UndrawLockedMedia != null) {
             return _UndrawLockedMedia!!
@@ -153,7 +155,7 @@ val UndrawLockedMedia: ImageVector
                 verticalLineToRelative(0f)
                 close()
             }
-            path(fill = SolidColor(Color(0xFF6C63FF))) {
+            path(fill = SolidColor(MaterialTheme.colorScheme.primaryContainer)) {
                 moveTo(357.76f, 208.28f)
                 moveToRelative(-29.57f, 0f)
                 arcToRelative(29.57f, 29.57f, 0f, isMoreThanHalf = true, isPositiveArc = true, 59.13f, 0f)
@@ -253,7 +255,7 @@ val UndrawLockedMedia: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFF6C63FF)),
+                fill = SolidColor(MaterialTheme.colorScheme.primaryContainer),
                 strokeLineWidth = 1.1944f
             ) {
                 moveTo(281.26f, 440.57f)
