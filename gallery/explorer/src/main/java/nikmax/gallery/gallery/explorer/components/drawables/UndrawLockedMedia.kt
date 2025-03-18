@@ -210,7 +210,7 @@ val UndrawLockedMedia: ImageVector
                 arcToRelative(33.14f, 33.14f, 0f, isMoreThanHalf = false, isPositiveArc = true, -33f, 32.52f)
                 close()
             }
-            path(fill = SolidColor(Color(0xFFF2F2F2))) {
+            path(fill = SolidColor(MaterialTheme.colorScheme.surfaceContainer)) {
                 moveTo(522.08f, 578.28f)
                 horizontalLineTo(35.92f)
                 arcTo(15.94f, 15.94f, 0f, isMoreThanHalf = false, isPositiveArc = true, 20f, 562.36f)
