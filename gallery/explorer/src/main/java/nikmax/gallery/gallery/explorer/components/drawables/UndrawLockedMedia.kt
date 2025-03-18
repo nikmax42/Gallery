@@ -1,9 +1,6 @@
 package nikmax.gallery.gallery.explorer.components.drawables
 
-import android.content.res.Configuration
 import androidx.compose.foundation.Image
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -11,10 +8,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import nikmax.gallery.core.ui.theme.GalleryTheme
 
 val UndrawLockedMedia: ImageVector
-    @Composable
     get() {
         if (_UndrawLockedMedia != null) {
             return _UndrawLockedMedia!!
@@ -155,7 +150,7 @@ val UndrawLockedMedia: ImageVector
                 verticalLineToRelative(0f)
                 close()
             }
-            path(fill = SolidColor(MaterialTheme.colorScheme.primaryContainer)) {
+            path(fill = SolidColor(Color(0xFF6C63FF))) {
                 moveTo(357.76f, 208.28f)
                 moveToRelative(-29.57f, 0f)
                 arcToRelative(29.57f, 29.57f, 0f, isMoreThanHalf = true, isPositiveArc = true, 59.13f, 0f)
@@ -210,7 +205,7 @@ val UndrawLockedMedia: ImageVector
                 arcToRelative(33.14f, 33.14f, 0f, isMoreThanHalf = false, isPositiveArc = true, -33f, 32.52f)
                 close()
             }
-            path(fill = SolidColor(MaterialTheme.colorScheme.surfaceContainer)) {
+            path(fill = SolidColor(Color(0xFFF2F2F2))) {
                 moveTo(522.08f, 578.28f)
                 horizontalLineTo(35.92f)
                 arcTo(15.94f, 15.94f, 0f, isMoreThanHalf = false, isPositiveArc = true, 20f, 562.36f)
@@ -255,7 +250,7 @@ val UndrawLockedMedia: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(MaterialTheme.colorScheme.primaryContainer),
+                fill = SolidColor(Color(0xFF6C63FF)),
                 strokeLineWidth = 1.1944f
             ) {
                 moveTo(281.26f, 440.57f)
@@ -293,13 +288,8 @@ val UndrawLockedMedia: ImageVector
 @Suppress("ObjectPropertyName")
 private var _UndrawLockedMedia: ImageVector? = null
 
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO or Configuration.UI_MODE_TYPE_NORMAL)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview
 @Composable
 private fun Preview() {
-    GalleryTheme {
-        Surface {
-            Image(UndrawLockedMedia, null)
-        }
-    }
+    Image(UndrawLockedMedia, null)
 }
