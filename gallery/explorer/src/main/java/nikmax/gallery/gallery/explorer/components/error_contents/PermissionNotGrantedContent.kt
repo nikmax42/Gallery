@@ -24,7 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.explorer.R
-import nikmax.gallery.gallery.explorer.components.drawables.UndrawLockedMedia
+import nikmax.gallery.gallery.explorer.components.drawables.UndrawLockedImageFolder
 
 @Composable
 internal fun PermissionNotGrantedContent(
@@ -40,7 +40,7 @@ internal fun PermissionNotGrantedContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Image(imageVector = UndrawLockedMedia, contentDescription = null)
+                Image(imageVector = UndrawLockedImageFolder, contentDescription = null)
                 Text(
                     text = stringResource(R.string.not_storage_access),
                     style = MaterialTheme.typography.titleLarge
@@ -60,6 +60,7 @@ internal fun PermissionNotGrantedContent(
 }
 
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO or Configuration.UI_MODE_TYPE_NORMAL)
 @Composable
 private fun PermissionNotGrantedContentPreview() {
     GalleryTheme {
