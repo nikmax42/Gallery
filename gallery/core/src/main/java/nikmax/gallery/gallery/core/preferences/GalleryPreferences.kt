@@ -10,10 +10,12 @@ data class GalleryPreferences(
 ) {
     @Serializable
     data class Appearance(
-        val dynamicColorsEnabled: Boolean = true,
-        val grid: Grid = Grid(),
-        val nestedAlbumsEnabled: Boolean = true
+        val nestedAlbumsEnabled: Boolean = true,
+        val onTop: OnTop = OnTop.NONE,
+        val grid: Grid = Grid()
     ) {
+        enum class OnTop { NONE, ALBUMS_ON_TOP, FILES_ON_TOP }
+
         @Serializable
         data class Grid(
             val portraitColumns: Int = 3,

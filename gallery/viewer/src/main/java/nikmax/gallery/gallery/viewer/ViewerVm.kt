@@ -174,7 +174,7 @@ class ViewerVm
                 is Resource.Error -> emptyList()
             }.createItemsListToDisplay(
                 targetAlbumPath = albumPath,
-                nestedAlbumsEnabled = prefs.appearance.nestedAlbumsEnabled,
+                treeModeEnabled = prefs.appearance.nestedAlbumsEnabled,
                 includeImages = prefs.filtering.includeImages,
                 includeVideos = prefs.filtering.includeVideos,
                 includeGifs = prefs.filtering.includeGifs,

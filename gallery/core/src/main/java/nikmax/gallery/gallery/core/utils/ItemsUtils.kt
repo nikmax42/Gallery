@@ -19,16 +19,17 @@ object ItemsUtils {
 
     fun List<MediaFileData>.createItemsListToDisplay(
         targetAlbumPath: String?,
-        nestedAlbumsEnabled: Boolean,
-        includeImages: Boolean,
-        includeVideos: Boolean,
-        includeGifs: Boolean,
-        includeHidden: Boolean,
-        includeFilesOnly: Boolean,
-        sortingOrder: GalleryPreferences.Sorting.Order,
+        searchQuery: String? = null,
+        treeModeEnabled: Boolean = true,
+        includeImages: Boolean = true,
+        includeVideos: Boolean = true,
+        includeGifs: Boolean = true,
+        includeHidden: Boolean = false,
+        includeFilesOnly: Boolean = false,
+        sortingOrder: GalleryPreferences.Sorting.Order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
         descendSorting: Boolean = false,
         showAlbumsFirst: Boolean = false,
-        searchQuery: String? = null
+        showFilesFirst: Boolean = false
     ): List<MediaItemUI> {
         val itemsListToDisplay = this.mapDataFilesToUiFiles().let { uiFiles ->
             val targetPathChildren = when (targetAlbumPath != null) {
@@ -39,7 +40,7 @@ object ItemsUtils {
                 true -> targetPathChildren.filter { it.path.contains(searchQuery, ignoreCase = true) }
                 false -> targetPathChildren
             }
-            val albumsGrouped = when (nestedAlbumsEnabled) {
+            val albumsGrouped = when (treeModeEnabled) {
                 true -> when (targetAlbumPath.isNullOrEmpty()) {
                     true -> searchFiltered.createNestedAlbumsList(ROOT_ALBUM_PATH)
                     false -> searchFiltered.createNestedAlbumsList(targetAlbumPath)
@@ -59,7 +60,8 @@ object ItemsUtils {
             val sorted = withFiltersApplied.applySorting(
                 sortingOrder = sortingOrder,
                 descend = descendSorting,
-                albumsFirst = showAlbumsFirst
+                albumsFirst = showAlbumsFirst,
+                filesFirst = showFilesFirst
             )
             sorted
         }
@@ -162,7 +164,8 @@ object ItemsUtils {
     private fun List<MediaItemUI>.applySorting(
         sortingOrder: GalleryPreferences.Sorting.Order,
         descend: Boolean,
-        albumsFirst: Boolean
+        albumsFirst: Boolean,
+        filesFirst: Boolean
     ): List<MediaItemUI> {
         return when (sortingOrder) {
             GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.dateCreated }
@@ -175,10 +178,9 @@ object ItemsUtils {
                 true -> it.reversed()
                 false -> it
             }.let {
-                when (albumsFirst) {
-                    true -> it.sortedBy { it is MediaItemUI.Album }
-                    false -> it
-                }
+                if (albumsFirst) it.filterIsInstance<MediaItemUI.Album>() + it.filterIsInstance<MediaItemUI.File>()
+                else if (filesFirst) it.filterIsInstance<MediaItemUI.File>() + it.filterIsInstance<MediaItemUI.Album>()
+                else it
             }
         }
     }

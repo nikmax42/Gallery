@@ -104,7 +104,7 @@ class AlbumPickerVm
                 is Resource.Error -> TODO()
             }.createItemsListToDisplay(
                 targetAlbumPath = navStack.lastOrNull(),
-                nestedAlbumsEnabled = prefs.appearance.nestedAlbumsEnabled,
+                treeModeEnabled = prefs.appearance.nestedAlbumsEnabled,
                 includeImages = prefs.filtering.includeImages,
                 includeVideos = prefs.filtering.includeVideos,
                 includeGifs = prefs.filtering.includeGifs,

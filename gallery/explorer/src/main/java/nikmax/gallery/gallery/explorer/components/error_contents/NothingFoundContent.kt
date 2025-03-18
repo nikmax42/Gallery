@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -19,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.explorer.R
 import nikmax.gallery.gallery.explorer.components.drawables.UndrawTreeSwing5010
@@ -32,15 +34,19 @@ internal fun NothingFoundContent(
     PullToRefreshBox(
         isRefreshing = false,
         onRefresh = { onRefresh() },
+        contentAlignment = Alignment.Center,
+        modifier = modifier.fillMaxSize()
     ) {
         Surface {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = modifier.fillMaxSize()
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Image(imageVector = UndrawTreeSwing5010, contentDescription = null)
-                Text(stringResource(R.string.no_media_found))
+                Text(
+                    text = stringResource(R.string.no_media_found),
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Row {
                     Button(onClick = { onRefresh() }) {
                         Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))

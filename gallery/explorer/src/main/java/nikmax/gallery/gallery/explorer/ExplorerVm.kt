@@ -302,7 +302,7 @@ class ExplorerVm
                 is Resource.Error -> emptyList()
             }.createItemsListToDisplay(
                 targetAlbumPath = currentAlbumPath,
-                nestedAlbumsEnabled = prefs.appearance.nestedAlbumsEnabled,
+                treeModeEnabled = prefs.appearance.nestedAlbumsEnabled,
                 includeImages = prefs.filtering.includeImages,
                 includeVideos = prefs.filtering.includeVideos,
                 includeGifs = prefs.filtering.includeGifs,
@@ -310,7 +310,8 @@ class ExplorerVm
                 includeFilesOnly = prefs.filtering.includeFilesOnly,
                 sortingOrder = prefs.sorting.order,
                 descendSorting = prefs.sorting.descend,
-                showAlbumsFirst = prefs.sorting.albumsFirst,
+                showAlbumsFirst = prefs.appearance.onTop == GalleryPreferences.Appearance.OnTop.ALBUMS_ON_TOP,
+                showFilesFirst = prefs.appearance.onTop == GalleryPreferences.Appearance.OnTop.FILES_ON_TOP,
                 searchQuery = searchQuery
             )
         }.collectLatest { actualItemsList ->

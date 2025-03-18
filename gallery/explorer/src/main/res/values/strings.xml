@@ -6,9 +6,12 @@
     <string name="appearance">Appearance</string>
     <string name="sorting">Sorting</string>
     <string name="filtering">Filtering</string>
-    <string name="displaying_mode">Displaying mode</string>
-    <string name="plain_albums">Plain albums</string>
-    <string name="nested_albums">Nested albums</string>
+    <string name="display_mode">Display mode</string>
+    <string name="plain_view">Plain view</string>
+    <string name="tree_view">Tree view</string>
+    <string name="albums_on_top">Albums on top</string>
+    <string name="files_on_top">Files on top</string>
+    <string name="grid_appearance">Grid appearance</string>
     <string name="grid_cols_portrait">Grid columns (portrait)</string>
     <string name="grid_cols_landscape">Grid columns (landscape)</string>
     <string name="descend">Descend</string>
@@ -27,8 +30,8 @@
     <string name="rename_selected">Rename selected</string>
     <string name="delete_selected">Delete selected</string>
     <string name="share">Share</string>
-    <string name="not_storage_access">Storage permission not granted</string>
-    <string name="storage_permission_explanation">Material tree requires external storage permission to read, copy, move, rename and delete images and folders on your device. Please grant permission below</string>
+    <string name="not_storage_access">Storage permission is not granted</string>
+    <string name="storage_permission_explanation">Material tree requires external storage permission to read, copy, move, rename and delete images and folders on your device</string>
     <string name="grant">Grant</string>
     <string name="no_media_found">Nothing found</string>
     <string name="protected_items_warning">Volumes cannot be changed></string>
