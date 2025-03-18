@@ -2,6 +2,7 @@ package nikmax.gallery.gallery.explorer.components.drawables
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -13,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import nikmax.gallery.core.ui.theme.GalleryTheme
 
 val UndrawLockedImageFolder: ImageVector
+    @Composable
     get() {
         if (_UndrawLockedImageFolder != null) {
             return _UndrawLockedImageFolder!!
@@ -52,7 +54,7 @@ val UndrawLockedImageFolder: ImageVector
                 arcTo(18.21f, 18.21f, 0f, isMoreThanHalf = false, isPositiveArc = false, 535.94f, 0f)
                 close()
             }
-            path(fill = SolidColor(Color(0xFF6C63FF))) {
+            path(fill = SolidColor(MaterialTheme.colorScheme.primaryContainer)) {
                 moveTo(241.85f, 90.87f)
                 moveToRelative(-48.85f, 0f)
                 arcToRelative(48.85f, 48.85f, 0f, isMoreThanHalf = true, isPositiveArc = true, 97.69f, 0f)
@@ -375,7 +377,7 @@ val UndrawLockedImageFolder: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(Color(0xFF6C63FF)),
+                fill = SolidColor(MaterialTheme.colorScheme.primaryContainer),
                 strokeLineWidth = 1.42f
             ) {
                 moveTo(285f, 338.18f)
@@ -416,7 +418,7 @@ private var _UndrawLockedImageFolder: ImageVector? = null
 
 
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO or Configuration.UI_MODE_TYPE_NORMAL)
-//@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
 @Composable
 private fun Preview() {
     GalleryTheme {
