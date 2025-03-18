@@ -91,9 +91,9 @@ object ItemsUtils {
                     path = it.key,
                     name = Path(it.key).name,
                     size = it.value.sumOf { file -> file.size },
-                    dateCreated = it.value.minOf { file -> file.dateCreated },
-                    dateModified = it.value.maxOf { file -> file.dateModified },
-                    volume = it.value.first().volume,
+                    creationDate = it.value.minOf { file -> file.creationDate },
+                    modificationDate = it.value.maxOf { file -> file.modificationDate },
+                    belongsToVolume = it.value.first().belongsToVolume,
                     thumbnail = it.value.first().path,
                     filesCount = it.value.size,
                     imagesCount = it.value.count { file -> file.mediaType == MediaItemUI.File.MediaType.IMAGE },
@@ -131,19 +131,34 @@ object ItemsUtils {
         val targetAlbumNestedFiles = this.filter { it.path.startsWith(albumPath.toString()) }
         val subAlbums = targetAlbumNestedFiles
             .groupBy { Path(it.path).parent.pathString }
-            .map {
+            .map { albumGroup ->
+                val albumOwnFiles = albumGroup.value
+                val nestedAlbumsFiles = this.filter { file -> file.path.startsWith(albumGroup.key) }.minus(albumOwnFiles)
+
+                val albumName = Path(albumGroup.key).name
+                // size of album own files and all nested album's files
+                val albumSize = (albumOwnFiles + nestedAlbumsFiles).sumOf { it.size }
+                val albumCreationDate = (albumOwnFiles + nestedAlbumsFiles).minOf { it.creationDate }
+                val albumModificationDate = (albumOwnFiles + nestedAlbumsFiles).minOf { it.modificationDate }
+                val albumVolume = albumOwnFiles.first().belongsToVolume
+                val albumThumbnail = (albumOwnFiles + nestedAlbumsFiles).first().path
+                val filesCount = (albumOwnFiles + nestedAlbumsFiles).size
+                val imagesCount = (albumOwnFiles + nestedAlbumsFiles).count { it.mediaType == MediaItemUI.File.MediaType.IMAGE }
+                val videosCount = (albumOwnFiles + nestedAlbumsFiles).count { it.mediaType == MediaItemUI.File.MediaType.VIDEO }
+                val gifsCount = (albumOwnFiles + nestedAlbumsFiles).count { it.mediaType == MediaItemUI.File.MediaType.GIF }
+
                 MediaItemUI.Album(
-                    path = it.key,
-                    name = Path(it.key).name,
-                    size = it.value.sumOf { file -> file.size },
-                    dateCreated = it.value.minOf { file -> file.dateCreated },
-                    dateModified = it.value.maxOf { file -> file.dateModified },
-                    volume = it.value.first().volume,
-                    thumbnail = it.value.first().path,
-                    filesCount = it.value.size,
-                    imagesCount = it.value.count { file -> file.mediaType == MediaItemUI.File.MediaType.IMAGE },
-                    videosCount = it.value.count { file -> file.mediaType == MediaItemUI.File.MediaType.VIDEO },
-                    gifsCount = it.value.count { file -> file.mediaType == MediaItemUI.File.MediaType.GIF }
+                    path = albumGroup.key,
+                    name = albumName,
+                    size = albumSize,
+                    creationDate = albumCreationDate,
+                    modificationDate = albumModificationDate,
+                    belongsToVolume = albumVolume,
+                    thumbnail = albumThumbnail,
+                    filesCount = filesCount,
+                    imagesCount = imagesCount,
+                    videosCount = videosCount,
+                    gifsCount = gifsCount
                 )
             }
             .filterNot { it.path == albumPath }
@@ -168,8 +183,8 @@ object ItemsUtils {
         filesFirst: Boolean
     ): List<MediaItemUI> {
         return when (sortingOrder) {
-            GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.dateCreated }
-            GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
+            GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.creationDate }
+            GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> this.sortedBy { it.modificationDate }
             GalleryPreferences.Sorting.Order.NAME -> this.sortedBy { it.name }
             GalleryPreferences.Sorting.Order.SIZE -> this.sortedBy { it.size }
             GalleryPreferences.Sorting.Order.RANDOM -> this.sortedBy { Random.Default.nextInt() }
@@ -239,11 +254,12 @@ object ItemsUtils {
             path = this.path,
             name = this.name,
             size = this.size,
-            dateCreated = this.dateCreated,
-            dateModified = this.dateModified,
-            volume = when (this.volume) {
-                MediaFileData.Volume.PRIMARY -> MediaItemUI.Volume.PRIMARY
-                MediaFileData.Volume.SECONDARY -> MediaItemUI.Volume.SECONDARY
+            duration = this.duration,
+            creationDate = this.dateCreated,
+            modificationDate = this.dateModified,
+            belongsToVolume = when (this.volume) {
+                MediaFileData.Volume.PRIMARY -> MediaItemUI.Volume.DEVICE
+                MediaFileData.Volume.SECONDARY -> MediaItemUI.Volume.PLUGGABLE
             },
             thumbnail = this.path
         )

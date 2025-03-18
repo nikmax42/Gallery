@@ -167,11 +167,13 @@ private fun ExplorerScreenContent(
             ) {
                 SelectionBottomBar(
                     selectedItems = state.selectedItems,
-                    onCopyClick = { items -> onAction(ExplorerVm.UserAction.ItemsCopy(items)) },
-                    onMoveClick = { items -> onAction(ExplorerVm.UserAction.ItemsMove(items)) },
-                    onRenameClick = { items -> onAction(ExplorerVm.UserAction.ItemsRename(items)) },
-                    onDeleteClick = { items -> onAction(ExplorerVm.UserAction.ItemsDelete(items)) },
-                    onShare = { file -> SharingUtils.shareSingleFile(file, context) }
+                    onCopy = { items -> onAction(ExplorerVm.UserAction.ItemsCopy(items)) },
+                    onMove = { items -> onAction(ExplorerVm.UserAction.ItemsMove(items)) },
+                    onRename = { items -> onAction(ExplorerVm.UserAction.ItemsRename(items)) },
+                    onDelete = { items -> onAction(ExplorerVm.UserAction.ItemsDelete(items)) },
+                    onShare = { file -> SharingUtils.shareSingleFile(file, context) },
+                    onUnavailableItemsUnselection = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
+                    snackbarHostState = snackbarHostState
                 )
             }
         },

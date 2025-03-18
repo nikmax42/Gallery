@@ -2,4 +2,6 @@
 <resources>
     <string name="pluggable_storage">Pluggable Storage</string>
     <string name="item_selected">Item selected</string>
+    <string name="its_volume">It is volume</string>
+    <string name="files">%d files</string>
 </resources>

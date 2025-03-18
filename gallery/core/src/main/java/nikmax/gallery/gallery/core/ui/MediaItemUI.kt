@@ -8,32 +8,26 @@ import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 
 sealed interface MediaItemUI {
-    enum class Volume { PRIMARY, SECONDARY }
+    enum class Volume { DEVICE, PLUGGABLE }
 
     val path: String
     val name: String
     val thumbnail: String?
     val size: Long
-    val dateCreated: Long
-    val dateModified: Long
-    val volume: Volume
+    val creationDate: Long
+    val modificationDate: Long
+    val belongsToVolume: Volume
     val hidden get() = path.contains("/.")
-    val protected: Boolean
-        get() {
-            val volumesRegex = Regex("^/storage(/emulated)*(/[a-zA-Z0-9_-]+)?$")
-            val isVolume = volumesRegex.containsMatchIn(path)
-            val isNotWritable = Path(path).isWritable().not()
-            return isVolume || isNotWritable
-        }
 
     data class File(
         override val path: String,
         override val size: Long = 0,
-        override val dateCreated: Long = 0,
-        override val dateModified: Long = 0,
-        override val volume: Volume = Volume.PRIMARY,
+        override val creationDate: Long = 0,
+        override val modificationDate: Long = 0,
+        override val belongsToVolume: Volume = Volume.DEVICE,
         override val name: String = Path(path).name,
         override val thumbnail: String? = null,
+        val duration: Long = 0,
         val uri: String? = null,
         val mimetype: String = Tika().detect(path)
     ) : MediaItemUI {
@@ -56,13 +50,21 @@ sealed interface MediaItemUI {
         override val path: String,
         override val name: String = Path(path).name,
         override val size: Long = 0,
-        override val dateCreated: Long = 0,
-        override val dateModified: Long = 0,
-        override val volume: Volume = Volume.PRIMARY,
+        override val creationDate: Long = 0,
+        override val modificationDate: Long = 0,
+        override val belongsToVolume: Volume = Volume.DEVICE,
         override val thumbnail: String? = null,
         val filesCount: Int = 0,
         val imagesCount: Int = 0,
         val videosCount: Int = 0,
         val gifsCount: Int = 0
-    ) : MediaItemUI
+    ) : MediaItemUI {
+        val isVolume: Boolean
+            get() {
+                val volumesRegex = Regex("^/storage(/emulated)*(/[a-zA-Z0-9_-]+)?$")
+                val isVolume = volumesRegex.containsMatchIn(path)
+                val isNotWritable = Path(path).isWritable().not()
+                return isVolume || isNotWritable
+            }
+    }
 }

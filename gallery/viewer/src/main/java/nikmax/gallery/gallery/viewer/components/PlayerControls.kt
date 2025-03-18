@@ -26,6 +26,9 @@ import dev.vivvvek.seeker.Seeker
 import dev.vivvvek.seeker.SeekerDefaults
 import kotlinx.coroutines.Dispatchers
 import nikmax.gallery.core.ui.theme.GalleryTheme
+import nikmax.gallery.gallery.core.utils.MeasurementUnitsUtils.percentageToPosition
+import nikmax.gallery.gallery.core.utils.MeasurementUnitsUtils.positionToPercentage
+import nikmax.gallery.gallery.core.utils.MeasurementUnitsUtils.videoDurationToString
 import nikmax.gallery.viewer.R
 import timber.log.Timber
 
@@ -103,29 +106,11 @@ internal fun Seekbar(
     onSeekFinished: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    fun positionToPercentage(position: Long, duration: Long): Float {
-        return position.toFloat() / duration.toFloat()
-    }
-
-    fun percentageToPosition(percentage: Float, duration: Long): Long {
-        return (percentage * duration).toLong()
-    }
-
-    fun Long.durationToString(): String {
-        val totalSeconds = this / 1000
-        val totalHours = totalSeconds / 3600
-        val hours = "${totalSeconds / 3600}".padStart(2, '0')
-        val minutes = "${(totalSeconds % 3600) / 60}".padStart(2, '0')
-        val seconds = "${totalSeconds % 60}".padStart(2, '0')
-        return if (totalHours > 0) "$hours:$minutes:$seconds"
-        else "$minutes:$seconds"
-    }
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
-        Text(position.durationToString())
+        Text(position.videoDurationToString())
         Seeker(
             value = positionToPercentage(position, duration),
             readAheadValue = positionToPercentage(bufferedPosition, duration),
@@ -139,7 +124,7 @@ internal fun Seekbar(
             ),
             modifier = Modifier.weight(1F)
         )
-        Text(duration.durationToString())
+        Text(duration.videoDurationToString())
     }
 }
 

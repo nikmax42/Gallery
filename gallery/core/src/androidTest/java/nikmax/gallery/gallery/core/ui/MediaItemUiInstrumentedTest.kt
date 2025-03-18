@@ -5,7 +5,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
 import java.io.IOException
 
 
@@ -31,19 +30,13 @@ class MediaItemUiInstrumentedTest {
 
     @Test
     fun protectedItemCheckReturnsCorrectResult() {
-        val tempFile = File.createTempFile("image", "jpg", appContext.cacheDir)
-        val image = MediaItemUI.File(tempFile.path)
-        val realResultForImage = image.protected
-        val desiredResultForImage = false
-        assert(realResultForImage == desiredResultForImage)
-
         val storage = MediaItemUI.Album("/storage/emulated/0")
-        val realResultForStorage = storage.protected
+        val realResultForStorage = storage.isVolume
         val desiredResultForStorage = true
         assert(realResultForStorage == desiredResultForStorage)
 
         val sdcard = MediaItemUI.Album("/storage/ABCD-1234")
-        val realResultForSdcard = sdcard.protected
+        val realResultForSdcard = sdcard.isVolume
         val desiredResultForSdcard = true
         assert(realResultForSdcard == desiredResultForSdcard)
     }

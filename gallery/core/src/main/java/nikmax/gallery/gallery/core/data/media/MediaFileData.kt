@@ -8,6 +8,7 @@ data class MediaFileData(
     val uri: String = "file://$path",
     val name: String = Path(path).name,
     val size: Long = 0,
+    val duration: Long = 0,
     val dateCreated: Long = 0,
     val dateModified: Long = 0,
     val volume: Volume = Volume.PRIMARY,

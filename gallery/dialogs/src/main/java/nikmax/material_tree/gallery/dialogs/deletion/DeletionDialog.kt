@@ -77,9 +77,9 @@ private fun DeletionDialogPreview() {
     val item = nikmax.gallery.gallery.core.ui.MediaItemUI.File(
         path = "test/image.png",
         size = 0,
-        dateCreated = 0,
-        dateModified = 0,
-        volume = nikmax.gallery.gallery.core.ui.MediaItemUI.Volume.PRIMARY,
+        creationDate = 0,
+        modificationDate = 0,
+        belongsToVolume = nikmax.gallery.gallery.core.ui.MediaItemUI.Volume.DEVICE,
     )
 
     GalleryTheme {

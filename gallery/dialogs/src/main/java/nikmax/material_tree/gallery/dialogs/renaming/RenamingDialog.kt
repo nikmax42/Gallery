@@ -133,9 +133,9 @@ private fun DialogPreview() {
         path = "test/image.png",
         name = "image.png",
         size = 0,
-        dateCreated = 0,
-        dateModified = 0,
-        volume = nikmax.gallery.gallery.core.ui.MediaItemUI.Volume.PRIMARY,
+        creationDate = 0,
+        modificationDate = 0,
+        belongsToVolume = nikmax.gallery.gallery.core.ui.MediaItemUI.Volume.DEVICE,
         mimetype = "image/png"
     )
 

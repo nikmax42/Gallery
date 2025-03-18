@@ -126,9 +126,9 @@ private fun Preview() {
         nikmax.gallery.gallery.core.ui.MediaItemUI.File(
             path = "",
             name = "image.png",
-            volume = nikmax.gallery.gallery.core.ui.MediaItemUI.Volume.PRIMARY,
-            dateCreated = 0,
-            dateModified = 0,
+            belongsToVolume = nikmax.gallery.gallery.core.ui.MediaItemUI.Volume.DEVICE,
+            creationDate = 0,
+            modificationDate = 0,
             size = 0,
             mimetype = "image/png"
         )
