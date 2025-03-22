@@ -34,7 +34,7 @@ val UndrawLockedImageFolder: ImageVector
                 arcTo(30.33f, 30.33f, 0f, isMoreThanHalf = false, isPositiveArc = false, 422.21f, 20.99f)
                 close()
             }
-            path(fill = SolidColor(Color(0xFF3F3D56))) {
+            path(fill = SolidColor(MaterialTheme.colorScheme.secondary)) {
                 moveTo(535.94f, 0f)
                 horizontalLineTo(175.61f)
                 arcToRelative(18.22f, 18.22f, 0f, isMoreThanHalf = false, isPositiveArc = false, -17.64f, 13.78f)
@@ -54,13 +54,14 @@ val UndrawLockedImageFolder: ImageVector
                 arcTo(18.21f, 18.21f, 0f, isMoreThanHalf = false, isPositiveArc = false, 535.94f, 0f)
                 close()
             }
-            path(fill = SolidColor(MaterialTheme.colorScheme.primaryContainer)) {
+            path(fill = SolidColor(MaterialTheme.colorScheme.primary)) {
                 moveTo(241.85f, 90.87f)
                 moveToRelative(-48.85f, 0f)
                 arcToRelative(48.85f, 48.85f, 0f, isMoreThanHalf = true, isPositiveArc = true, 97.69f, 0f)
                 arcToRelative(48.85f, 48.85f, 0f, isMoreThanHalf = true, isPositiveArc = true, -97.69f, 0f)
             }
-            path(fill = SolidColor(Color(0xFF3F3D56))) {
+            // mountains
+            path(fill = SolidColor(MaterialTheme.colorScheme.secondary)) {
                 moveTo(536.34f, 203.51f)
                 horizontalLineTo(201.31f)
                 arcToRelative(17.15f, 17.15f, 0f, isMoreThanHalf = false, isPositiveArc = true, -11.25f, -4.25f)
@@ -89,7 +90,8 @@ val UndrawLockedImageFolder: ImageVector
                 arcTo(37.42f, 37.42f, 0f, isMoreThanHalf = false, isPositiveArc = false, 357.38f, 71.64f)
                 close()
             }
-            path(fill = SolidColor(Color(0xFF3F3D56))) {
+            // folder border
+            path(fill = SolidColor(MaterialTheme.colorScheme.secondary)) {
                 moveToRelative(182.47f, 189.89f)
                 lineToRelative(-12.44f, -10.96f)
                 lineToRelative(-0.03f, -0.02f)
@@ -377,7 +379,7 @@ val UndrawLockedImageFolder: ImageVector
                 close()
             }
             path(
-                fill = SolidColor(MaterialTheme.colorScheme.primaryContainer),
+                fill = SolidColor(MaterialTheme.colorScheme.primary),
                 strokeLineWidth = 1.42f
             ) {
                 moveTo(285f, 338.18f)

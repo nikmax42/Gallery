@@ -58,7 +58,8 @@ internal object MediastoreUtils {
             MediaStore.Images.Media.DATE_ADDED,
             MediaStore.Images.Media.DATE_MODIFIED,
             MediaStore.Images.Media.VOLUME_NAME,
-            MediaStore.Images.Media.SIZE
+            MediaStore.Images.Media.SIZE,
+            MediaStore.Images.Media.DURATION
         )
         val cursor = context.contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -85,7 +86,8 @@ internal object MediastoreUtils {
             MediaStore.Video.Media.DATE_ADDED,
             MediaStore.Video.Media.DATE_MODIFIED,
             MediaStore.Video.Media.VOLUME_NAME,
-            MediaStore.Video.Media.SIZE
+            MediaStore.Video.Media.SIZE,
+            MediaStore.Video.Media.DURATION
         )
         val cursor = context.contentResolver.query(
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
@@ -128,6 +130,9 @@ internal object MediastoreUtils {
         val size = cursor.getLong(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE)
         )
+        val duration = cursor.getLong(
+            cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DURATION)
+        )
         val volumeName = cursor.getString(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.VOLUME_NAME)
         )
@@ -136,6 +141,7 @@ internal object MediastoreUtils {
             path = data,
             uri = contentUri.toString(),
             size = size,
+            duration = duration,
             dateCreated = dateAdded,
             dateModified = dateModified,
             volume = if (volumeName == MediaStore.VOLUME_EXTERNAL_PRIMARY) MediaFileData.Volume.PRIMARY

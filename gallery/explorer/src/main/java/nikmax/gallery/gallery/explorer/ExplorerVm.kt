@@ -171,18 +171,6 @@ class ExplorerVm
     }
 
     private suspend fun onCopyOrMove(itemsToCopyOrMove: List<MediaItemUI>, move: Boolean = false) {
-        // if selection contains protected items - prevent execution
-        // and show snackbar with proposition to unselect protected items
-        val protectedItems = itemsToCopyOrMove.filter { it.protected }
-        if (protectedItems.isNotEmpty()) {
-            showSnackbar(
-                SnackBar.ProtectedItems(
-                    protectedItems = protectedItems,
-                    onConfirm = { onSelectionChange(itemsToCopyOrMove - protectedItems) }
-                ),
-            )
-            return
-        }
         // pick destination album
         val destinationAlbumPath = try {
             awaitForAlbumPickerResult()
@@ -223,16 +211,6 @@ class ExplorerVm
     }
 
     private suspend fun onRename(itemsToRename: List<MediaItemUI>) {
-        val protectedItems = itemsToRename.filter { it.protected }
-        if (protectedItems.isNotEmpty()) {
-            showSnackbar(
-                SnackBar.ProtectedItems(
-                    protectedItems = protectedItems,
-                    onConfirm = { onSelectionChange(itemsToRename - protectedItems) }
-                ),
-            )
-            return
-        }
         // await for after-rename paths from dialogs
         val newPaths = itemsToRename.map { item ->
             try {
@@ -264,16 +242,6 @@ class ExplorerVm
     }
 
     private suspend fun onDelete(itemsToDelete: List<MediaItemUI>) {
-        val protectedItems = itemsToDelete.filter { it.protected }
-        if (protectedItems.isNotEmpty()) {
-            showSnackbar(
-                SnackBar.ProtectedItems(
-                    protectedItems = protectedItems,
-                    onConfirm = { onSelectionChange(itemsToDelete - protectedItems) }
-                ),
-            )
-            return
-        }
         try {
             awaitForDeletionConfirmationDialogResult(itemsToDelete)
             val fileOperations = itemsToDelete.map { FileOperation.Delete(it.path) }

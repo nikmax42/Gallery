@@ -3,16 +3,9 @@ package nikmax.gallery.gallery.explorer.components.error_contents
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,35 +25,32 @@ internal fun PermissionNotGrantedContent(
     modifier: Modifier = Modifier
 ) {
     Surface {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = modifier.fillMaxSize()
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = modifier
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Image(imageVector = UndrawLockedImageFolder, contentDescription = null)
-                Text(
-                    text = stringResource(R.string.not_storage_access),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text(
-                    text = stringResource(R.string.storage_permission_explanation),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Button(onClick = { onGrantClick() }) {
-                    Icon(Icons.Default.Check, stringResource(R.string.grant))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.grant))
-                }
+            Image(
+                imageVector = UndrawLockedImageFolder,
+                contentDescription = null
+            )
+            Text(
+                text = stringResource(R.string.storage_access),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = stringResource(R.string.storage_permission_explanation),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Button(onClick = { onGrantClick() }) {
+                Text(stringResource(R.string.grant))
             }
         }
     }
 }
 
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
 @Composable
 private fun PermissionNotGrantedContentPreview() {
     GalleryTheme {

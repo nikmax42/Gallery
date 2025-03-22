@@ -60,7 +60,7 @@ fun ConflictResolverDialog(
         conflictsCount = conflictsCount,
         conflictItemPath = conflictItem.path,
         conflictItemThumbnail = conflictItem.thumbnail,
-        conflictItemCreationDate = conflictItem.dateCreated,
+        conflictItemCreationDate = conflictItem.creationDate,
         conflictItemSize = conflictItem.size,
         selectedResolution = selectedResolution,
         onResolutionChange = { selectedResolution = it },

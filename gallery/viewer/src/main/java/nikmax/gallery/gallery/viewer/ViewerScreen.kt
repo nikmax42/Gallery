@@ -145,23 +145,23 @@ private fun ViewerContentPreview() {
             MediaItemUI.File(
                 path = "/storage/emulated/0/DCIM/Camera/IMG1234567890.jpg",
                 size = 0,
-                dateCreated = 0,
-                dateModified = 0,
-                volume = MediaItemUI.Volume.PRIMARY
+                creationDate = 0,
+                modificationDate = 0,
+                belongsToVolume = MediaItemUI.Volume.DEVICE
             ),
             MediaItemUI.File(
                 path = "/storage/emulated/0/Images/wallpaper.jpg",
                 size = 0,
-                dateCreated = 0,
-                dateModified = 0,
-                volume = MediaItemUI.Volume.PRIMARY
+                creationDate = 0,
+                modificationDate = 0,
+                belongsToVolume = MediaItemUI.Volume.DEVICE
             ),
             MediaItemUI.File(
                 path = "/storage/emulated/0/Movies/VID1234567890.mp4",
                 size = 0,
-                dateCreated = 0,
-                dateModified = 0,
-                volume = MediaItemUI.Volume.PRIMARY
+                creationDate = 0,
+                modificationDate = 0,
+                belongsToVolume = MediaItemUI.Volume.DEVICE
             )
         )
     }

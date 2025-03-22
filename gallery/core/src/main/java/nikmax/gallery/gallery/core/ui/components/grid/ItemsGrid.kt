@@ -99,15 +99,31 @@ fun ItemsGrid(
         ) {
             items(items.size) { index ->
                 val item = items[index]
+                val image = item.thumbnail
+                val name = item.name
+                val isVideo = item is MediaItemUI.File && item.mediaType == MediaItemUI.File.MediaType.VIDEO
+                val videoDuration = when (item is MediaItemUI.File && item.mediaType == MediaItemUI.File.MediaType.VIDEO) {
+                    true -> item.duration
+                    false -> 0
+                }
+                val isAlbum = item is MediaItemUI.Album
+                val isVolume = item is MediaItemUI.Album && item.isVolume
+                val albumSize = if (item is MediaItemUI.Album) item.size else 0
+                val albumFilesCount = if (item is MediaItemUI.Album) item.filesCount else 0
+                val isPlacedOnPluggableVolume = item.belongsToVolume == MediaItemUI.Volume.PLUGGABLE
+                val isSelected = selectedItems.contains(item)
+
                 GridItem(
-                    image = item.thumbnail,
-                    name = item.name,
-                    isVideo = item is MediaItemUI.File && item.mediaType == MediaItemUI.File.MediaType.VIDEO,
-                    isFolder = item is MediaItemUI.Album,
-                    folderFilesCount = if (item is MediaItemUI.Album) item.filesCount else 0,
-                    isSelected = selectedItems.contains(item),
-                    isSecondaryVolume = item.volume == MediaItemUI.Volume.SECONDARY,
-                    isNotWritable = item.protected,
+                    image = image,
+                    name = name,
+                    isVideo = isVideo,
+                    videoDuration = videoDuration,
+                    isAlbum = isAlbum,
+                    isVolume = isVolume,
+                    albumSize = albumSize,
+                    albumFilesCount = albumFilesCount,
+                    isPlacedOnPluggableVolume = isPlacedOnPluggableVolume,
+                    isSelected = isSelected,
                     modifier = Modifier
                         .animateItem(
                             fadeInSpec = tween(),
@@ -142,9 +158,9 @@ private fun ItemsGridPreview() {
         MediaItemUI.File(
             path = "",
             name = "image.png",
-            volume = MediaItemUI.Volume.PRIMARY,
-            dateCreated = 0,
-            dateModified = 0,
+            belongsToVolume = MediaItemUI.Volume.DEVICE,
+            creationDate = 0,
+            modificationDate = 0,
             size = 0,
             mimetype = "image/png"
         )
@@ -153,9 +169,9 @@ private fun ItemsGridPreview() {
         MediaItemUI.File(
             path = "",
             name = "video.mp4",
-            volume = MediaItemUI.Volume.PRIMARY,
-            dateCreated = 0,
-            dateModified = 0,
+            belongsToVolume = MediaItemUI.Volume.DEVICE,
+            creationDate = 0,
+            modificationDate = 0,
             size = 0,
             mimetype = "video/mp4"
         )
@@ -164,9 +180,9 @@ private fun ItemsGridPreview() {
         MediaItemUI.File(
             path = "",
             name = "gif.gif",
-            volume = MediaItemUI.Volume.PRIMARY,
-            dateCreated = 0,
-            dateModified = 0,
+            belongsToVolume = MediaItemUI.Volume.DEVICE,
+            creationDate = 0,
+            modificationDate = 0,
             size = 0,
             mimetype = "image/gif"
         )
@@ -175,9 +191,9 @@ private fun ItemsGridPreview() {
         MediaItemUI.Album(
             path = "",
             name = "album",
-            volume = MediaItemUI.Volume.PRIMARY,
-            dateCreated = 0,
-            dateModified = 0,
+            belongsToVolume = MediaItemUI.Volume.DEVICE,
+            creationDate = 0,
+            modificationDate = 0,
             size = 0,
             filesCount = 3
         )
