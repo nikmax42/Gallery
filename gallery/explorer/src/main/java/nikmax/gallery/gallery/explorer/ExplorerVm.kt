@@ -302,9 +302,7 @@ class ExplorerVm
             _navStackFlow,
             _permissionStatusFlow
         ) { isLoading, items, navStack, permissionStatus ->
-            if (isLoading && navStack.isEmpty() && items.isEmpty())
-                UIState.Content.Initialization
-            else if (permissionStatus == PermissionsUtils.PermissionStatus.DENIED)
+            if (permissionStatus == PermissionsUtils.PermissionStatus.DENIED)
                 UIState.Content.Error.PermissionNotGranted(
                     onGrantClick = {
                         PermissionsUtils.requestPermission(
@@ -315,11 +313,15 @@ class ExplorerVm
                 )
             else if (!isLoading && items.isEmpty())
                 UIState.Content.Error.NothingFound
+            else if (isLoading && navStack.isEmpty() && items.isEmpty())
+                UIState.Content.Initialization
             else
                 UIState.Content.Normal
         }.collectLatest { newContentType ->
-            _uiState.update {
-                it.copy(content = newContentType)
+            withContext(Dispatchers.Main) {
+                _uiState.update {
+                    it.copy(content = newContentType)
+                }
             }
         }
     }
