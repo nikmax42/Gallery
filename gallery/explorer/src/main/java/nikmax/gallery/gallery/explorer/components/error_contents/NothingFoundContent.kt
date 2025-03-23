@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -23,7 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.explorer.R
-import nikmax.gallery.gallery.explorer.components.drawables.UndrawTreeSwing5010
+import nikmax.gallery.gallery.explorer.components.drawables.UndrawNothingFound
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,21 +37,23 @@ internal fun NothingFoundContent(
         contentAlignment = Alignment.Center,
         modifier = modifier.fillMaxSize()
     ) {
-        Surface {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Image(imageVector = UndrawTreeSwing5010, contentDescription = null)
-                Text(
-                    text = stringResource(R.string.no_media_found),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Row {
-                    Button(onClick = { onRefresh() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))
-                        Text(stringResource(R.string.refresh))
-                    }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = modifier
+        ) {
+            Image(
+                imageVector = UndrawNothingFound,
+                contentDescription = null
+            )
+            Text(
+                text = stringResource(R.string.no_media_found),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Row {
+                Button(onClick = { onRefresh() }) {
+                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))
+                    Text(stringResource(R.string.refresh))
                 }
             }
         }
@@ -65,6 +67,7 @@ private fun NoMediaFoundContentPreview() {
     GalleryTheme {
         NothingFoundContent(
             onRefresh = { },
+            modifier = Modifier.padding(16.dp)
         )
     }
 }
