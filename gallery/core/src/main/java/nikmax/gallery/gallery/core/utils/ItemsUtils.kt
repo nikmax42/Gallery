@@ -24,8 +24,10 @@ object ItemsUtils {
         includeImages: Boolean = true,
         includeVideos: Boolean = true,
         includeGifs: Boolean = true,
+        includeUnHidden: Boolean = true,
         includeHidden: Boolean = false,
-        includeFilesOnly: Boolean = false,
+        includeFiles: Boolean = true,
+        includeAlbums: Boolean = true,
         sortingOrder: GalleryPreferences.Sorting.Order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
         descendSorting: Boolean = false,
         showAlbumsFirst: Boolean = false,
@@ -50,14 +52,16 @@ object ItemsUtils {
                     false -> searchFiltered.createAlbumOwnFilesList(targetAlbumPath)
                 }
             }
-            val withFiltersApplied = albumsGrouped.applyFilters(
+            val filtered = albumsGrouped.applyFilters(
                 includeImages = includeImages,
                 includeVideos = includeVideos,
                 includeGifs = includeGifs,
+                includeUnHidden = includeUnHidden,
                 includeHidden = includeHidden,
-                includeFilesOnly = includeFilesOnly
+                includeFiles = includeFiles,
+                includeAlbums = includeAlbums
             )
-            val sorted = withFiltersApplied.applySorting(
+            val sorted = filtered.applySorting(
                 sortingOrder = sortingOrder,
                 descend = descendSorting,
                 albumsFirst = showAlbumsFirst,
@@ -186,8 +190,9 @@ object ItemsUtils {
             GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.creationDate }
             GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> this.sortedBy { it.modificationDate }
             GalleryPreferences.Sorting.Order.NAME -> this.sortedBy { it.name }
+            GalleryPreferences.Sorting.Order.EXTENSION -> this.filterIsInstance<MediaItemUI.File>().sortedBy { it.extension }
             GalleryPreferences.Sorting.Order.SIZE -> this.sortedBy { it.size }
-            GalleryPreferences.Sorting.Order.RANDOM -> this.sortedBy { Random.Default.nextInt() }
+            GalleryPreferences.Sorting.Order.RANDOM -> this.sortedBy { Random.nextInt() }
         }.let {
             when (descend) {
                 true -> it.reversed()
@@ -204,41 +209,45 @@ object ItemsUtils {
         includeImages: Boolean,
         includeVideos: Boolean,
         includeGifs: Boolean,
+        includeFiles: Boolean,
+        includeAlbums: Boolean,
+        includeUnHidden: Boolean,
         includeHidden: Boolean,
-        includeFilesOnly: Boolean = false,
     ): List<MediaItemUI> {
-        val imagesFiltered = if (includeImages) this.filter { item ->
+        val images = if (includeImages) this.filter { item ->
             when (item) {
                 is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.IMAGE
                 is MediaItemUI.Album -> item.imagesCount > 0
             }
         } else emptyList()
 
-        val videosFiltered = if (includeVideos) this.filter { item ->
+        val videos = if (includeVideos) this.filter { item ->
             when (item) {
                 is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.VIDEO
                 is MediaItemUI.Album -> item.videosCount > 0
             }
         } else emptyList()
 
-        val gifsFiltered = if (includeGifs) this.filter { item ->
+        val gifs = if (includeGifs) this.filter { item ->
             when (item) {
                 is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.GIF
                 is MediaItemUI.Album -> item.gifsCount > 0
             }
         } else emptyList()
 
-        val hiddenFiltered = when (includeHidden) {
-            true -> imagesFiltered + videosFiltered + gifsFiltered
-            false -> (imagesFiltered + videosFiltered + gifsFiltered).filterNot { it.hidden }
-        }
+        val mediaTypeFiltered = (images + videos + gifs).distinct()
 
-        val filesOnlyFiltered = when (includeFilesOnly) {
-            true -> hiddenFiltered.filterIsInstance<MediaItemUI.File>()
-            false -> hiddenFiltered
-        }
+        val unhidden = if (includeUnHidden) mediaTypeFiltered.filter { !it.hidden } else emptyList()
+        val hidden = if (includeHidden) mediaTypeFiltered.filter { it.hidden } else emptyList()
 
-        return filesOnlyFiltered
+        val visibilityFiltered = unhidden + hidden
+
+        val filesFiltered = if (includeFiles) visibilityFiltered.filterIsInstance<MediaItemUI.File>() else emptyList()
+        val albumsFiltered = if (includeAlbums) visibilityFiltered.filterIsInstance<MediaItemUI.Album>() else emptyList()
+
+        val itemTypeFiltered = filesFiltered + albumsFiltered
+
+        return itemTypeFiltered
     }
 
 

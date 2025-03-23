@@ -108,8 +108,10 @@ class AlbumPickerVm
                 includeImages = prefs.filtering.includeImages,
                 includeVideos = prefs.filtering.includeVideos,
                 includeGifs = prefs.filtering.includeGifs,
+                includeUnHidden = prefs.filtering.includeUnHidden,
                 includeHidden = prefs.filtering.includeHidden,
-                includeFilesOnly = prefs.filtering.includeFilesOnly,
+                includeFiles = prefs.filtering.includeFiles,
+                includeAlbums = prefs.filtering.includeAlbums,
                 sortingOrder = prefs.sorting.order,
                 descendSorting = prefs.sorting.descend,
                 searchQuery = null

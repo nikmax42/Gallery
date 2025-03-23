@@ -274,12 +274,14 @@ class ExplorerVm
                 includeImages = prefs.filtering.includeImages,
                 includeVideos = prefs.filtering.includeVideos,
                 includeGifs = prefs.filtering.includeGifs,
+                includeUnHidden = prefs.filtering.includeUnHidden,
                 includeHidden = prefs.filtering.includeHidden,
-                includeFilesOnly = prefs.filtering.includeFilesOnly,
+                includeFiles = prefs.filtering.includeFiles,
+                includeAlbums = prefs.filtering.includeAlbums,
                 sortingOrder = prefs.sorting.order,
                 descendSorting = prefs.sorting.descend,
-                showAlbumsFirst = prefs.appearance.onTop == GalleryPreferences.Appearance.OnTop.ALBUMS_ON_TOP,
-                showFilesFirst = prefs.appearance.onTop == GalleryPreferences.Appearance.OnTop.FILES_ON_TOP,
+                showAlbumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
+                showFilesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP,
                 searchQuery = searchQuery
             )
         }.collectLatest { actualItemsList ->

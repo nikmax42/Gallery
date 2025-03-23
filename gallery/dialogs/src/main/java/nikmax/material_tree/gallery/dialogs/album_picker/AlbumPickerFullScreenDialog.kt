@@ -75,8 +75,8 @@ fun AlbumPickerFullScreenDialog(
             },
             onConfirm = { vm.onAction(AlbumPickerVm.UserAction.Confirm) },
             onDismiss = { onDismiss() },
-            gridColumnsPortrait = preferences.appearance.grid.portraitColumns,
-            gridColumnsLandscape = preferences.appearance.grid.landscapeColumns
+            gridColumnsPortrait = preferences.appearance.gridAppearance.portraitColumns,
+            gridColumnsLandscape = preferences.appearance.gridAppearance.landscapeColumns
         )
     }
 }

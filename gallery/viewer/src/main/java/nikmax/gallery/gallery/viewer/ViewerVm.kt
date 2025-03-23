@@ -178,8 +178,10 @@ class ViewerVm
                 includeImages = prefs.filtering.includeImages,
                 includeVideos = prefs.filtering.includeVideos,
                 includeGifs = prefs.filtering.includeGifs,
+                includeUnHidden = prefs.filtering.includeUnHidden,
                 includeHidden = prefs.filtering.includeHidden,
-                includeFilesOnly = true,
+                includeFiles = true,
+                includeAlbums = true,
                 sortingOrder = prefs.sorting.order,
                 descendSorting = prefs.sorting.descend,
             ).map { it as MediaItemUI.File }

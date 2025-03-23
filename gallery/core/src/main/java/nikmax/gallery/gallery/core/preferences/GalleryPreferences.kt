@@ -11,13 +11,14 @@ data class GalleryPreferences(
     @Serializable
     data class Appearance(
         val nestedAlbumsEnabled: Boolean = true,
-        val onTop: OnTop = OnTop.NONE,
-        val grid: Grid = Grid()
+        val theme: Theme = Theme.SYSTEM,
+        val dynamicColors: DynamicColors = DynamicColors.SYSTEM,
+        val gridAppearance: GridAppearance = GridAppearance()
     ) {
-        enum class OnTop { NONE, ALBUMS_ON_TOP, FILES_ON_TOP }
-
+        enum class Theme { SYSTEM, LIGHT, DARK }
+        enum class DynamicColors { SYSTEM, DISABLED }
         @Serializable
-        data class Grid(
+        data class GridAppearance(
             val portraitColumns: Int = 3,
             val landscapeColumns: Int = 4
         )
@@ -27,9 +28,10 @@ data class GalleryPreferences(
     data class Sorting(
         val order: Order = Order.CREATION_DATE,
         val descend: Boolean = false,
-        val albumsFirst: Boolean = true
+        val onTop: OnTop = OnTop.ALBUMS_ON_TOP
     ) {
-        enum class Order { CREATION_DATE, MODIFICATION_DATE, NAME, SIZE, RANDOM }
+        enum class Order { CREATION_DATE, MODIFICATION_DATE, NAME, EXTENSION, SIZE, RANDOM }
+        enum class OnTop { NONE, ALBUMS_ON_TOP, FILES_ON_TOP }
     }
 
     @Serializable
@@ -37,7 +39,9 @@ data class GalleryPreferences(
         val includeImages: Boolean = true,
         val includeVideos: Boolean = true,
         val includeGifs: Boolean = true,
-        val includeHidden: Boolean = false,
-        val includeFilesOnly: Boolean = false
+        val includeFiles: Boolean = true,
+        val includeAlbums: Boolean = true,
+        val includeUnHidden: Boolean = true,
+        val includeHidden: Boolean = false
     )
 }

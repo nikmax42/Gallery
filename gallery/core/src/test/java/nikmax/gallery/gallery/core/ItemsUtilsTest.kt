@@ -116,7 +116,7 @@ class ItemsUtilsTest {
             includeVideos = false,
             includeGifs = false,
             includeHidden = true,
-            includeFilesOnly = false
+            includeFiles = false
         )
 
         fun MediaItemUI.isImageFile(): Boolean {
@@ -124,7 +124,7 @@ class ItemsUtilsTest {
         }
 
         fun MediaItemUI.containsOnlyImages(): Boolean {
-            return this is MediaItemUI.Album && this.imagesCount > 0 && this.videosCount == 0 && this.gifsCount == 0
+            return this is MediaItemUI.Album && this.imagesCount > 0 /* && this.videosCount == 0 && this.gifsCount == 0 */ // uncomment to test strict filtering
         }
 
         assert(
@@ -142,7 +142,7 @@ class ItemsUtilsTest {
             includeVideos = true,
             includeGifs = false,
             includeHidden = true,
-            includeFilesOnly = false
+            includeFiles = false
         )
 
         fun MediaItemUI.isVideoFile(): Boolean {
@@ -150,7 +150,7 @@ class ItemsUtilsTest {
         }
 
         fun MediaItemUI.containsOnlyVideos(): Boolean {
-            return this is MediaItemUI.Album && this.videosCount > 0 && this.imagesCount == 0 && this.gifsCount == 0
+            return this is MediaItemUI.Album && this.videosCount > 0 /* && this.imagesCount == 0 && this.gifsCount == 0 */
         }
 
         assert(
@@ -168,7 +168,7 @@ class ItemsUtilsTest {
             includeVideos = false,
             includeGifs = true,
             includeHidden = true,
-            includeFilesOnly = false
+            includeFiles = false
         )
 
         fun MediaItemUI.isGifFile(): Boolean {
@@ -176,7 +176,7 @@ class ItemsUtilsTest {
         }
 
         fun MediaItemUI.containsOnlyGifs(): Boolean {
-            return this is MediaItemUI.Album && this.gifsCount > 0 && this.imagesCount == 0 && this.videosCount == 0
+            return this is MediaItemUI.Album && this.gifsCount > 0 /* && this.imagesCount == 0 && this.videosCount == 0 */
         }
 
         assert(

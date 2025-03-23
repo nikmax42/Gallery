@@ -35,8 +35,8 @@ internal fun MainContent(
                 selectedItems = state.selectedItems,
                 onItemOpen = { onAction(ExplorerVm.UserAction.ItemOpen(it)) },
                 onSelectionChange = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
-                columnsAmountPortrait = preferences.appearance.grid.portraitColumns,
-                columnsAmountLandscape = preferences.appearance.grid.landscapeColumns,
+                columnsAmountPortrait = preferences.appearance.gridAppearance.portraitColumns,
+                columnsAmountLandscape = preferences.appearance.gridAppearance.landscapeColumns,
                 modifier = modifier.fillMaxSize()
             )
         }

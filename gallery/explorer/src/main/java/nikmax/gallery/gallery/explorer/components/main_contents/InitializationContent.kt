@@ -31,8 +31,8 @@ internal fun InitializationContent(
         .getPreferencesFlow(LocalContext.current)
         .collectAsState(GalleryPreferences())
     val columnsAmount = when (LocalConfiguration.current.orientation) {
-        Configuration.ORIENTATION_LANDSCAPE -> preferences.appearance.grid.landscapeColumns
-        else -> preferences.appearance.grid.portraitColumns
+        Configuration.ORIENTATION_LANDSCAPE -> preferences.appearance.gridAppearance.landscapeColumns
+        else -> preferences.appearance.gridAppearance.portraitColumns
     }
 
     LazyVerticalGrid(
