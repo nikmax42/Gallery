@@ -10,28 +10,31 @@ import android.provider.MediaStore
  * Utilities for retrieving media files from the [MediaStore].
  */
 internal object MediastoreUtils {
-
+    
     /**
      * Retrieves a list of images and videos (including placed in hidden .directories) from the mediastore.
      *
      * @return a list of [MediaFileData] objects.
      */
     fun getAllImagesAndVideos(context: Context): List<MediaFileData> {
-        return getAllImages(context) + getAllVideos(context)
+        // return getAllImages(context) + getAllVideos(context)
+        return getAllImageAndVideoFiles(context)
     }
-
-    // contains example of correct projection and selection to get all images and videos INCLUDING hidden ones
-    private fun getAllImagesAndVideos_OLD(context: Context): MutableList<MediaFileData> {
+    
+    // get all images and videos INCLUDING hidden ones
+    private fun getAllImageAndVideoFiles(context: Context): MutableList<MediaFileData> {
         val projection = arrayOf(
+            MediaStore.MediaColumns._ID,
             MediaStore.MediaColumns.DATA,
             MediaStore.MediaColumns.DATE_ADDED,
             MediaStore.MediaColumns.DATE_MODIFIED,
             MediaStore.MediaColumns.VOLUME_NAME,
-            MediaStore.MediaColumns.SIZE
+            MediaStore.MediaColumns.SIZE,
+            MediaStore.MediaColumns.DURATION
         )
         val selection = "${MediaStore.Files.FileColumns.MIME_TYPE} LIKE 'image/%'" +
                 " OR ${MediaStore.Files.FileColumns.MIME_TYPE} LIKE 'video/%'"
-
+        
         val mediaStoreUri = MediaStore.Files.getContentUri("external")
         val cursor = context.contentResolver.query(
             mediaStoreUri,
@@ -50,7 +53,7 @@ internal object MediastoreUtils {
         }
         return filesData
     }
-
+    
     private fun getAllImages(context: Context): MutableList<MediaFileData> {
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
@@ -78,7 +81,7 @@ internal object MediastoreUtils {
         }
         return filesData
     }
-
+    
     private fun getAllVideos(context: Context): MutableList<MediaFileData> {
         val projection = arrayOf(
             MediaStore.Video.Media._ID,
@@ -106,7 +109,7 @@ internal object MediastoreUtils {
         }
         return filesData
     }
-
+    
     /**
      * Creates a [MediaFileData] object from a mediastore cursor.
      *
@@ -136,7 +139,7 @@ internal object MediastoreUtils {
         val volumeName = cursor.getString(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.VOLUME_NAME)
         )
-
+        
         return MediaFileData(
             path = data,
             uri = contentUri.toString(),

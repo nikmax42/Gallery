@@ -16,7 +16,7 @@ object ItemsUtils {
      * Default album path that will be used when target album path is not specified
      */
     private const val ROOT_ALBUM_PATH = "/storage/"
-
+    
     fun List<MediaFileData>.createItemsListToDisplay(
         targetAlbumPath: String?,
         searchQuery: String? = null,
@@ -71,8 +71,8 @@ object ItemsUtils {
         }
         return itemsListToDisplay
     }
-
-
+    
+    
     /**
      * Filters the list of [MediaItemUI] to only include files in the specified album path.
      *
@@ -82,7 +82,7 @@ object ItemsUtils {
     private fun List<MediaItemUI>.createAlbumOwnFilesList(albumPath: String): List<MediaItemUI> {
         return this.filter { Path(it.path).parent.pathString == albumPath }
     }
-
+    
     /**
      * Groups a list of [MediaItemUI.File] into albums based on their parent directory path.
      *
@@ -106,7 +106,7 @@ object ItemsUtils {
                 )
             }
     }
-
+    
     /**
      * include target album's direct children
      * include target album's deep children that doesn't have any media albums between them and the target album
@@ -137,8 +137,9 @@ object ItemsUtils {
             .groupBy { Path(it.path).parent.pathString }
             .map { albumGroup ->
                 val albumOwnFiles = albumGroup.value
-                val nestedAlbumsFiles = this.filter { file -> file.path.startsWith(albumGroup.key) }.minus(albumOwnFiles)
-
+                val nestedAlbumsFiles =
+                    this.filter { file -> file.path.startsWith(albumGroup.key) }.minus(albumOwnFiles)
+                
                 val albumName = Path(albumGroup.key).name
                 // size of album own files and all nested album's files
                 val albumSize = (albumOwnFiles + nestedAlbumsFiles).sumOf { it.size }
@@ -147,10 +148,13 @@ object ItemsUtils {
                 val albumVolume = albumOwnFiles.first().belongsToVolume
                 val albumThumbnail = (albumOwnFiles + nestedAlbumsFiles).first().path
                 val filesCount = (albumOwnFiles + nestedAlbumsFiles).size
-                val imagesCount = (albumOwnFiles + nestedAlbumsFiles).count { it.mediaType == MediaItemUI.File.MediaType.IMAGE }
-                val videosCount = (albumOwnFiles + nestedAlbumsFiles).count { it.mediaType == MediaItemUI.File.MediaType.VIDEO }
-                val gifsCount = (albumOwnFiles + nestedAlbumsFiles).count { it.mediaType == MediaItemUI.File.MediaType.GIF }
-
+                val imagesCount =
+                    (albumOwnFiles + nestedAlbumsFiles).count { it.mediaType == MediaItemUI.File.MediaType.IMAGE }
+                val videosCount =
+                    (albumOwnFiles + nestedAlbumsFiles).count { it.mediaType == MediaItemUI.File.MediaType.VIDEO }
+                val gifsCount =
+                    (albumOwnFiles + nestedAlbumsFiles).count { it.mediaType == MediaItemUI.File.MediaType.GIF }
+                
                 MediaItemUI.Album(
                     path = albumGroup.key,
                     name = albumName,
@@ -178,8 +182,8 @@ object ItemsUtils {
         }
         return filteredNestedAlbums + ownFiles
     }
-
-
+    
+    
     private fun List<MediaItemUI>.applySorting(
         sortingOrder: GalleryPreferences.Sorting.Order,
         descend: Boolean,
@@ -190,9 +194,10 @@ object ItemsUtils {
             GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.creationDate }
             GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> this.sortedBy { it.modificationDate }
             GalleryPreferences.Sorting.Order.NAME -> this.sortedBy { it.name }
-            GalleryPreferences.Sorting.Order.EXTENSION -> this.filterIsInstance<MediaItemUI.File>().sortedBy { it.extension }
             GalleryPreferences.Sorting.Order.SIZE -> this.sortedBy { it.size }
             GalleryPreferences.Sorting.Order.RANDOM -> this.sortedBy { Random.nextInt() }
+            GalleryPreferences.Sorting.Order.EXTENSION -> this.filterIsInstance<MediaItemUI.Album>() +
+                    this.filterIsInstance<MediaItemUI.File>().sortedBy { it.extension }
         }.let {
             when (descend) {
                 true -> it.reversed()
@@ -204,7 +209,7 @@ object ItemsUtils {
             }
         }
     }
-
+    
     private fun List<MediaItemUI>.applyFilters(
         includeImages: Boolean,
         includeVideos: Boolean,
@@ -219,42 +224,47 @@ object ItemsUtils {
                 is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.IMAGE
                 is MediaItemUI.Album -> item.imagesCount > 0
             }
-        } else emptyList()
-
+        }
+        else emptyList()
+        
         val videos = if (includeVideos) this.filter { item ->
             when (item) {
                 is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.VIDEO
                 is MediaItemUI.Album -> item.videosCount > 0
             }
-        } else emptyList()
-
+        }
+        else emptyList()
+        
         val gifs = if (includeGifs) this.filter { item ->
             when (item) {
                 is MediaItemUI.File -> item.mediaType == MediaItemUI.File.MediaType.GIF
                 is MediaItemUI.Album -> item.gifsCount > 0
             }
-        } else emptyList()
-
+        }
+        else emptyList()
+        
         val mediaTypeFiltered = (images + videos + gifs).distinct()
-
+        
         val unhidden = if (includeUnHidden) mediaTypeFiltered.filter { !it.hidden } else emptyList()
         val hidden = if (includeHidden) mediaTypeFiltered.filter { it.hidden } else emptyList()
-
+        
         val visibilityFiltered = unhidden + hidden
-
-        val filesFiltered = if (includeFiles) visibilityFiltered.filterIsInstance<MediaItemUI.File>() else emptyList()
-        val albumsFiltered = if (includeAlbums) visibilityFiltered.filterIsInstance<MediaItemUI.Album>() else emptyList()
-
+        
+        val filesFiltered =
+            if (includeFiles) visibilityFiltered.filterIsInstance<MediaItemUI.File>() else emptyList()
+        val albumsFiltered =
+            if (includeAlbums) visibilityFiltered.filterIsInstance<MediaItemUI.Album>() else emptyList()
+        
         val itemTypeFiltered = filesFiltered + albumsFiltered
-
+        
         return itemTypeFiltered
     }
-
-
+    
+    
     private fun List<MediaFileData>.mapDataFilesToUiFiles(): List<MediaItemUI.File> {
         return this.map { it.mapDataFileToUiFile() }
     }
-
+    
     /**
      * Maps [MediaFileData] to [MediaItemUI.File].
      */

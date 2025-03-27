@@ -76,13 +76,13 @@ internal fun GalleryPreferencesSheet(
     val galleryPreferences by GalleryPreferencesUtils
         .getPreferencesFlow(context)
         .collectAsState(GalleryPreferences())
-
+    
     fun setNewPreferences(prefs: GalleryPreferences) {
         scope.launch {
             GalleryPreferencesUtils.savePreferences(prefs, context)
         }
     }
-
+    
     ModalBottomSheet(
         onDismissRequest = { onShowSheetChange(false) },
         dragHandle = null,
@@ -151,7 +151,9 @@ private fun GalleryPreferencesMenu(
                         setNewPreferences(
                             galleryPreferences.copy(
                                 appearance = galleryPreferences.appearance.copy(
-                                    gridAppearance = galleryPreferences.appearance.gridAppearance.copy(portraitColumns = it)
+                                    gridAppearance = galleryPreferences.appearance.gridAppearance.copy(
+                                        portraitColumns = it
+                                    )
                                 )
                             )
                         )
@@ -161,7 +163,9 @@ private fun GalleryPreferencesMenu(
                         setNewPreferences(
                             galleryPreferences.copy(
                                 appearance = galleryPreferences.appearance.copy(
-                                    gridAppearance = galleryPreferences.appearance.gridAppearance.copy(landscapeColumns = it)
+                                    gridAppearance = galleryPreferences.appearance.gridAppearance.copy(
+                                        landscapeColumns = it
+                                    )
                                 )
                             )
                         )
@@ -225,9 +229,21 @@ private fun GalleryPreferencesMenu(
                         )
                     },
                     includeFiles = galleryPreferences.filtering.includeFiles,
-                    onIncludeFilesChange = {},
+                    onIncludeFilesChange = {
+                        setNewPreferences(
+                            galleryPreferences.copy(
+                                filtering = galleryPreferences.filtering.copy(includeFiles = it)
+                            )
+                        )
+                    },
                     includeAlbums = galleryPreferences.filtering.includeAlbums,
-                    onIncludeAlbumsChange = {},
+                    onIncludeAlbumsChange = {
+                        setNewPreferences(
+                            galleryPreferences.copy(
+                                filtering = galleryPreferences.filtering.copy(includeAlbums = it)
+                            )
+                        )
+                    },
                     includeHidden = galleryPreferences.filtering.includeHidden,
                     onIncludeHiddenChange = {
                         setNewPreferences(
@@ -237,7 +253,13 @@ private fun GalleryPreferencesMenu(
                         )
                     },
                     includeUnhidden = galleryPreferences.filtering.includeUnHidden,
-                    onIncludeUnhiddenChange = {},
+                    onIncludeUnhiddenChange = {
+                        setNewPreferences(
+                            galleryPreferences.copy(
+                                filtering = galleryPreferences.filtering.copy(includeUnHidden = it)
+                            )
+                        )
+                    },
                 )
             }
         }
@@ -252,7 +274,7 @@ private fun GalleryAppearanceMenuPreview() {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     scope.launch { sheetState.show() }
-
+    
     GalleryTheme {
         GalleryPreferencesMenu(
             galleryPreferences = GalleryPreferences(),
@@ -306,7 +328,7 @@ private fun AppearanceMenu(
                     val selected = !treeAlbumsEnabled
                     FilterChip(
                         selected = selected,
-                        onClick = { onTreeAlbumsChange(true) },
+                        onClick = { onTreeAlbumsChange(false) },
                         leadingIcon = {
                             Icon(
                                 imageVector = if (selected) Icons.Default.Check else Icons.Default.GridView,
@@ -319,7 +341,7 @@ private fun AppearanceMenu(
                 }
             }
         }
-
+        
         // theme
         Column {
             Text(
@@ -338,9 +360,12 @@ private fun AppearanceMenu(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = null,
                                     modifier = Modifier.size(18.dp)
-                                ) else when (it) {
+                                )
+                                else when (it) {
                                     GalleryPreferences.Appearance.Theme.SYSTEM -> Icon(
-                                        painter = painterResource(R.drawable.routine_24dp_e3e3e3_fill0_wght400_grad0_opsz24),
+                                        painter = painterResource(
+                                            R.drawable.routine_24dp_e3e3e3_fill0_wght400_grad0_opsz24
+                                        ),
                                         contentDescription = null,
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -358,8 +383,12 @@ private fun AppearanceMenu(
                             },
                             label = {
                                 val text = when (it) {
-                                    GalleryPreferences.Appearance.Theme.SYSTEM -> stringResource(R.string.system)
-                                    GalleryPreferences.Appearance.Theme.LIGHT -> stringResource(R.string.light)
+                                    GalleryPreferences.Appearance.Theme.SYSTEM -> stringResource(
+                                        R.string.system
+                                    )
+                                    GalleryPreferences.Appearance.Theme.LIGHT -> stringResource(
+                                        R.string.light
+                                    )
                                     GalleryPreferences.Appearance.Theme.DARK -> stringResource(R.string.dark)
                                 }
                                 Text(text)
@@ -369,7 +398,7 @@ private fun AppearanceMenu(
                 }
             }
         }
-
+        
         // dynamic color scheme
         Column {
             Text(
@@ -388,7 +417,8 @@ private fun AppearanceMenu(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = null,
                                     modifier = Modifier.size(18.dp)
-                                ) else {
+                                )
+                                else {
                                     val icon = when (it) {
                                         GalleryPreferences.Appearance.DynamicColors.SYSTEM -> Icons.Default.Palette
                                         GalleryPreferences.Appearance.DynamicColors.DISABLED -> PaletteDisabled
@@ -402,8 +432,12 @@ private fun AppearanceMenu(
                             },
                             label = {
                                 val text = when (it) {
-                                    GalleryPreferences.Appearance.DynamicColors.SYSTEM -> stringResource(R.string.system)
-                                    GalleryPreferences.Appearance.DynamicColors.DISABLED -> stringResource(R.string.disabled)
+                                    GalleryPreferences.Appearance.DynamicColors.SYSTEM -> stringResource(
+                                        R.string.system
+                                    )
+                                    GalleryPreferences.Appearance.DynamicColors.DISABLED -> stringResource(
+                                        R.string.disabled
+                                    )
                                 }
                                 Text(text)
                             }
@@ -412,7 +446,7 @@ private fun AppearanceMenu(
                 }
             }
         }
-
+        
         // grid appearance
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
@@ -519,9 +553,15 @@ private fun SortingMenu(
                                 },
                                 label = {
                                     val text = when (it) {
-                                        GalleryPreferences.Sorting.OnTop.NONE -> stringResource(R.string.disabled)
-                                        GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP -> stringResource(R.string.albums_on_top)
-                                        GalleryPreferences.Sorting.OnTop.FILES_ON_TOP -> stringResource(R.string.files_on_top)
+                                        GalleryPreferences.Sorting.OnTop.NONE -> stringResource(
+                                            R.string.disabled
+                                        )
+                                        GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP -> stringResource(
+                                            R.string.albums_on_top
+                                        )
+                                        GalleryPreferences.Sorting.OnTop.FILES_ON_TOP -> stringResource(
+                                            R.string.files_on_top
+                                        )
                                     }
                                     Text(text = text)
                                 }
@@ -555,12 +595,19 @@ private fun SortingMenu(
                                     tint = ButtonDefaults.textButtonColors().contentColor
                                 )
                                 Spacer(Modifier.width(4.dp))
-                            } else Spacer(Modifier.width(24.dp))
+                            }
+                            else Spacer(Modifier.width(24.dp))
                             val text = when (order) {
-                                GalleryPreferences.Sorting.Order.CREATION_DATE -> stringResource(R.string.creation_date)
-                                GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> stringResource(R.string.modification_date)
+                                GalleryPreferences.Sorting.Order.CREATION_DATE -> stringResource(
+                                    R.string.creation_date
+                                )
+                                GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> stringResource(
+                                    R.string.modification_date
+                                )
                                 GalleryPreferences.Sorting.Order.NAME -> stringResource(R.string.name)
-                                GalleryPreferences.Sorting.Order.EXTENSION -> stringResource(R.string.extension)
+                                GalleryPreferences.Sorting.Order.EXTENSION -> stringResource(
+                                    R.string.extension
+                                )
                                 GalleryPreferences.Sorting.Order.SIZE -> stringResource(R.string.size)
                                 GalleryPreferences.Sorting.Order.RANDOM -> stringResource(R.string.random)
                             }
@@ -637,7 +684,8 @@ private fun FilteringMenu(
                         onClick = { onIncludeVideosChange(!includeVideos) },
                         label = { Text(stringResource(R.string.videos)) },
                         leadingIcon = {
-                            val icon = if (includeVideos) Icons.Default.Check else Icons.Default.VideoCameraBack
+                            val icon =
+                                if (includeVideos) Icons.Default.Check else Icons.Default.VideoCameraBack
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
@@ -663,7 +711,7 @@ private fun FilteringMenu(
                 }
             }
         }
-
+        
         Column {
             Text(
                 text = stringResource(R.string.item_type),
@@ -702,7 +750,7 @@ private fun FilteringMenu(
                 }
             }
         }
-
+        
         Column {
             Text(
                 text = stringResource(R.string.item_type),

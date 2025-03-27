@@ -3,7 +3,9 @@ package nikmax.gallery.gallery.explorer.components.error_contents
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -25,25 +27,29 @@ internal fun PermissionNotGrantedContent(
     modifier: Modifier = Modifier
 ) {
     Surface {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = modifier
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = modifier.fillMaxSize()
         ) {
-            Image(
-                imageVector = UndrawLockedImageFolder,
-                contentDescription = null
-            )
-            Text(
-                text = stringResource(R.string.storage_access),
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                text = stringResource(R.string.storage_permission_explanation),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Button(onClick = { onGrantClick() }) {
-                Text(stringResource(R.string.grant))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Image(
+                    imageVector = UndrawLockedImageFolder,
+                    contentDescription = null
+                )
+                Text(
+                    text = stringResource(R.string.storage_access),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(R.string.storage_permission_explanation),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Button(onClick = { onGrantClick() }) {
+                    Text(stringResource(R.string.grant))
+                }
             }
         }
     }

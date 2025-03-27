@@ -64,10 +64,10 @@ fun ExplorerScreen(
 ) {
     val state by vm.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-
+    
     val strProtectedItemsWarning = stringResource(R.string.protected_items_warning)
     val strUnselect = stringResource(R.string.unselect)
-
+    
     LaunchedEffect(Unit) {
         vm.onAction(ExplorerVm.UserAction.ScreenLaunch(albumPath))
         vm.event.collectLatest { event ->
@@ -90,7 +90,7 @@ fun ExplorerScreen(
             }
         }
     }
-
+    
     ExplorerScreenContent(
         state = state,
         onAction = { vm.onAction(it) },
@@ -109,7 +109,7 @@ private fun ExplorerScreenContent(
     var showAppearanceSheet by remember { mutableStateOf(false) }
     val topBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val focusManager = LocalFocusManager.current
-
+    
     // if it's not a gallery root - display parent album content
     BackHandler(state.albumPath != null) {
         onAction(ExplorerVm.UserAction.NavigateOutOfAlbum)
@@ -123,7 +123,7 @@ private fun ExplorerScreenContent(
     BackHandler(state.selectedItems.isNotEmpty()) {
         onAction(ExplorerVm.UserAction.ItemsSelectionChange(emptyList()))
     }
-
+    
     Scaffold(
         topBar = {
             AnimatedContent(state.selectedItems.isNotEmpty()) { hasSelectedItems ->
@@ -132,8 +132,16 @@ private fun ExplorerScreenContent(
                     true -> SelectionTopBar(
                         items = state.items,
                         selectedItems = state.selectedItems,
-                        onClearSelectionClick = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(emptyList())) },
-                        onSelectAllClick = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(state.items)) }
+                        onClearSelectionClick = {
+                            onAction(
+                                ExplorerVm.UserAction.ItemsSelectionChange(emptyList())
+                            )
+                        },
+                        onSelectAllClick = {
+                            onAction(
+                                ExplorerVm.UserAction.ItemsSelectionChange(state.items)
+                            )
+                        }
                     )
                     false -> {
                         // when selected items is empty - show searchbar
@@ -172,7 +180,11 @@ private fun ExplorerScreenContent(
                     onRename = { items -> onAction(ExplorerVm.UserAction.ItemsRename(items)) },
                     onDelete = { items -> onAction(ExplorerVm.UserAction.ItemsDelete(items)) },
                     onShare = { file -> SharingUtils.shareSingleFile(file, context) },
-                    onUnavailableItemsUnselection = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
+                    onUnavailableItemsUnselection = {
+                        onAction(
+                            ExplorerVm.UserAction.ItemsSelectionChange(it)
+                        )
+                    },
                     snackbarHostState = snackbarHostState
                 )
             }
@@ -228,7 +240,7 @@ private fun ExplorerScreenContent(
             )
         }
     }
-
+    
     // dialogs section
     when (val dialog = state.dialog) {
         Dialog.None -> {}
@@ -238,7 +250,11 @@ private fun ExplorerScreenContent(
         )
         is Dialog.ConflictResolver -> ConflictResolverDialog(
             conflictItem = dialog.conflictItem,
-            onResolve = { resolution, applyToAll -> dialog.onConfirm(resolution) }, // todo enable "apply to all functionality"
+            onResolve = { resolution, applyToAll ->
+                dialog.onConfirm(
+                    resolution
+                )
+            }, // todo enable "apply to all functionality"
             onDismiss = { dialog.onDismiss() }
         )
         is Dialog.DeletionConfirmation -> DeletionDialog(
@@ -260,7 +276,7 @@ private fun ExplorerContentPreview() {
     var state by remember { mutableStateOf(ExplorerVm.UIState(isLoading = true)) }
     val snackbarHostState = remember { SnackbarHostState() }
     fun onAction(action: ExplorerVm.UserAction) {}
-
+    
     LaunchedEffect(Unit) {
         delay(5000)
         state = state.copy(
@@ -274,7 +290,7 @@ private fun ExplorerContentPreview() {
             )
         )
     }
-
+    
     GalleryTheme {
         ExplorerScreenContent(
             state = state,
