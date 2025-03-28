@@ -34,15 +34,15 @@ class ViewerVm
     @ApplicationContext private val context: Context,
     private val mediaItemsRepo: MediaItemsRepo,
 ) : ViewModel() {
-
+    
     data class UIState(
         val files: List<MediaItemUI.File> = emptyList(),
         val isLoading: Boolean = false,
         val showControls: Boolean = true,
         val dialog: nikmax.material_tree.gallery.dialogs.Dialog = nikmax.material_tree.gallery.dialogs.Dialog.None
     )
-
-
+    
+    
     sealed interface UserAction {
         data class Launch(val filePath: String) : UserAction
         data object SwitchControls : UserAction
@@ -51,26 +51,26 @@ class ViewerVm
         data class Rename(val file: MediaItemUI.File) : UserAction
         data class Delete(val file: MediaItemUI.File) : UserAction
     }
-
-
+    
+    
     sealed interface Event {
-
+    
     }
-
-
+    
+    
     // Raw data flows
     private val _galleryPreferencesFlow = GalleryPreferencesUtils.getPreferencesFlow(context)
     private val _dataResourceFlow = mediaItemsRepo.getFilesResourceFlow()
-
+    
     // UI-related data flows
     private val _filesFlow = MutableStateFlow(emptyList<MediaItemUI.File>())
     private val _isLoadingFlow = MutableStateFlow(false)
     private val _controlsIsShownFlow = MutableStateFlow(true)
-
+    
     private val _uiState = MutableStateFlow(UIState())
     val uiState = _uiState.asStateFlow()
-
-
+    
+    
     fun onAction(action: UserAction) {
         viewModelScope.launch {
             when (action) {
@@ -83,8 +83,8 @@ class ViewerVm
             }
         }
     }
-
-
+    
+    
     private fun onLaunch(filePath: String) {
         viewModelScope.launch {
             Path(filePath).parent.pathString.let { albumPath ->
@@ -92,20 +92,21 @@ class ViewerVm
             }
         }
         viewModelScope.launch { updateLoadingFlow() }
-
+        
         viewModelScope.launch { reflectFilesChanges() }
         viewModelScope.launch { reflectLoadingChanges() }
         viewModelScope.launch { reflectControlsVisibilityChanges() }
     }
-
-
+    
+    
     private suspend fun onCopyOrMove(
         files: List<MediaItemUI.File>,
         move: Boolean = false
     ) {
         val destinationAlbumPath = try {
             awaitForAlbumPickerResult()
-        } catch (e: CancellationException) {
+        }
+        catch (e: CancellationException) {
             return
         }
         val operations = files.map { item ->
@@ -114,7 +115,8 @@ class ViewerVm
             val resolution = when (conflicts) {
                 true -> try {
                     awaitForConflictResolverResult(item)
-                } catch (e: CancellationException) {
+                }
+                catch (e: CancellationException) {
                     return
                 }
                 false -> ConflictResolution.KEEP_BOTH
@@ -126,19 +128,21 @@ class ViewerVm
         }
         performFileOperations(operations)
     }
-
+    
     private suspend fun onRename(files: List<MediaItemUI>) {
         val operations = files.map { item ->
             val newPath = try {
                 awaitForRenamerResult(item)
-            } catch (e: CancellationException) {
+            }
+            catch (e: CancellationException) {
                 return
             }
             val conflicts = mediaItemsRepo.checkExistence(newPath)
             val resolution = when (conflicts) {
                 true -> try {
                     awaitForConflictResolverResult(item)
-                } catch (e: CancellationException) {
+                }
+                catch (e: CancellationException) {
                     return
                 }
                 false -> ConflictResolution.KEEP_BOTH
@@ -147,11 +151,12 @@ class ViewerVm
         }
         performFileOperations(operations)
     }
-
+    
     private suspend fun onDelete(files: List<MediaItemUI>) {
         val deletionConfirmed = try {
             awaitForDeletionConfirm(files)
-        } catch (e: CancellationException) {
+        }
+        catch (e: CancellationException) {
             false
         }
         val operations = when (deletionConfirmed) {
@@ -160,12 +165,12 @@ class ViewerVm
         }
         performFileOperations(operations)
     }
-
+    
     private fun onControlsVisibilityChange() {
         _controlsIsShownFlow.update { !it }
     }
-
-
+    
+    
     private suspend fun updateFilesFlow(albumPath: String) {
         combine(_dataResourceFlow, _galleryPreferencesFlow) { dataRes, prefs ->
             when (dataRes) {
@@ -181,15 +186,15 @@ class ViewerVm
                 includeUnHidden = prefs.filtering.includeUnHidden,
                 includeHidden = prefs.filtering.includeHidden,
                 includeFiles = true,
-                includeAlbums = true,
+                includeAlbums = false,
                 sortingOrder = prefs.sorting.order,
                 descendSorting = prefs.sorting.descend,
-            ).map { it as MediaItemUI.File }
+            ).filterIsInstance<MediaItemUI.File>()
         }.collectLatest { actualItemsList ->
             _filesFlow.update { actualItemsList }
         }
     }
-
+    
     private suspend fun updateLoadingFlow() {
         _dataResourceFlow.collectLatest { filesDataResource ->
             _isLoadingFlow.update {
@@ -197,8 +202,8 @@ class ViewerVm
             }
         }
     }
-
-
+    
+    
     private suspend fun reflectFilesChanges() {
         _filesFlow.collectLatest { newFiles ->
             withContext(Dispatchers.Main) {
@@ -206,7 +211,7 @@ class ViewerVm
             }
         }
     }
-
+    
     private suspend fun reflectLoadingChanges() {
         _isLoadingFlow.collectLatest { isLoading ->
             withContext(Dispatchers.Main) {
@@ -214,14 +219,14 @@ class ViewerVm
             }
         }
     }
-
+    
     private suspend fun reflectControlsVisibilityChanges() {
         _controlsIsShownFlow.collectLatest { controlsIsShown ->
             _uiState.update { it.copy(showControls = controlsIsShown) }
         }
     }
-
-
+    
+    
     private suspend fun awaitForAlbumPickerResult(): String {
         return suspendCoroutine { cont ->
             setDialog(
@@ -238,7 +243,7 @@ class ViewerVm
             )
         }
     }
-
+    
     private suspend fun awaitForRenamerResult(itemToRename: MediaItemUI): String {
         return suspendCoroutine { cont ->
             _uiState.update {
@@ -258,7 +263,7 @@ class ViewerVm
             }
         }
     }
-
+    
     private suspend fun awaitForDeletionConfirm(itemsToDelete: List<MediaItemUI>): Boolean {
         return suspendCoroutine { cont ->
             setDialog(
@@ -276,7 +281,7 @@ class ViewerVm
             )
         }
     }
-
+    
     private suspend fun awaitForConflictResolverResult(conflictItem: MediaItemUI): ConflictResolution {
         return suspendCoroutine { cont ->
             setDialog(
@@ -294,12 +299,12 @@ class ViewerVm
             )
         }
     }
-
+    
     private fun setDialog(newDialog: nikmax.material_tree.gallery.dialogs.Dialog) {
         _uiState.update { it.copy(dialog = newDialog) }
     }
-
-
+    
+    
     private suspend fun performFileOperations(operations: List<FileOperation>) {
         var completeOperationsCount = 0
         mediaItemsRepo

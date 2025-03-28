@@ -11,6 +11,7 @@
     <string name="invalid_extension">Invalid extension</string>
     <string name="delete_x_items">Permanently delete %1$d items? </string>
     <string name="pick_destination">Pick destination</string>
+    <string name="pick_destination_first">Pick destination first</string>
     <string name="ok">OK</string>
     <string name="filename_conflict">Filename conflict</string>
     <string name="x_files_already_exist">%1$d items already exists in the target directory</string>

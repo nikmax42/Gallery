@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import nikmax.gallery.core.data.Resource
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
 import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
+import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.utils.ItemsUtils.createItemsListToDisplay
 import javax.inject.Inject
 
@@ -25,85 +26,81 @@ class AlbumPickerVm
     @ApplicationContext private val context: Context,
     private val itemsRepo: MediaItemsRepo
 ) : ViewModel() {
-
+    
     data class UiState(
-        val items: List<nikmax.gallery.gallery.core.ui.MediaItemUI> = listOf(),
+        val items: List<MediaItemUI> = listOf(),
         val loading: Boolean = false,
+        val selectedAlbum: MediaItemUI.Album? = null
     )
-
+    
     sealed interface UserAction {
-        data class Launch(val initialAlbumPath: String?) : UserAction
-        data class NavigateIn(val albumPath: String) : UserAction
+        data object Launch : UserAction
+        data class NavigateIn(val album: MediaItemUI.Album) : UserAction
         data object NavigateBack : UserAction
         data object Refresh : UserAction
-        data object Confirm : UserAction
     }
-
+    
     sealed interface Event {
         data object DismissDialog : Event
-        data class ConfirmDialog(val selectedPath: String) : Event
     }
-
-
-    private val _navStack = MutableStateFlow(listOf<String?>())
-
+    
+    
+    private val _navEntriesFlow = MutableStateFlow(listOf<MediaItemUI.Album?>())
+    
     private val _state = MutableStateFlow(UiState())
     val state = _state.asStateFlow()
-
+    
     private val _event = MutableSharedFlow<Event>()
     val event = _event.asSharedFlow()
-
+    
     fun onAction(action: UserAction) {
         viewModelScope.launch {
             when (action) {
-                is UserAction.Launch -> onLaunch(action.initialAlbumPath)
-                is UserAction.NavigateIn -> navigateIn(action.albumPath)
+                is UserAction.Launch -> onLaunch()
+                is UserAction.NavigateIn -> navigateIn(action.album)
                 UserAction.NavigateBack -> navigateBack()
                 UserAction.Refresh -> onRefresh()
-                UserAction.Confirm -> onConfirm()
             }
         }
     }
-
-
-    private suspend fun onLaunch(initialAlbumPath: String?) {
-        _navStack.update { emptyList() }
-        navigateIn(initialAlbumPath)
+    
+    
+    private suspend fun onLaunch() {
+        resetNavStack()
         observeFlows()
     }
-
-    private fun navigateIn(albumPath: String?) {
-        _navStack.update { it + albumPath }
+    
+    private fun resetNavStack() {
+        _navEntriesFlow.update { listOf(null) }
     }
-
+    
+    private fun navigateIn(album: MediaItemUI.Album?) {
+        _navEntriesFlow.update { it + album }
+    }
+    
     private suspend fun navigateBack() {
-        when (_navStack.value.isNotEmpty()) {
-            true -> _navStack.update { it.dropLast(1) }
+        when (_navEntriesFlow.value.isNotEmpty()) {
+            true -> _navEntriesFlow.update { it.dropLast(1) }
             false -> _event.emit(Event.DismissDialog)
         }
     }
-
+    
     private suspend fun onRefresh() {
         itemsRepo.rescan()
     }
-
-    private suspend fun onConfirm() {
-        val path = _navStack.value.lastOrNull()
-        if (path != null) _event.emit(Event.ConfirmDialog(path))
-    }
-
+    
     private suspend fun observeFlows() {
         combine(
             itemsRepo.getFilesResourceFlow(),
             GalleryPreferencesUtils.getPreferencesFlow(context),
-            _navStack
+            _navEntriesFlow
         ) { filesRes, prefs, navStack ->
             val newItems = when (filesRes) {
                 is Resource.Success -> filesRes.data
                 is Resource.Loading -> filesRes.data
                 is Resource.Error -> TODO()
             }.createItemsListToDisplay(
-                targetAlbumPath = navStack.lastOrNull(),
+                targetAlbumPath = navStack.lastOrNull()?.path,
                 treeModeEnabled = prefs.appearance.nestedAlbumsEnabled,
                 includeImages = prefs.filtering.includeImages,
                 includeVideos = prefs.filtering.includeVideos,
@@ -118,7 +115,8 @@ class AlbumPickerVm
             )
             _state.value.copy(
                 items = newItems,
-                loading = filesRes is Resource.Loading
+                loading = filesRes is Resource.Loading,
+                selectedAlbum = navStack.lastOrNull()
             )
         }.collectLatest { newState ->
             _state.update { newState }

@@ -9,7 +9,10 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -33,6 +36,8 @@ import kotlinx.coroutines.launch
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.gallery.core.preferences.GalleryPreferences
 import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
+import nikmax.gallery.gallery.core.ui.MediaItemUI
+import nikmax.gallery.gallery.core.ui.MediaItemUI.Volume
 import nikmax.gallery.gallery.core.ui.components.grid.ItemsGrid
 import nikmax.material_tree.gallery.dialogs.R
 
@@ -41,42 +46,47 @@ import nikmax.material_tree.gallery.dialogs.R
 fun AlbumPickerFullScreenDialog(
     onConfirm: (pickedPath: String) -> Unit,
     onDismiss: () -> Unit,
-    initialPath: String? = null,
     vm: AlbumPickerVm = hiltViewModel()
 ) {
     val state by vm.state.collectAsState()
     val preferences by GalleryPreferencesUtils
         .getPreferencesFlow(LocalContext.current)
         .collectAsState(GalleryPreferences())
-
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    
     LaunchedEffect(null) {
-        vm.onAction(AlbumPickerVm.UserAction.Launch(initialPath))
+        vm.onAction(AlbumPickerVm.UserAction.Launch)
         vm.event.collectLatest { event ->
             when (event) {
-                is AlbumPickerVm.Event.ConfirmDialog -> onConfirm(event.selectedPath)
                 AlbumPickerVm.Event.DismissDialog -> onDismiss()
             }
         }
     }
-
+    
     BackHandler { vm.onAction(AlbumPickerVm.UserAction.NavigateBack) }
-
+    
     AnimatedVisibility(true) { // to show dialog with crossfade animation
+        val strSnackbarText = stringResource(R.string.pick_destination_first)
         AlbumPickerContent(
             items = state.items,
+            selectedAlbum = state.selectedAlbum,
             loading = state.loading,
             onRefresh = { vm.onAction(AlbumPickerVm.UserAction.Refresh) },
             onItemClick = {
-                if (it is nikmax.gallery.gallery.core.ui.MediaItemUI.Album) vm.onAction(
-                    AlbumPickerVm.UserAction.NavigateIn(
-                        it.path
-                    )
-                )
+                if (it is MediaItemUI.Album) vm.onAction(AlbumPickerVm.UserAction.NavigateIn(it))
             },
-            onConfirm = { vm.onAction(AlbumPickerVm.UserAction.Confirm) },
+            onConfirm = {
+                when (state.selectedAlbum != null) {
+                    true -> onConfirm(state.selectedAlbum!!.path)
+                    false -> scope.launch { snackbarHostState.showSnackbar(strSnackbarText) }
+                }
+                
+            },
             onDismiss = { onDismiss() },
             gridColumnsPortrait = preferences.appearance.gridAppearance.portraitColumns,
-            gridColumnsLandscape = preferences.appearance.gridAppearance.landscapeColumns
+            gridColumnsLandscape = preferences.appearance.gridAppearance.landscapeColumns,
+            snackbarHostState = snackbarHostState
         )
     }
 }
@@ -84,22 +94,26 @@ fun AlbumPickerFullScreenDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AlbumPickerContent(
-    items: List<nikmax.gallery.gallery.core.ui.MediaItemUI>,
+    items: List<MediaItemUI>,
+    selectedAlbum: MediaItemUI.Album?,
     loading: Boolean,
     onRefresh: () -> Unit,
-    onItemClick: (nikmax.gallery.gallery.core.ui.MediaItemUI) -> Unit,
+    onItemClick: (MediaItemUI) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     gridColumnsPortrait: Int,
-    gridColumnsLandscape: Int
+    gridColumnsLandscape: Int,
+    snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
         topBar = {
             AlbumPickerTopBar(
                 onConfirmClick = { onConfirm() },
-                onDismissClick = { onDismiss() }
+                onDismissClick = { onDismiss() },
+                albumIsNotSelectedYet = selectedAlbum == null
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddings ->
         PullToRefreshBox(
             isRefreshing = loading,
@@ -123,10 +137,10 @@ private fun AlbumPickerContent(
 private fun Preview() {
     val scope = rememberCoroutineScope()
     val items = listOf(
-        nikmax.gallery.gallery.core.ui.MediaItemUI.File(
+        MediaItemUI.File(
             path = "",
             name = "image.png",
-            belongsToVolume = nikmax.gallery.gallery.core.ui.MediaItemUI.Volume.DEVICE,
+            belongsToVolume = Volume.DEVICE,
             creationDate = 0,
             modificationDate = 0,
             size = 0,
@@ -137,6 +151,7 @@ private fun Preview() {
     GalleryTheme {
         AlbumPickerContent(
             items = items,
+            selectedAlbum = null,
             loading = loading,
             onRefresh = {
                 scope.launch {
@@ -150,6 +165,7 @@ private fun Preview() {
             onConfirm = {},
             gridColumnsPortrait = 3,
             gridColumnsLandscape = 4,
+            snackbarHostState = remember { SnackbarHostState() }
         )
     }
 }
@@ -159,11 +175,21 @@ private fun Preview() {
 @Composable
 private fun AlbumPickerTopBar(
     onConfirmClick: () -> Unit,
-    onDismissClick: () -> Unit
+    onDismissClick: () -> Unit,
+    albumIsNotSelectedYet: Boolean
 ) {
     TopAppBar(
         navigationIcon = {
-            IconButton(onClick = { onDismissClick() }) {
+            IconButton(
+                onClick = { onDismissClick() },
+                colors = when (albumIsNotSelectedYet) {
+                    true -> IconButtonDefaults.iconButtonColors().copy(
+                        contentColor = IconButtonDefaults.iconButtonColors().disabledContentColor,
+                        containerColor = IconButtonDefaults.iconButtonColors().disabledContainerColor,
+                    )
+                    false -> IconButtonDefaults.iconButtonColors()
+                }
+            ) {
                 Icon(
                     imageVector = Icons.Default.Clear,
                     contentDescription = stringResource(R.string.cancel)
