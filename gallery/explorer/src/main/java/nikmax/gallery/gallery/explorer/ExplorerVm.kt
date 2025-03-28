@@ -39,7 +39,7 @@ class ExplorerVm
     @ApplicationContext private val context: Context,
     private val mediaItemsRepo: MediaItemsRepo
 ) : ViewModel() {
-
+    
     data class UIState(
         val albumPath: String? = null,
         val items: List<MediaItemUI> = emptyList(),
@@ -58,8 +58,8 @@ class ExplorerVm
             }
         }
     }
-
-
+    
+    
     sealed interface UserAction {
         data class ScreenLaunch(val folderPath: String?) : UserAction
         data object Refresh : UserAction
@@ -72,26 +72,26 @@ class ExplorerVm
         data class ItemsRename(val itemsToRename: List<MediaItemUI>) : UserAction
         data class ItemsDelete(val itemsToDelete: List<MediaItemUI>) : UserAction
     }
-
-
+    
+    
     sealed interface Event {
         data class OpenViewer(val file: MediaItemUI.File) : Event
         data class ShowSnackbar(val snackbar: SnackBar) : Event
     }
-
-
+    
+    
     sealed interface SnackBar {
         data class ProtectedItems(
             val protectedItems: List<MediaItemUI>,
             val onConfirm: () -> Unit
         ) : SnackBar
     }
-
-
+    
+    
     // Raw data flows
     private val _galleryPreferencesFlow = GalleryPreferencesUtils.getPreferencesFlow(context)
     private val _dataResourceFlow = mediaItemsRepo.getFilesResourceFlow()
-
+    
     // UI-related data flows
     private val _navStackFlow = MutableStateFlow(emptyList<String>())
     private val _itemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
@@ -100,14 +100,14 @@ class ExplorerVm
     private val _selectedItemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
     private val _contentFlow = MutableStateFlow(UIState.Content.Initialization)
     private val _permissionStatusFlow = MutableStateFlow(PermissionsUtils.PermissionStatus.GRANTED)
-
+    
     private val _uiState = MutableStateFlow(UIState())
     val uiState = _uiState.asStateFlow()
-
+    
     private val _event = MutableSharedFlow<Event>()
     val event = _event.asSharedFlow()
-
-
+    
+    
     fun onAction(action: UserAction) {
         viewModelScope.launch {
             when (action) {
@@ -116,7 +116,6 @@ class ExplorerVm
                 is UserAction.ItemOpen -> onItemOpen(action.item)
                 UserAction.NavigateOutOfAlbum -> onNavigateBack()
                 is UserAction.SearchQueryChange -> onSearchQueryChange(action.newQuery)
-                // is UserAction.PreferencesChange -> onPreferencesChange(action.newPreferences)
                 is UserAction.ItemsSelectionChange -> onSelectionChange(action.newSelection)
                 is UserAction.ItemsCopy -> onCopyOrMove(action.itemsToCopy)
                 is UserAction.ItemsMove -> onCopyOrMove(action.itemsToMove, move = true)
@@ -125,16 +124,16 @@ class ExplorerVm
             }
         }
     }
-
-
+    
+    
     private fun onLaunch() {
         viewModelScope.launch { onRefresh() }
-
+        
         viewModelScope.launch { keepItemsFlowUpdated() }
         viewModelScope.launch { keepLoadingFlowUpdated() }
         viewModelScope.launch { keepContentTypeFlowUpdated() }
         viewModelScope.launch { keepPermissionStatusFlowUpdated() }
-
+        
         viewModelScope.launch { reflectContentTypeChanges() }
         viewModelScope.launch { reflectNavigationStackChanges() }
         viewModelScope.launch { reflectItemsChanges() }
@@ -142,39 +141,36 @@ class ExplorerVm
         viewModelScope.launch { reflectSelectedItemsChanges() }
         viewModelScope.launch { reflectSearchQueryChanges() }
     }
-
+    
     private suspend fun onRefresh() {
         mediaItemsRepo.rescan()
     }
-
+    
     private suspend fun onItemOpen(item: MediaItemUI) {
         when (item) {
             is MediaItemUI.Album -> _navStackFlow.update { it.plus(item.path) }
             is MediaItemUI.File -> _event.emit(Event.OpenViewer(item))
         }
     }
-
+    
     private fun onNavigateBack() {
         _navStackFlow.update { it.dropLast(1) }
     }
-
+    
     private fun onSearchQueryChange(newQuery: String?) {
         _searchQueryFlow.update { newQuery }
     }
-
+    
     private fun onSelectionChange(newSelection: List<MediaItemUI>) {
         _selectedItemsFlow.update { newSelection }
     }
-
-    private suspend fun onPreferencesChange(newPreferences: GalleryPreferences) {
-        GalleryPreferencesUtils.savePreferences(newPreferences, context)
-    }
-
+    
     private suspend fun onCopyOrMove(itemsToCopyOrMove: List<MediaItemUI>, move: Boolean = false) {
         // pick destination album
         val destinationAlbumPath = try {
             awaitForAlbumPickerResult()
-        } catch (e: CancellationException) {
+        }
+        catch (e: CancellationException) {
             return
         }
         val destinationFilesPaths = itemsToCopyOrMove.map { item ->
@@ -187,7 +183,8 @@ class ExplorerVm
             when (alreadyExists) {
                 true -> try {
                     awaitForConflictResolverDialogResult(itemsToCopyOrMove[index])
-                } catch (e: CancellationException) {
+                }
+                catch (e: CancellationException) {
                     return
                 }
                 false -> ConflictResolution.KEEP_BOTH
@@ -209,13 +206,14 @@ class ExplorerVm
         }
         performFileOperations(fileOperations, mediaItemsRepo, viewModelScope)
     }
-
+    
     private suspend fun onRename(itemsToRename: List<MediaItemUI>) {
         // await for after-rename paths from dialogs
         val newPaths = itemsToRename.map { item ->
             try {
                 awaitForRenamerDialogResult(item)
-            } catch (e: CancellationException) {
+            }
+            catch (e: CancellationException) {
                 return
             }
         }
@@ -225,7 +223,8 @@ class ExplorerVm
             when (alreadyExists) {
                 true -> try {
                     awaitForConflictResolverDialogResult(itemsToRename[index])
-                } catch (e: CancellationException) {
+                }
+                catch (e: CancellationException) {
                     return
                 }
                 false -> ConflictResolution.KEEP_BOTH
@@ -240,18 +239,19 @@ class ExplorerVm
         }
         performFileOperations(fileOperations, mediaItemsRepo, viewModelScope)
     }
-
+    
     private suspend fun onDelete(itemsToDelete: List<MediaItemUI>) {
         try {
             awaitForDeletionConfirmationDialogResult(itemsToDelete)
             val fileOperations = itemsToDelete.map { FileOperation.Delete(it.path) }
             performFileOperations(fileOperations, mediaItemsRepo, viewModelScope)
-        } catch (e: CancellationException) {
+        }
+        catch (e: CancellationException) {
             return
         }
     }
-
-
+    
+    
     /**
      * Updated screen items list based on mediastore data, app preferences, current album path and search query
      *
@@ -288,7 +288,7 @@ class ExplorerVm
             _itemsFlow.update { actualItemsList.distinct() }
         }
     }
-
+    
     private suspend fun keepLoadingFlowUpdated() {
         _dataResourceFlow.collectLatest { filesDataResource ->
             _isLoadingFlow.update {
@@ -296,7 +296,7 @@ class ExplorerVm
             }
         }
     }
-
+    
     private suspend fun keepContentTypeFlowUpdated() {
         combine(
             _isLoadingFlow,
@@ -327,8 +327,8 @@ class ExplorerVm
             }
         }
     }
-
-    private suspend fun keepPermissionStatusFlowUpdated() {
+    
+    private fun keepPermissionStatusFlowUpdated() {
         timer(period = 3000) {
             val storageStatus = PermissionsUtils.checkPermission(
                 PermissionsUtils.AppPermissions.MANAGE_EXTERNAL_STORAGE,
@@ -337,15 +337,15 @@ class ExplorerVm
             _permissionStatusFlow.update { storageStatus }
         }
     }
-
-
-
+    
+    
+    
     private suspend fun reflectNavigationStackChanges() {
         _navStackFlow.collectLatest { navEntries ->
             _uiState.update { it.copy(albumPath = navEntries.lastOrNull()) }
         }
     }
-
+    
     private suspend fun reflectItemsChanges() {
         _itemsFlow.collectLatest { newItems ->
             withContext(Dispatchers.Main) {
@@ -353,13 +353,17 @@ class ExplorerVm
                     it.copy(
                         items = newItems,
                         // remove selection from items that not exists anymore
-                        selectedItems = it.selectedItems.filter { selectedItem -> newItems.contains(selectedItem) }
+                        selectedItems = it.selectedItems.filter { selectedItem ->
+                            newItems.contains(
+                                selectedItem
+                            )
+                        }
                     )
                 }
             }
         }
     }
-
+    
     private suspend fun reflectLoadingChanges() {
         _isLoadingFlow.collectLatest { isLoading ->
             withContext(Dispatchers.Main) {
@@ -367,7 +371,7 @@ class ExplorerVm
             }
         }
     }
-
+    
     private suspend fun reflectSearchQueryChanges() {
         _searchQueryFlow.collectLatest { newQuery ->
             _uiState.update {
@@ -375,7 +379,7 @@ class ExplorerVm
             }
         }
     }
-
+    
     private suspend fun reflectSelectedItemsChanges() {
         _selectedItemsFlow.collectLatest { selectedItems ->
             _uiState.update {
@@ -383,7 +387,7 @@ class ExplorerVm
             }
         }
     }
-
+    
     private suspend fun reflectContentTypeChanges() {
         _contentFlow.collectLatest { contentType ->
             _uiState.update {
@@ -391,37 +395,37 @@ class ExplorerVm
             }
         }
     }
-
-
+    
+    
     private suspend fun awaitForAlbumPickerResult(): String {
         return suspendCoroutine { cont ->
             setDialog(
-                nikmax.material_tree.gallery.dialogs.Dialog.AlbumPicker(
+                Dialog.AlbumPicker(
                     onConfirm = { pickedAlbumPath ->
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resume(pickedAlbumPath)
                     },
                     onDismiss = {
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
             )
         }
     }
-
+    
     private suspend fun awaitForRenamerDialogResult(itemToRename: MediaItemUI): String {
         return suspendCoroutine { cont ->
             _uiState.update {
                 it.copy(
-                    dialog = nikmax.material_tree.gallery.dialogs.Dialog.Renaming(
+                    dialog = Dialog.Renaming(
                         item = itemToRename,
                         onConfirm = { newPath ->
-                            setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                            setDialog(Dialog.None)
                             cont.resume(newPath)
                         },
                         onDismiss = {
-                            setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                            setDialog(Dialog.None)
                             cont.resumeWithException(CancellationException())
                         }
                     )
@@ -429,53 +433,53 @@ class ExplorerVm
             }
         }
     }
-
+    
     private suspend fun awaitForDeletionConfirmationDialogResult(itemsToDelete: List<MediaItemUI>): Boolean {
         return suspendCoroutine { cont ->
             setDialog(
-                nikmax.material_tree.gallery.dialogs.Dialog.DeletionConfirmation(
+                Dialog.DeletionConfirmation(
                     items = itemsToDelete,
                     onConfirm = {
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resume(true)
                     },
                     onDismiss = {
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
             )
         }
     }
-
+    
     private suspend fun awaitForConflictResolverDialogResult(conflictItem: MediaItemUI): ConflictResolution {
         return suspendCoroutine { cont ->
             setDialog(
-                nikmax.material_tree.gallery.dialogs.Dialog.ConflictResolver(
+                Dialog.ConflictResolver(
                     conflictItem = conflictItem,
                     onConfirm = { resolution ->
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resume(resolution)
                     },
                     onDismiss = {
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
             )
         }
     }
-
+    
     private fun setDialog(newDialog: Dialog) {
         _uiState.update { it.copy(dialog = newDialog) }
     }
-
-
+    
+    
     private suspend fun showSnackbar(snackbar: SnackBar) {
         _event.emit(Event.ShowSnackbar(snackbar))
     }
-
-
+    
+    
     private suspend fun performFileOperations(
         operations: List<FileOperation>,
         mediaItemsRepo: MediaItemsRepo,
