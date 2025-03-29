@@ -54,4 +54,22 @@
     <string name="refresh">Refresh</string>
     <string name="albums">%1$d albums</string>
     <string name="files">%1$d files</string>
+    <!-- <string name="copying">Copying %1$d items…</string>
+     <string name="moving">Moving %1$d items…</string>
+     <string name="renaming">Renaming %1$d items…</string>
+     <string name="deleting">Deleting %1$d items…</string> -->
+    <string name="copying">Copying…</string>
+    <string name="moving">Moving…</string>
+    <string name="renaming">Renaming…</string>
+    <string name="deleting">Deleting…</string>
+    <!--<string name="copied">Copied %1$d items</string>
+    <string name="moved">Moved %1$d items</string>
+    <string name="renamed">Renamed %1$d items</string>
+    <string name="deleted">Deleted %1$d items</string>
+    <string name="not_copied">Failed to copy %1$d items</string>
+    <string name="not_moved">Failed to move %1$d items</string>
+    <string name="not_renamed">Failed to rename %1$d items</string>
+    <string name="not_deleted">Failed to delete %1$d items</string>-->
+    <string name="operation_complete">Operation complete</string>
+    <string name="operation_failed">Operation failed. Some files not processed</string>
 </resources>

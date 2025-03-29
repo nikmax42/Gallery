@@ -40,6 +40,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.explorer.R
+import nikmax.gallery.gallery.core.data.media.FileOperation
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.utils.SharingUtils
 import nikmax.gallery.gallery.explorer.components.bottom_bars.SelectionBottomBar
@@ -67,6 +68,12 @@ fun ExplorerScreen(
     
     val strProtectedItemsWarning = stringResource(R.string.protected_items_warning)
     val strUnselect = stringResource(R.string.unselect)
+    val strCopying = stringResource(R.string.copying)
+    val strMoving = stringResource(R.string.moving)
+    val strRenaming = stringResource(R.string.renaming)
+    val strDeleting = stringResource(R.string.deleting)
+    val strFailed = stringResource(R.string.operation_failed)
+    val strComplete = stringResource(R.string.operation_complete)
     
     LaunchedEffect(Unit) {
         vm.onAction(ExplorerVm.UserAction.ScreenLaunch(albumPath))
@@ -75,16 +82,32 @@ fun ExplorerScreen(
                 is ExplorerVm.Event.OpenViewer -> onFileOpen(event.file)
                 is ExplorerVm.Event.ShowSnackbar -> when (val snack = event.snackbar) {
                     is ExplorerVm.SnackBar.ProtectedItems -> {
-                        snackbarHostState.showSnackbar(
-                            message = strProtectedItemsWarning,
-                            actionLabel = strUnselect,
-                            duration = SnackbarDuration.Long
-                        ).let {
-                            when (it) {
-                                SnackbarResult.ActionPerformed -> snack.onConfirm()
-                                SnackbarResult.Dismissed -> {}
-                            }
+                        when (
+                            snackbarHostState.showSnackbar(
+                                message = strProtectedItemsWarning,
+                                actionLabel = strUnselect,
+                                duration = SnackbarDuration.Long
+                            )
+                        ) {
+                            SnackbarResult.ActionPerformed -> snack.onConfirm()
+                            SnackbarResult.Dismissed -> {}
                         }
+                    }
+                    is ExplorerVm.SnackBar.OperationStarted -> {
+                        val message = when (snack.operations.first()) {
+                            is FileOperation.Copy -> strCopying
+                            is FileOperation.Move -> strMoving
+                            is FileOperation.Rename -> strRenaming
+                            is FileOperation.Delete -> strDeleting
+                        }
+                        snackbarHostState.showSnackbar(message)
+                    }
+                    is ExplorerVm.SnackBar.OperationFinished -> {
+                        val message = when (snack.failedItems == 0) {
+                            true -> strComplete
+                            false -> strFailed
+                        }
+                        snackbarHostState.showSnackbar(message)
                     }
                 }
             }

@@ -3,6 +3,7 @@ package nikmax.gallery.gallery.explorer
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -59,7 +60,6 @@ class ExplorerVm
         }
     }
     
-    
     sealed interface UserAction {
         data class ScreenLaunch(val folderPath: String?) : UserAction
         data object Refresh : UserAction
@@ -73,18 +73,19 @@ class ExplorerVm
         data class ItemsDelete(val itemsToDelete: List<MediaItemUI>) : UserAction
     }
     
-    
     sealed interface Event {
         data class OpenViewer(val file: MediaItemUI.File) : Event
         data class ShowSnackbar(val snackbar: SnackBar) : Event
     }
-    
     
     sealed interface SnackBar {
         data class ProtectedItems(
             val protectedItems: List<MediaItemUI>,
             val onConfirm: () -> Unit
         ) : SnackBar
+        
+        data class OperationStarted(val operations: List<FileOperation>) : SnackBar
+        data class OperationFinished(val completeItems: Int, val failedItems: Int) : SnackBar
     }
     
     
@@ -485,6 +486,9 @@ class ExplorerVm
         mediaItemsRepo: MediaItemsRepo,
         scope: CoroutineScope
     ) {
+        // show snackbar with operations type
+        _event.emit(Event.ShowSnackbar(SnackBar.OperationStarted(operations)))
+        
         var completeOperationsCount = 0
         mediaItemsRepo
             .executeFileOperations(operations)
@@ -495,7 +499,21 @@ class ExplorerVm
                         scope.launch { mediaItemsRepo.rescan() }
                     }
                 }
-                /* TODO: post progress notification here */
+                // when all operations finished: show snackbar with result
+                if (completeOperationsCount == operations.size) {
+                    val successfulOperationsCount = workInfos.count { it.state == WorkInfo.State.SUCCEEDED }
+                    val failedOperationsCount = workInfos.count { it.state == WorkInfo.State.FAILED }
+                    viewModelScope.launch {
+                        _event.emit(
+                            Event.ShowSnackbar(
+                                SnackBar.OperationFinished(
+                                    completeItems = successfulOperationsCount,
+                                    failedItems = failedOperationsCount
+                                )
+                            )
+                        )
+                    }
+                }
             }
     }
 }
