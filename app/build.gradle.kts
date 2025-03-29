@@ -10,20 +10,20 @@ plugins {
 android {
     namespace = "nikmax.gallery"
     compileSdk = 35
-
+    
     defaultConfig {
         applicationId = "nikmax.gallery"
         minSdk = 30
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 3
         versionName = "0.8.3"
-
+        
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
-
+    
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -56,7 +56,7 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":gallery"))
-
+    
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.core.ktx)
