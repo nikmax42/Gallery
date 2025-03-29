@@ -4,7 +4,7 @@ agp = "8.9.1"
 coilComposeVersion = "2.6.0"
 coilGif = "2.7.0"
 coreSplashscreen = "1.0.1"
-datastorePreferences = "1.1.3"
+datastorePreferences = "1.1.4"
 hiltCompiler = "1.2.0"
 hilt = "2.53.1"
 kotlin = "2.1.0"
@@ -14,14 +14,13 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 kotlinxCoroutinesTest = "1.9.0"
 kotlinxSerializationJson = "1.7.3"
-lifecycleRuntimeCompose = "2.8.7"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
-composeBom = "2025.02.00"
+composeBom = "2025.03.01"
 ksp = "2.1.0-1.0.29"
-media3 = "1.5.1"
+media3 = "1.6.0"
 mockitoCore = "2.19.0"
-navigationCompose = "2.8.8"
+navigationCompose = "2.8.9"
 runtime = "1.7.8"
 seeker = "1.2.2"
 tikaCore = "1.28.3"
@@ -29,11 +28,6 @@ timber = "5.0.1"
 turbineVersion = "1.0.0"
 workRuntimeKtx = "2.10.0"
 coreKtxVersion = "1.6.1"
-hiltCommon = "1.2.0"
-appcompat = "1.7.0"
-material = "1.12.0"
-rules = "1.6.1"
-runtimeAndroid = "1.7.8"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityKtx" }
@@ -42,15 +36,11 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltCompiler" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltCompiler" }
-androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltCompiler" }
-androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
-androidx-media3-exoplayer-dash = { module = "androidx.media3:media3-exoplayer-dash", version.ref = "media3" }
 androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "runtime" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
-androidx-work-testing = { module = "androidx.work:work-testing" }
 tika-core = { module = "org.apache.tika:tika-core", version.ref = "tikaCore" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbineVersion" }
 coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coilGif" }
@@ -87,11 +77,6 @@ seeker = { module = "io.github.2307vivek:seeker", version.ref = "seeker" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "coreKtxVersion" }
-androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-androidx-rules = { group = "androidx.test", name = "rules", version.ref = "rules" }
-androidx-runtime-android = { group = "androidx.compose.runtime", name = "runtime-android", version.ref = "runtimeAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
