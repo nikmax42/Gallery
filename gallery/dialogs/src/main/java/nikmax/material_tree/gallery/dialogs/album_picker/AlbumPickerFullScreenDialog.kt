@@ -33,9 +33,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import nikmax.gallery.core.preferences.GalleryPreferences
+import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.gallery.core.preferences.GalleryPreferences
-import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.ui.MediaItemUI.Volume
 import nikmax.gallery.gallery.core.ui.components.grid.ItemsGrid

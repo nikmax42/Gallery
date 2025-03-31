@@ -18,12 +18,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nikmax.gallery.core.data.Resource
+import nikmax.gallery.core.preferences.GalleryPreferences
+import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.utils.PermissionsUtils
 import nikmax.gallery.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.gallery.core.data.media.FileOperation
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
-import nikmax.gallery.gallery.core.preferences.GalleryPreferences
-import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.utils.ItemsUtils.createItemsListToDisplay
 import nikmax.material_tree.gallery.dialogs.Dialog

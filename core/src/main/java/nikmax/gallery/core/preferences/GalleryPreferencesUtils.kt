@@ -1,4 +1,4 @@
-package nikmax.gallery.gallery.core.preferences
+package nikmax.gallery.core.preferences
 
 import android.content.Context
 import androidx.datastore.core.Serializer
@@ -17,11 +17,11 @@ object GalleryPreferencesUtils {
         fileName = "gallery-preferences.json",
         serializer = GalleryPreferencesSerializer
     )
-
+    
     fun getPreferencesFlow(context: Context): Flow<GalleryPreferences> {
         return context.datastore.data
     }
-
+    
     suspend fun savePreferences(preferences: GalleryPreferences, context: Context) {
         withContext(Dispatchers.IO) {
             context.datastore.updateData { preferences }
@@ -33,7 +33,7 @@ object GalleryPreferencesUtils {
 private object GalleryPreferencesSerializer : Serializer<GalleryPreferences> {
     override val defaultValue: GalleryPreferences
         get() = GalleryPreferences()
-
+    
     override suspend fun readFrom(input: InputStream): GalleryPreferences {
         return try {
             defaultValue
@@ -41,11 +41,12 @@ private object GalleryPreferencesSerializer : Serializer<GalleryPreferences> {
                 deserializer = GalleryPreferences.serializer(),
                 string = input.readBytes().decodeToString()
             )
-        } catch (e: SerializationException) {
+        }
+        catch (e: SerializationException) {
             defaultValue
         }
     }
-
+    
     override suspend fun writeTo(t: GalleryPreferences, output: OutputStream) {
         output.write(
             Json.encodeToString(t).encodeToByteArray()

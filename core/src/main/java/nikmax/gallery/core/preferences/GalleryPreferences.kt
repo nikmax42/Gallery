@@ -1,4 +1,4 @@
-package nikmax.gallery.gallery.core.preferences
+package nikmax.gallery.core.preferences
 
 import kotlinx.serialization.Serializable
 
@@ -23,7 +23,7 @@ data class GalleryPreferences(
             val landscapeColumns: Int = 4
         )
     }
-
+    
     @Serializable
     data class Sorting(
         val order: Order = Order.CREATION_DATE,
@@ -33,7 +33,7 @@ data class GalleryPreferences(
         enum class Order { CREATION_DATE, MODIFICATION_DATE, NAME, EXTENSION, SIZE, RANDOM }
         enum class OnTop { NONE, ALBUMS_ON_TOP, FILES_ON_TOP }
     }
-
+    
     @Serializable
     data class Filtering(
         val includeImages: Boolean = true,

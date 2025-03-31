@@ -9,8 +9,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import nikmax.gallery.gallery.core.preferences.GalleryPreferences
-import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
+import nikmax.gallery.core.preferences.GalleryPreferences
+import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.core.ui.components.grid.ItemsGrid
 import nikmax.gallery.gallery.explorer.ExplorerVm
 
@@ -24,7 +24,7 @@ internal fun MainContent(
     val preferences by GalleryPreferencesUtils
         .getPreferencesFlow(LocalContext.current)
         .collectAsState(GalleryPreferences())
-
+    
     Box {
         PullToRefreshBox(
             isRefreshing = state.isLoading,

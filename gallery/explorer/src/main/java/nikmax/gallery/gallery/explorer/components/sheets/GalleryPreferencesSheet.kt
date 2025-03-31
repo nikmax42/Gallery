@@ -59,10 +59,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import nikmax.gallery.core.preferences.GalleryPreferences
+import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.explorer.R
-import nikmax.gallery.gallery.core.preferences.GalleryPreferences
-import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.explorer.components.drawables.PaletteDisabled
 
 @OptIn(ExperimentalMaterial3Api::class)

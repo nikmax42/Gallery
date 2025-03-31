@@ -14,8 +14,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import nikmax.gallery.core.data.Resource
+import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
-import nikmax.gallery.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.utils.ItemsUtils.createItemsListToDisplay
 import javax.inject.Inject
