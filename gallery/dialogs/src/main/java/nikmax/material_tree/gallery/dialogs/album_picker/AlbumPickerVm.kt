@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -13,24 +14,29 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import nikmax.gallery.core.data.Resource
+import nikmax.gallery.core.preferences.GalleryPreferences
 import nikmax.gallery.core.preferences.GalleryPreferencesUtils
+import nikmax.gallery.gallery.core.data.media.MediaItemData
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
 import nikmax.gallery.gallery.core.ui.MediaItemUI
-import nikmax.gallery.gallery.core.utils.ItemsUtils.createItemsListToDisplay
+import nikmax.gallery.gallery.core.utils.ItemsUtils.applyFilters
+import nikmax.gallery.gallery.core.utils.ItemsUtils.applySorting
+import nikmax.gallery.gallery.core.utils.ItemsUtils.mapToUi
 import javax.inject.Inject
 
 @HiltViewModel
 class AlbumPickerVm
 @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val itemsRepo: MediaItemsRepo
+    private val galleryRepo: MediaItemsRepo
 ) : ViewModel() {
     
     data class UiState(
         val items: List<MediaItemUI> = listOf(),
         val loading: Boolean = false,
-        val selectedAlbum: MediaItemUI.Album? = null
+        val pickedAlbum: MediaItemUI.Album? = null
     )
     
     sealed interface UserAction {
@@ -45,10 +51,16 @@ class AlbumPickerVm
     }
     
     
-    private val _navEntriesFlow = MutableStateFlow(listOf<MediaItemUI.Album?>())
+    private val _navStackFlow = MutableStateFlow(listOf<MediaItemUI.Album?>())
+    private var _dataResourceFlow: MutableStateFlow<Resource<List<MediaItemData>>> =
+        MutableStateFlow(Resource.Loading(emptyList()))
+    private val _galleryPreferencesFlow = GalleryPreferencesUtils.getPreferencesFlow(context)
     
-    private val _state = MutableStateFlow(UiState())
-    val state = _state.asStateFlow()
+    private val _itemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
+    private val _isLoadingFlow = MutableStateFlow(false)
+    
+    private val _uiState = MutableStateFlow(UiState())
+    val state = _uiState.asStateFlow()
     
     private val _event = MutableSharedFlow<Event>()
     val event = _event.asSharedFlow()
@@ -66,60 +78,121 @@ class AlbumPickerVm
     
     
     private suspend fun onLaunch() {
-        resetNavStack()
-        observeFlows()
+        viewModelScope.launch { resetNavStack() }
+        
+        viewModelScope.launch { keepDataFlowUpdated() }
+        viewModelScope.launch { keepLoadingFlowUpdated() }
+        viewModelScope.launch { keepItemsFlowUpdated() }
+        
+        viewModelScope.launch { reflectLoadingFlowChanges() }
+        viewModelScope.launch { reflectItemsFlowChanges() }
+        viewModelScope.launch { reflectNavStackFlowChanges() }
     }
     
     private fun resetNavStack() {
-        _navEntriesFlow.update { listOf(null) }
+        _navStackFlow.update { listOf(null) }
     }
     
     private fun navigateIn(album: MediaItemUI.Album?) {
-        _navEntriesFlow.update { it + album }
+        _navStackFlow.update { it + album }
     }
     
     private suspend fun navigateBack() {
-        when (_navEntriesFlow.value.isNotEmpty()) {
-            true -> _navEntriesFlow.update { it.dropLast(1) }
+        when (_navStackFlow.value.isNotEmpty()) {
+            true -> _navStackFlow.update { it.dropLast(1) }
             false -> _event.emit(Event.DismissDialog)
         }
     }
     
     private suspend fun onRefresh() {
-        itemsRepo.rescan()
+        galleryRepo.rescan()
     }
     
-    private suspend fun observeFlows() {
+    
+    private suspend fun keepDataFlowUpdated() {
         combine(
-            itemsRepo.getFilesResourceFlow(),
-            GalleryPreferencesUtils.getPreferencesFlow(context),
-            _navEntriesFlow
-        ) { filesRes, prefs, navStack ->
-            val newItems = when (filesRes) {
-                is Resource.Success -> filesRes.data
-                is Resource.Loading -> filesRes.data
-                is Resource.Error -> TODO()
-            }.createItemsListToDisplay(
-                targetAlbumPath = navStack.lastOrNull()?.path,
-                treeModeEnabled = prefs.appearance.nestedAlbumsEnabled,
-                includeImages = prefs.filtering.includeImages,
-                includeVideos = prefs.filtering.includeVideos,
-                includeGifs = prefs.filtering.includeGifs,
-                includeUnHidden = prefs.filtering.includeUnHidden,
-                includeHidden = prefs.filtering.includeHidden,
-                includeFiles = prefs.filtering.includeFiles,
-                includeAlbums = prefs.filtering.includeAlbums,
-                sortingOrder = prefs.sorting.order,
-                descendSorting = prefs.sorting.descend,
-                searchQuery = null
+            _galleryPreferencesFlow,
+            _navStackFlow,
+        ) { prefs, navStack ->
+            galleryRepo.getAlbumContentFlow(
+                path = navStack.lastOrNull()?.path,
+                searchQuery = null,
+                treeMode = prefs.appearance.nestedAlbumsEnabled
             )
-            _state.value.copy(
-                items = newItems,
-                loading = filesRes is Resource.Loading,
-                selectedAlbum = navStack.lastOrNull()
-            )
-        }.collectLatest { newState ->
-            _state.update { newState }
+        }.collectLatest { newDataFlow ->
+            newDataFlow.collectLatest { newData ->
+                _dataResourceFlow.update { newData }
+            }
+        }
+    }
+    
+    private suspend fun keepLoadingFlowUpdated() {
+        _dataResourceFlow.collectLatest { resource ->
+            _isLoadingFlow.update {
+                resource is Resource.Loading
+            }
+        }
+    }
+    
+    private suspend fun keepItemsFlowUpdated() {
+        combine(_dataResourceFlow, _galleryPreferencesFlow) { data, prefs ->
+            when (data) {
+                is Resource.Success -> data.data
+                is Resource.Loading -> data.data
+                is Resource.Error -> emptyList()
+            }.mapToUi()
+                .applyFilters(
+                    includeImages = prefs.filtering.includeImages,
+                    includeVideos = prefs.filtering.includeVideos,
+                    includeGifs = prefs.filtering.includeGifs,
+                    includeUnHidden = prefs.filtering.includeUnHidden,
+                    includeHidden = prefs.filtering.includeHidden,
+                    includeFiles = prefs.filtering.includeFiles,
+                    includeAlbums = prefs.filtering.includeAlbums
+                )
+                .applySorting(
+                    sortingOrder = prefs.sorting.order,
+                    descend = prefs.sorting.descend,
+                    albumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
+                    filesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP
+                )
+        }.collectLatest { newItemsList ->
+            _itemsFlow.update { newItemsList }
+        }
+    }
+    
+    
+    private suspend fun reflectLoadingFlowChanges() {
+        _isLoadingFlow.collectLatest { isLoading ->
+            _uiState.update {
+                it.copy(
+                    loading = isLoading
+                )
+            }
+        }
+    }
+    
+    private suspend fun reflectItemsFlowChanges() {
+        _itemsFlow.collectLatest { newItems ->
+            withContext(Dispatchers.Main) {
+                _uiState.update {
+                    it.copy(
+                        items = newItems,
+                    )
+                }
+            }
+        }
+    }
+    
+    private suspend fun reflectNavStackFlowChanges() {
+        _navStackFlow.collectLatest { newNavStack ->
+            withContext(Dispatchers.Main) {
+                _uiState.update {
+                    it.copy(
+                        pickedAlbum = newNavStack.lastOrNull()
+                    )
+                }
+            }
         }
     }
 }

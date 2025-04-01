@@ -1,6 +1,7 @@
 package nikmax.gallery.gallery.core.data.media
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LiveData
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -15,21 +16,29 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import nikmax.gallery.core.data.Resource
+import kotlin.io.path.Path
+import kotlin.io.path.pathString
 
 interface MediaItemsRepo {
-
-    /**
-     * @return flow of [Resource] of [MediaFileData].
-     */
-    fun getFilesResourceFlow(): Flow<Resource<List<MediaFileData>>>
-
+    
+    fun getAlbumContentFlow(
+        path: String?,
+        searchQuery: String?,
+        treeMode: Boolean = true
+    ): Flow<Resource<List<MediaItemData>>>
+    
+    fun getSearchResultFlow(
+        query: String,
+        basePath: String? = null
+    ): Flow<Resource<List<MediaItemData>>>
+    
     /**
      * Use mediastore to update files flow with all available media files.
      */
     suspend fun rescan()
-
+    
     suspend fun checkExistence(filePath: String): Boolean
-
+    
     suspend fun executeFileOperations(operations: List<FileOperation>): LiveData<List<WorkInfo>>
 }
 
@@ -37,36 +46,81 @@ interface MediaItemsRepo {
 internal class MediaItemRepoImpl(
     private val context: Context
 ) : MediaItemsRepo {
-
-    private val _filesFlow = MutableStateFlow<List<MediaFileData>>(emptyList())
+    
+    private val galleryRootPath = "/storage"
+    
     private val _loadingFlow = MutableStateFlow(false)
-
-    override fun getFilesResourceFlow(): Flow<Resource<List<MediaFileData>>> {
-        return combine(_filesFlow, _loadingFlow) { files, loading ->
+    private val _albumsFlow = MutableStateFlow<List<MediaItemData.Album>>(emptyList())
+    
+    override fun getAlbumContentFlow(
+        path: String?,
+        searchQuery: String?,
+        treeMode: Boolean
+    ): Flow<Resource<List<MediaItemData>>> {
+        return combine(_albumsFlow, _loadingFlow) { albums, loading ->
+            val data = when (treeMode) {
+                true -> getDirectoryContent(
+                    directoryPath = path ?: galleryRootPath,
+                    galleryAlbums = albums
+                )
+                false -> when (path == null) {
+                    true -> getFlatListOfAllGalleryNotEmptyAlbums(galleryAlbums = albums)
+                    false -> getAlbumOwnFilesList(
+                        albumPath = path,
+                        galleryAlbums = albums
+                    )
+                }
+            }
             when (loading) {
-                true -> Resource.Loading(files)
-                false -> Resource.Success(files)
+                true -> Resource.Loading(data)
+                false -> Resource.Success(data)
             }
         }
     }
-
+    
+    override fun getSearchResultFlow(
+        query: String,
+        basePath: String?
+    ): Flow<Resource<List<MediaItemData>>> {
+        return combine(_albumsFlow, _loadingFlow) { galleryAlbums, loading ->
+            val foundAlbums = galleryAlbums
+                .filter { album -> album.path.contains(query) }
+            val foundFiles = galleryAlbums
+                .map { it.files }
+                .flatten()
+                .filter { file -> file.path.contains(query) }
+                .filterNot { foundAlbums.map { it.files }.flatten().contains(it) }
+            
+            val data = when (basePath != null) {
+                true -> (foundAlbums + foundFiles).filter { it.path.startsWith(basePath) }
+                false -> foundAlbums + foundFiles
+            }
+            when (loading) {
+                true -> Resource.Loading(data)
+                false -> Resource.Success(data)
+            }
+        }
+    }
+    
     override suspend fun rescan() {
         _loadingFlow.update { true }
         withContext(Dispatchers.IO) {
-            val media = MediastoreUtils.getAllImagesAndVideos(context)
+            val galleryData = MediastoreUtils
+                .getAllImagesAndVideos(context)
+                .createGalleryAlbumsList()
             withContext(Dispatchers.Main) {
-                _filesFlow.update { media }
+                _albumsFlow.update { galleryData }
                 _loadingFlow.update { false }
             }
         }
     }
-
+    
     override suspend fun checkExistence(filePath: String): Boolean {
         return withContext(Dispatchers.IO) {
             FilesUtils.checkExistence(filePath)
         }
     }
-
+    
     override suspend fun executeFileOperations(operations: List<FileOperation>): LiveData<List<WorkInfo>> {
         return withContext(Dispatchers.IO) {
             val workManager = WorkManager.getInstance(context)
@@ -82,6 +136,94 @@ internal class MediaItemRepoImpl(
             }
             requests.forEach { workManager.enqueue(it) }
             workManager.getWorkInfosByTagLiveData(workTag)
+        }
+    }
+    
+    
+    companion object {
+        
+        @VisibleForTesting
+        internal fun getDirectoryContent(
+            directoryPath: String,
+            galleryAlbums: List<MediaItemData.Album>
+        ): List<MediaItemData> {
+            val files = getAlbumOwnFilesList(directoryPath, galleryAlbums)
+            val albums = galleryAlbums.filter {
+                Path(it.path).parent?.pathString == directoryPath
+            }
+            return files + albums
+        }
+        
+        @VisibleForTesting
+        internal fun getFlatListOfAllGalleryNotEmptyAlbums(
+            galleryAlbums: List<MediaItemData.Album>
+        ): List<MediaItemData.Album> {
+            return galleryAlbums.filter { it.files.isNotEmpty() }
+        }
+        
+        @VisibleForTesting
+        internal fun getAlbumOwnFilesList(
+            albumPath: String,
+            galleryAlbums: List<MediaItemData.Album>
+        ): List<MediaItemData.File> {
+            return galleryAlbums.find { it.path == albumPath }?.files ?: emptyList()
+        }
+        
+        //convert plain list of files to plain list of albums.
+        // Result list contains empty intermediate albums for search and navigation purposes
+        @VisibleForTesting
+        internal fun List<MediaItemData.File>.createGalleryAlbumsList(): List<MediaItemData.Album> {
+            val albums = mutableMapOf<String, MediaItemData.Album>()
+            
+            //create empty albums from path
+            this
+                .groupBy { Path(it.path).parent.pathString }
+                .forEach { albumGroup ->
+                    val pathNodes = mutableListOf<String>()
+                    var node = Path(albumGroup.key).pathString
+                    while (node != "null") {
+                        pathNodes.add(node)
+                        node = Path(node).parent?.toString() ?: "null"
+                    }
+                    pathNodes.forEach { albumPath ->
+                        albums.put(
+                            albumPath,
+                            MediaItemData.Album(path = albumPath)
+                        )
+                    }
+                }
+            
+            //fill albums with metadata
+            albums.values.forEach { album ->
+                val albumOwnFiles = this.filter { Path(it.path).parent.pathString == album.path }
+                val albumDeepFiles = this.filter { Path(it.path).startsWith(album.path) } - albumOwnFiles
+                val albumSize = (albumOwnFiles + albumDeepFiles).sumOf { it.size }
+                val imagesCount = (albumOwnFiles + albumDeepFiles)
+                    .count { it.mediaType == MediaItemData.File.Type.IMAGE }
+                val videosCount = (albumOwnFiles + albumDeepFiles)
+                    .count { it.mediaType == MediaItemData.File.Type.VIDEO }
+                val gifsCount = (albumOwnFiles + albumDeepFiles)
+                    .count { it.mediaType == MediaItemData.File.Type.GIF }
+                val creationDate = (albumOwnFiles + albumDeepFiles).minOf { it.dateCreated }
+                val modificationDate = (albumOwnFiles + albumDeepFiles).minOf { it.dateModified }
+                val thumbnail = albumOwnFiles.firstOrNull()?.path ?: albumDeepFiles.firstOrNull()?.path ?: ""
+                
+                albums.put(
+                    album.path,
+                    MediaItemData.Album(
+                        path = album.path,
+                        files = albumOwnFiles,
+                        size = albumSize,
+                        imagesCount = imagesCount,
+                        videosCount = videosCount,
+                        gifsCount = gifsCount,
+                        dateCreated = creationDate,
+                        dateModified = modificationDate,
+                        thumbnail = thumbnail
+                    )
+                )
+            }
+            return albums.values.toList()
         }
     }
 }

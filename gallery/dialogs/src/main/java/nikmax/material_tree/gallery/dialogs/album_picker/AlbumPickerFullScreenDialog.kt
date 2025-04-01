@@ -70,15 +70,15 @@ fun AlbumPickerFullScreenDialog(
         val strSnackbarText = stringResource(R.string.pick_destination_first)
         AlbumPickerContent(
             items = state.items,
-            selectedAlbum = state.selectedAlbum,
+            selectedAlbum = state.pickedAlbum,
             loading = state.loading,
             onRefresh = { vm.onAction(AlbumPickerVm.UserAction.Refresh) },
             onItemClick = {
                 if (it is MediaItemUI.Album) vm.onAction(AlbumPickerVm.UserAction.NavigateIn(it))
             },
             onConfirm = {
-                when (state.selectedAlbum != null) {
-                    true -> onConfirm(state.selectedAlbum!!.path)
+                when (state.pickedAlbum != null) {
+                    true -> onConfirm(state.pickedAlbum!!.path)
                     false -> scope.launch { snackbarHostState.showSnackbar(strSnackbarText) }
                 }
                 

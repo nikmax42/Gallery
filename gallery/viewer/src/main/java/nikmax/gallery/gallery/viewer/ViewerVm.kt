@@ -14,12 +14,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nikmax.gallery.core.data.Resource
+import nikmax.gallery.core.preferences.GalleryPreferences
 import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.gallery.core.data.media.FileOperation
+import nikmax.gallery.gallery.core.data.media.MediaItemData
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
 import nikmax.gallery.gallery.core.ui.MediaItemUI
-import nikmax.gallery.gallery.core.utils.ItemsUtils.createItemsListToDisplay
+import nikmax.gallery.gallery.core.utils.ItemsUtils.applyFilters
+import nikmax.gallery.gallery.core.utils.ItemsUtils.applySorting
+import nikmax.gallery.gallery.core.utils.ItemsUtils.mapToUi
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
@@ -60,7 +64,8 @@ class ViewerVm
     
     // Raw data flows
     private val _galleryPreferencesFlow = GalleryPreferencesUtils.getPreferencesFlow(context)
-    private val _dataResourceFlow = mediaItemsRepo.getFilesResourceFlow()
+    private val _dataResourceFlow: MutableStateFlow<Resource<List<MediaItemData>>> =
+        MutableStateFlow(Resource.Loading(emptyList()))
     
     // UI-related data flows
     private val _filesFlow = MutableStateFlow(emptyList<MediaItemUI.File>())
@@ -88,10 +93,11 @@ class ViewerVm
     private fun onLaunch(filePath: String) {
         viewModelScope.launch {
             Path(filePath).parent.pathString.let { albumPath ->
-                updateFilesFlow(albumPath)
+                keepDataFlowUpdated(albumPath)
             }
         }
-        viewModelScope.launch { updateLoadingFlow() }
+        viewModelScope.launch { keepFilesFlowUpdated() }
+        viewModelScope.launch { keepLoadingFlowUpdated() }
         
         viewModelScope.launch { reflectFilesChanges() }
         viewModelScope.launch { reflectLoadingChanges() }
@@ -171,31 +177,45 @@ class ViewerVm
     }
     
     
-    private suspend fun updateFilesFlow(albumPath: String) {
+    private suspend fun keepDataFlowUpdated(albumPath: String) {
+        mediaItemsRepo.getAlbumContentFlow(
+            path = albumPath,
+            searchQuery = null,
+            treeMode = false
+        ).collectLatest { albumFilesData ->
+            _dataResourceFlow.update { albumFilesData }
+        }
+    }
+    
+    private suspend fun keepFilesFlowUpdated() {
         combine(_dataResourceFlow, _galleryPreferencesFlow) { dataRes, prefs ->
             when (dataRes) {
                 is Resource.Success -> dataRes.data
                 is Resource.Loading -> dataRes.data
                 is Resource.Error -> emptyList()
-            }.createItemsListToDisplay(
-                targetAlbumPath = albumPath,
-                treeModeEnabled = prefs.appearance.nestedAlbumsEnabled,
-                includeImages = prefs.filtering.includeImages,
-                includeVideos = prefs.filtering.includeVideos,
-                includeGifs = prefs.filtering.includeGifs,
-                includeUnHidden = prefs.filtering.includeUnHidden,
-                includeHidden = prefs.filtering.includeHidden,
-                includeFiles = true,
-                includeAlbums = false,
-                sortingOrder = prefs.sorting.order,
-                descendSorting = prefs.sorting.descend,
-            ).filterIsInstance<MediaItemUI.File>()
+            }.mapToUi()
+                .applyFilters(
+                    includeImages = prefs.filtering.includeImages,
+                    includeVideos = prefs.filtering.includeVideos,
+                    includeGifs = prefs.filtering.includeGifs,
+                    includeUnHidden = prefs.filtering.includeUnHidden,
+                    includeHidden = prefs.filtering.includeHidden,
+                    includeFiles = true,
+                    includeAlbums = false
+                )
+                .applySorting(
+                    sortingOrder = prefs.sorting.order,
+                    descend = prefs.sorting.descend,
+                    albumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
+                    filesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP
+                )
+                .filterIsInstance<MediaItemUI.File>()
         }.collectLatest { actualItemsList ->
             _filesFlow.update { actualItemsList }
         }
     }
     
-    private suspend fun updateLoadingFlow() {
+    private suspend fun keepLoadingFlowUpdated() {
         _dataResourceFlow.collectLatest { filesDataResource ->
             _isLoadingFlow.update {
                 filesDataResource is Resource.Loading

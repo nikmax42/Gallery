@@ -23,9 +23,12 @@ import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.utils.PermissionsUtils
 import nikmax.gallery.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.gallery.core.data.media.FileOperation
+import nikmax.gallery.gallery.core.data.media.MediaItemData
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
 import nikmax.gallery.gallery.core.ui.MediaItemUI
-import nikmax.gallery.gallery.core.utils.ItemsUtils.createItemsListToDisplay
+import nikmax.gallery.gallery.core.utils.ItemsUtils.applyFilters
+import nikmax.gallery.gallery.core.utils.ItemsUtils.applySorting
+import nikmax.gallery.gallery.core.utils.ItemsUtils.mapToUi
 import nikmax.material_tree.gallery.dialogs.Dialog
 import javax.inject.Inject
 import kotlin.concurrent.timer
@@ -38,7 +41,7 @@ import kotlin.coroutines.suspendCoroutine
 class ExplorerVm
 @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val mediaItemsRepo: MediaItemsRepo
+    private val galleryRepo: MediaItemsRepo
 ) : ViewModel() {
     
     data class UIState(
@@ -91,7 +94,8 @@ class ExplorerVm
     
     // Raw data flows
     private val _galleryPreferencesFlow = GalleryPreferencesUtils.getPreferencesFlow(context)
-    private val _dataResourceFlow = mediaItemsRepo.getFilesResourceFlow()
+    private var _dataResourceFlow: MutableStateFlow<Resource<List<MediaItemData>>> =
+        MutableStateFlow(Resource.Loading(emptyList()))
     
     // UI-related data flows
     private val _navStackFlow = MutableStateFlow(emptyList<String>())
@@ -130,21 +134,22 @@ class ExplorerVm
     private fun onLaunch() {
         viewModelScope.launch { onRefresh() }
         
+        viewModelScope.launch { keepDataFlowUpdated() }
         viewModelScope.launch { keepItemsFlowUpdated() }
         viewModelScope.launch { keepLoadingFlowUpdated() }
         viewModelScope.launch { keepContentTypeFlowUpdated() }
         viewModelScope.launch { keepPermissionStatusFlowUpdated() }
         
-        viewModelScope.launch { reflectContentTypeChanges() }
-        viewModelScope.launch { reflectNavigationStackChanges() }
-        viewModelScope.launch { reflectItemsChanges() }
+        viewModelScope.launch { reflectContentTypeFlowChanges() }
+        viewModelScope.launch { reflectNavigationStackFlowChanges() }
+        viewModelScope.launch { reflectItemsFlowChanges() }
         viewModelScope.launch { reflectLoadingChanges() }
-        viewModelScope.launch { reflectSelectedItemsChanges() }
-        viewModelScope.launch { reflectSearchQueryChanges() }
+        viewModelScope.launch { reflectSelectedItemsFlowChanges() }
+        viewModelScope.launch { reflectSearchQueryFlowChanges() }
     }
     
     private suspend fun onRefresh() {
-        mediaItemsRepo.rescan()
+        galleryRepo.rescan()
     }
     
     private suspend fun onItemOpen(item: MediaItemUI) {
@@ -171,7 +176,7 @@ class ExplorerVm
         val destinationAlbumPath = try {
             awaitForAlbumPickerResult()
         }
-        catch (e: CancellationException) {
+        catch (_: CancellationException) {
             return
         }
         val destinationFilesPaths = itemsToCopyOrMove.map { item ->
@@ -180,12 +185,12 @@ class ExplorerVm
         // check for conflict filenames in the picked album
         // await for conflict resolutions
         val conflictsResolutions = destinationFilesPaths.mapIndexed { index, destinationPath ->
-            val alreadyExists = mediaItemsRepo.checkExistence(destinationPath)
+            val alreadyExists = galleryRepo.checkExistence(destinationPath)
             when (alreadyExists) {
                 true -> try {
                     awaitForConflictResolverDialogResult(itemsToCopyOrMove[index])
                 }
-                catch (e: CancellationException) {
+                catch (_: CancellationException) {
                     return
                 }
                 false -> ConflictResolution.KEEP_BOTH
@@ -205,7 +210,7 @@ class ExplorerVm
                 )
             }
         }
-        performFileOperations(fileOperations, mediaItemsRepo, viewModelScope)
+        performFileOperations(fileOperations, galleryRepo, viewModelScope)
     }
     
     private suspend fun onRename(itemsToRename: List<MediaItemUI>) {
@@ -214,18 +219,18 @@ class ExplorerVm
             try {
                 awaitForRenamerDialogResult(item)
             }
-            catch (e: CancellationException) {
+            catch (_: CancellationException) {
                 return
             }
         }
         // check for filename conflicts and await for resolutions
         val conflictsResolutions = newPaths.mapIndexed { index, newPath ->
-            val alreadyExists = mediaItemsRepo.checkExistence(newPath)
+            val alreadyExists = galleryRepo.checkExistence(newPath)
             when (alreadyExists) {
                 true -> try {
                     awaitForConflictResolverDialogResult(itemsToRename[index])
                 }
-                catch (e: CancellationException) {
+                catch (_: CancellationException) {
                     return
                 }
                 false -> ConflictResolution.KEEP_BOTH
@@ -238,62 +243,79 @@ class ExplorerVm
                 conflictResolution = conflictsResolutions[index]
             )
         }
-        performFileOperations(fileOperations, mediaItemsRepo, viewModelScope)
+        performFileOperations(fileOperations, galleryRepo, viewModelScope)
     }
     
     private suspend fun onDelete(itemsToDelete: List<MediaItemUI>) {
         try {
             awaitForDeletionConfirmationDialogResult(itemsToDelete)
             val fileOperations = itemsToDelete.map { FileOperation.Delete(it.path) }
-            performFileOperations(fileOperations, mediaItemsRepo, viewModelScope)
+            performFileOperations(fileOperations, galleryRepo, viewModelScope)
         }
-        catch (e: CancellationException) {
+        catch (_: CancellationException) {
             return
         }
     }
     
     
-    /**
-     * Updated screen items list based on mediastore data, app preferences, current album path and search query
-     *
-     */
-    private suspend fun keepItemsFlowUpdated() {
+    private suspend fun keepDataFlowUpdated() {
         combine(
-            _dataResourceFlow,
             _galleryPreferencesFlow,
             _navStackFlow,
             _searchQueryFlow
-        ) { dataRes, prefs, navStack, searchQuery ->
-            val currentAlbumPath = navStack.lastOrNull()
-            when (dataRes) {
-                is Resource.Success -> dataRes.data
-                is Resource.Loading -> dataRes.data
+        ) { prefs, navStack, searchQuery ->
+            when (searchQuery.isNullOrBlank()) {
+                //if there is not search query - use album content data
+                true -> galleryRepo.getAlbumContentFlow(
+                    path = navStack.lastOrNull(),
+                    searchQuery = searchQuery,
+                    treeMode = prefs.appearance.nestedAlbumsEnabled
+                )
+                //on search use search result data
+                false -> galleryRepo.getSearchResultFlow(
+                    query = searchQuery,
+                    basePath = navStack.lastOrNull()
+                )
+            }
+            
+        }.collectLatest { newDataFlow ->
+            newDataFlow.collectLatest { newData ->
+                _dataResourceFlow.update { newData }
+            }
+        }
+    }
+    
+    private suspend fun keepItemsFlowUpdated() {
+        combine(_dataResourceFlow, _galleryPreferencesFlow) { data, prefs ->
+            when (data) {
+                is Resource.Success -> data.data
+                is Resource.Loading -> data.data
                 is Resource.Error -> emptyList()
-            }.createItemsListToDisplay(
-                targetAlbumPath = currentAlbumPath,
-                treeModeEnabled = prefs.appearance.nestedAlbumsEnabled,
-                includeImages = prefs.filtering.includeImages,
-                includeVideos = prefs.filtering.includeVideos,
-                includeGifs = prefs.filtering.includeGifs,
-                includeUnHidden = prefs.filtering.includeUnHidden,
-                includeHidden = prefs.filtering.includeHidden,
-                includeFiles = prefs.filtering.includeFiles,
-                includeAlbums = prefs.filtering.includeAlbums,
-                sortingOrder = prefs.sorting.order,
-                descendSorting = prefs.sorting.descend,
-                showAlbumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
-                showFilesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP,
-                searchQuery = searchQuery
-            )
-        }.collectLatest { actualItemsList ->
-            _itemsFlow.update { actualItemsList.distinct() }
+            }.mapToUi()
+                .applyFilters(
+                    includeImages = prefs.filtering.includeImages,
+                    includeVideos = prefs.filtering.includeVideos,
+                    includeGifs = prefs.filtering.includeGifs,
+                    includeUnHidden = prefs.filtering.includeUnHidden,
+                    includeHidden = prefs.filtering.includeHidden,
+                    includeFiles = prefs.filtering.includeFiles,
+                    includeAlbums = prefs.filtering.includeAlbums
+                )
+                .applySorting(
+                    sortingOrder = prefs.sorting.order,
+                    descend = prefs.sorting.descend,
+                    albumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
+                    filesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP
+                )
+        }.collectLatest { newItemsList ->
+            _itemsFlow.update { newItemsList }
         }
     }
     
     private suspend fun keepLoadingFlowUpdated() {
-        _dataResourceFlow.collectLatest { filesDataResource ->
+        _dataResourceFlow.collectLatest { data ->
             _isLoadingFlow.update {
-                filesDataResource is Resource.Loading
+                data is Resource.Loading
             }
         }
     }
@@ -341,13 +363,13 @@ class ExplorerVm
     
     
     
-    private suspend fun reflectNavigationStackChanges() {
+    private suspend fun reflectNavigationStackFlowChanges() {
         _navStackFlow.collectLatest { navEntries ->
             _uiState.update { it.copy(albumPath = navEntries.lastOrNull()) }
         }
     }
     
-    private suspend fun reflectItemsChanges() {
+    private suspend fun reflectItemsFlowChanges() {
         _itemsFlow.collectLatest { newItems ->
             withContext(Dispatchers.Main) {
                 _uiState.update {
@@ -373,7 +395,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun reflectSearchQueryChanges() {
+    private suspend fun reflectSearchQueryFlowChanges() {
         _searchQueryFlow.collectLatest { newQuery ->
             _uiState.update {
                 it.copy(searchQuery = newQuery)
@@ -381,7 +403,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun reflectSelectedItemsChanges() {
+    private suspend fun reflectSelectedItemsFlowChanges() {
         _selectedItemsFlow.collectLatest { selectedItems ->
             _uiState.update {
                 it.copy(selectedItems = selectedItems)
@@ -389,7 +411,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun reflectContentTypeChanges() {
+    private suspend fun reflectContentTypeFlowChanges() {
         _contentFlow.collectLatest { contentType ->
             _uiState.update {
                 it.copy(content = contentType)
@@ -473,11 +495,6 @@ class ExplorerVm
     
     private fun setDialog(newDialog: Dialog) {
         _uiState.update { it.copy(dialog = newDialog) }
-    }
-    
-    
-    private suspend fun showSnackbar(snackbar: SnackBar) {
-        _event.emit(Event.ShowSnackbar(snackbar))
     }
     
     

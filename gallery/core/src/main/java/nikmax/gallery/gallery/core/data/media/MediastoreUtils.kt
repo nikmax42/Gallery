@@ -16,13 +16,12 @@ internal object MediastoreUtils {
      *
      * @return a list of [MediaFileData] objects.
      */
-    fun getAllImagesAndVideos(context: Context): List<MediaFileData> {
-        // return getAllImages(context) + getAllVideos(context)
+    fun getAllImagesAndVideos(context: Context): List<MediaItemData.File> {
         return getAllImageAndVideoFiles(context)
     }
     
     // get all images and videos INCLUDING hidden ones
-    private fun getAllImageAndVideoFiles(context: Context): MutableList<MediaFileData> {
+    private fun getAllImageAndVideoFiles(context: Context): MutableList<MediaItemData.File> {
         val projection = arrayOf(
             MediaStore.MediaColumns._ID,
             MediaStore.MediaColumns.DATA,
@@ -43,66 +42,10 @@ internal object MediastoreUtils {
             null,
             null
         )
-        val filesData = mutableListOf<MediaFileData>()
+        val filesData = mutableListOf<MediaItemData.File>()
         if (cursor != null) {
             while (cursor.moveToNext()) {
-                val fileData = createMediaItemData(cursor)
-                filesData.add(fileData)
-            }
-            cursor.close()
-        }
-        return filesData
-    }
-    
-    private fun getAllImages(context: Context): MutableList<MediaFileData> {
-        val projection = arrayOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DATA,
-            MediaStore.Images.Media.DATE_ADDED,
-            MediaStore.Images.Media.DATE_MODIFIED,
-            MediaStore.Images.Media.VOLUME_NAME,
-            MediaStore.Images.Media.SIZE,
-            MediaStore.Images.Media.DURATION
-        )
-        val cursor = context.contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            null,
-            null,
-            null
-        )
-        val filesData = mutableListOf<MediaFileData>()
-        if (cursor != null) {
-            while (cursor.moveToNext()) {
-                val fileData = createMediaItemData(cursor)
-                filesData.add(fileData)
-            }
-            cursor.close()
-        }
-        return filesData
-    }
-    
-    private fun getAllVideos(context: Context): MutableList<MediaFileData> {
-        val projection = arrayOf(
-            MediaStore.Video.Media._ID,
-            MediaStore.Video.Media.DATA,
-            MediaStore.Video.Media.DATE_ADDED,
-            MediaStore.Video.Media.DATE_MODIFIED,
-            MediaStore.Video.Media.VOLUME_NAME,
-            MediaStore.Video.Media.SIZE,
-            MediaStore.Video.Media.DURATION
-        )
-        val cursor = context.contentResolver.query(
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            null,
-            null,
-            null
-        )
-        val filesData = mutableListOf<MediaFileData>()
-        if (cursor != null) {
-            while (cursor.moveToNext()) {
-                val fileData = createMediaItemData(cursor)
+                val fileData = createMediaFileData(cursor)
                 filesData.add(fileData)
             }
             cursor.close()
@@ -116,7 +59,7 @@ internal object MediastoreUtils {
      * @param cursor the cursor to create the [MediaFileData] object from.
      * @return a [MediaFileData] object.
      */
-    private fun createMediaItemData(cursor: Cursor): MediaFileData {
+    private fun createMediaFileData(cursor: Cursor): MediaItemData.File {
         val data = cursor.getString(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
         )
@@ -140,15 +83,14 @@ internal object MediastoreUtils {
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.VOLUME_NAME)
         )
         
-        return MediaFileData(
+        return MediaItemData.File(
             path = data,
             uri = contentUri.toString(),
             size = size,
             duration = duration,
             dateCreated = dateAdded,
             dateModified = dateModified,
-            volume = if (volumeName == MediaStore.VOLUME_EXTERNAL_PRIMARY) MediaFileData.Volume.PRIMARY
-            else MediaFileData.Volume.SECONDARY
         )
     }
+    
 }

@@ -2,6 +2,7 @@ package nikmax.gallery.gallery.core.utils
 
 import nikmax.gallery.core.preferences.GalleryPreferences
 import nikmax.gallery.gallery.core.data.media.MediaFileData
+import nikmax.gallery.gallery.core.data.media.MediaItemData
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import kotlin.io.path.Path
 import kotlin.io.path.name
@@ -15,7 +16,43 @@ object ItemsUtils {
     /**
      * Default album path that will be used when target album path is not specified
      */
-    private const val ROOT_ALBUM_PATH = "/storage/"
+    private const val ROOT_ALBUM_PATH = "/storage"
+    
+    fun List<MediaItemData>.mapToUi(): List<MediaItemUI> {
+        return this.map { it.mapToUi() }
+    }
+    
+    fun MediaItemData.mapToUi(): MediaItemUI {
+        return when (this) {
+            is MediaItemData.File -> MediaItemUI.File(
+                path = this.path,
+                size = this.size,
+                duration = this.duration,
+                creationDate = this.dateCreated,
+                modificationDate = this.dateModified,
+                belongsToVolume = when (this.storage) {
+                    MediaItemData.Storage.DEVICE -> MediaItemUI.Volume.DEVICE
+                    MediaItemData.Storage.PLUGGABLE -> MediaItemUI.Volume.PLUGGABLE
+                },
+                thumbnail = this.path
+            )
+            is MediaItemData.Album -> MediaItemUI.Album(
+                path = this.path,
+                size = this.size,
+                creationDate = this.dateCreated,
+                modificationDate = this.dateModified,
+                belongsToVolume = when (this.storage) {
+                    MediaItemData.Storage.DEVICE -> MediaItemUI.Volume.DEVICE
+                    MediaItemData.Storage.PLUGGABLE -> MediaItemUI.Volume.PLUGGABLE
+                },
+                thumbnail = this.thumbnail,
+                filesCount = this.imagesCount + this.videosCount + this.gifsCount,
+                imagesCount = this.imagesCount,
+                videosCount = this.videosCount,
+                gifsCount = this.gifsCount
+            )
+        }
+    }
     
     fun List<MediaFileData>.createItemsListToDisplay(
         targetAlbumPath: String?,
@@ -180,11 +217,20 @@ object ItemsUtils {
         val ownFiles = this.filter { file ->
             Path(file.path).parent.pathString == albumPath
         }
+        
+        //fixme problem occurs when parent album does not have any files, only nested albums.
+        // in that case a big lists of albums will be created instead of parent album
+        
+        
+        ownFiles.map { it.path }.map { Path(it) }
+        
+        
         return filteredNestedAlbums + ownFiles
     }
     
     
-    private fun List<MediaItemUI>.applySorting(
+    //todo cover with tests
+    fun List<MediaItemUI>.applySorting(
         sortingOrder: GalleryPreferences.Sorting.Order,
         descend: Boolean,
         albumsFirst: Boolean,
@@ -210,7 +256,8 @@ object ItemsUtils {
         }
     }
     
-    private fun List<MediaItemUI>.applyFilters(
+    //todo cover with tests
+    fun List<MediaItemUI>.applyFilters(
         includeImages: Boolean,
         includeVideos: Boolean,
         includeGifs: Boolean,
