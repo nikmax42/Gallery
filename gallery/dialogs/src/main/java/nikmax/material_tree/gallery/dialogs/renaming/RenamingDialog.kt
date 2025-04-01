@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import nikmax.gallery.core.ui.theme.GalleryTheme
+import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.material_tree.gallery.dialogs.R
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
@@ -58,9 +59,9 @@ fun RenamingDialog(
         val value = if (extension != null) RenamingUtils.fileExtensionIsValid(extension!!) else true
         mutableStateOf(value)
     }
-
+    
     val focusRequester: FocusRequester = remember { FocusRequester() }
-
+    
     Dialog(
         onDismissRequest = { onDismiss() },
         properties = DialogProperties()
@@ -71,7 +72,7 @@ fun RenamingDialog(
                     text = stringResource(id = R.string.rename),
                     style = MaterialTheme.typography.headlineSmall,
                 )
-
+                
                 Spacer(modifier = Modifier.size(16.dp))
                 OutlinedTextField(
                     value = name,
@@ -100,7 +101,7 @@ fun RenamingDialog(
                         singleLine = true,
                     )
                 }
-
+                
                 Spacer(modifier = Modifier.size(24.dp))
                 Row(
                     horizontalArrangement = Arrangement.End,
@@ -112,7 +113,11 @@ fun RenamingDialog(
                     TextButton(
                         onClick = {
                             val newPath =
-                                "${Path(mediaItem.path).parent.pathString}/$name${if (extension != null) ".$extension" else ""}"
+                                "${
+                                    Path(
+                                        mediaItem.path
+                                    ).parent.pathString
+                                }/$name${if (extension != null) ".$extension" else ""}"
                             onConfirm(newPath)
                         },
                         enabled = nameIsValid && extensionIsValid
@@ -129,16 +134,15 @@ fun RenamingDialog(
 @Preview(showSystemUi = false, showBackground = true)
 @Composable
 private fun DialogPreview() {
-    val item = nikmax.gallery.gallery.core.ui.MediaItemUI.File(
+    val item = MediaItemUI.File(
         path = "test/image.png",
         name = "image.png",
         size = 0,
         creationDate = 0,
         modificationDate = 0,
-        belongsToVolume = nikmax.gallery.gallery.core.ui.MediaItemUI.Volume.DEVICE,
-        mimetype = "image/png"
+        belongsToVolume = MediaItemUI.Volume.DEVICE,
     )
-
+    
     GalleryTheme {
         RenamingDialog(
             mediaItem = item,

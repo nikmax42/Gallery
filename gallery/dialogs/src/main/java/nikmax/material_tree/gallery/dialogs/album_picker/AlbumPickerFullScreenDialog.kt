@@ -144,7 +144,6 @@ private fun Preview() {
             creationDate = 0,
             modificationDate = 0,
             size = 0,
-            mimetype = "image/png"
         )
     )
     var loading by remember { mutableStateOf(false) }

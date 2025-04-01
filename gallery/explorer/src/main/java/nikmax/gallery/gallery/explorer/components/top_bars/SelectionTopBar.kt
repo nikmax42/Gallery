@@ -43,7 +43,7 @@ fun SelectionTopBar(
     val affectedFilesCount = selectedItems.count { it is MediaItemUI.File } +
             selectedItems.filterIsInstance<MediaItemUI.Album>().sumOf { it.filesCount }
     val affectedItemsSize: Long = selectedItems.sumOf { it.size }
-
+    
     TopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -125,7 +125,6 @@ private fun SelectionTopBarPreview() {
             creationDate = 0,
             modificationDate = 0,
             belongsToVolume = MediaItemUI.Volume.DEVICE,
-            mimetype = "image/png"
         )
     }
     val file2 = remember {
@@ -136,7 +135,6 @@ private fun SelectionTopBarPreview() {
             creationDate = 0,
             modificationDate = 0,
             belongsToVolume = MediaItemUI.Volume.DEVICE,
-            mimetype = "image/gif"
         )
     }
     val album1 = remember {
@@ -156,7 +154,7 @@ private fun SelectionTopBarPreview() {
     val selectedItems = remember {
         mutableStateListOf(file1, album1)
     }
-
+    
     SelectionTopBar(
         items = items,
         selectedItems = selectedItems,

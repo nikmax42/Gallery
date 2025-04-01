@@ -1,6 +1,6 @@
 package nikmax.gallery.gallery.core.ui
 
-import org.apache.tika.Tika
+import android.webkit.MimeTypeMap
 import kotlin.io.path.Path
 import kotlin.io.path.extension
 import kotlin.io.path.isWritable
@@ -9,7 +9,7 @@ import kotlin.io.path.nameWithoutExtension
 
 sealed interface MediaItemUI {
     enum class Volume { DEVICE, PLUGGABLE }
-
+    
     val path: String
     val name: String
     val thumbnail: String?
@@ -18,7 +18,7 @@ sealed interface MediaItemUI {
     val modificationDate: Long
     val belongsToVolume: Volume
     val hidden get() = path.contains("/.")
-
+    
     data class File(
         override val path: String,
         override val size: Long = 0,
@@ -28,24 +28,27 @@ sealed interface MediaItemUI {
         override val name: String = Path(path).name,
         override val thumbnail: String? = null,
         val duration: Long = 0,
-        val uri: String? = null,
-        val mimetype: String = Tika().detect(path)
+        val uri: String? = null
     ) : MediaItemUI {
         enum class MediaType { IMAGE, VIDEO, GIF }
-
+        
+        val mimetype: String = MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(extension)
+            .toString()
+        
         val mediaType: MediaType
             get() = if (mimetype.startsWith("video/")) MediaType.VIDEO
             else if (mimetype == "image/gif") MediaType.GIF
             else MediaType.IMAGE
-
+        
         val isVideoOrGif = mediaType == MediaType.VIDEO || mediaType == MediaType.GIF
-
         val extension: String
             get() = Path(path).extension
+        
         val nameWithoutExtension: String
             get() = Path(path).nameWithoutExtension
     }
-
+    
     data class Album(
         override val path: String,
         override val name: String = Path(path).name,

@@ -77,7 +77,7 @@ fun ItemsGrid(
             }
         }
     }
-
+    
     Surface {
         LazyVerticalGrid(
             columns = GridCells.Fixed(columnsAmount),
@@ -102,17 +102,18 @@ fun ItemsGrid(
                 val image = item.thumbnail
                 val name = item.name
                 val isVideo = item is MediaItemUI.File && item.mediaType == MediaItemUI.File.MediaType.VIDEO
-                val videoDuration = when (item is MediaItemUI.File && item.mediaType == MediaItemUI.File.MediaType.VIDEO) {
-                    true -> item.duration
-                    false -> 0
-                }
+                val videoDuration =
+                    when (item is MediaItemUI.File && item.mediaType == MediaItemUI.File.MediaType.VIDEO) {
+                        true -> item.duration
+                        false -> 0
+                    }
                 val isAlbum = item is MediaItemUI.Album
                 val isVolume = item is MediaItemUI.Album && item.isVolume
                 val albumSize = if (item is MediaItemUI.Album) item.size else 0
                 val albumFilesCount = if (item is MediaItemUI.Album) item.filesCount else 0
                 val isPlacedOnPluggableVolume = item.belongsToVolume == MediaItemUI.Volume.PLUGGABLE
                 val isSelected = selectedItems.contains(item)
-
+                
                 GridItem(
                     image = image,
                     name = name,
@@ -129,21 +130,22 @@ fun ItemsGrid(
                             fadeInSpec = tween(),
                             fadeOutSpec = tween()
                         )
-                        .then(when (dragInProcess.value) {
-                            // should disable click handling when drag gesture in progress
-                            // otherwise clickable modifier will be fired simultaneously with drag gesture and cancel it
-                            true -> Modifier
-                            false -> Modifier.clickable {
-                                when (selectedItems.isEmpty()) {
-                                    true -> if (onItemOpen != null) onItemOpen(item)
-                                    false -> if (onSelectionChange != null)
-                                        when (selectedItems.contains(item)) {
-                                            true -> selectedItems.minus(item)
-                                            false -> selectedItems.plus(item)
-                                        }.let { onSelectionChange(it) }
+                        .then(
+                            when (dragInProcess.value) {
+                                // should disable click handling when drag gesture in progress
+                                // otherwise clickable modifier will be fired simultaneously with drag gesture and cancel it
+                                true -> Modifier
+                                false -> Modifier.clickable {
+                                    when (selectedItems.isEmpty()) {
+                                        true -> if (onItemOpen != null) onItemOpen(item)
+                                        false -> if (onSelectionChange != null)
+                                            when (selectedItems.contains(item)) {
+                                                true -> selectedItems.minus(item)
+                                                false -> selectedItems.plus(item)
+                                            }.let { onSelectionChange(it) }
+                                    }
                                 }
-                            }
-                        })
+                            })
                 )
             }
         }
@@ -162,7 +164,6 @@ private fun ItemsGridPreview() {
             creationDate = 0,
             modificationDate = 0,
             size = 0,
-            mimetype = "image/png"
         )
     }
     val video = remember {
@@ -173,7 +174,6 @@ private fun ItemsGridPreview() {
             creationDate = 0,
             modificationDate = 0,
             size = 0,
-            mimetype = "video/mp4"
         )
     }
     val gif = remember {
@@ -184,7 +184,6 @@ private fun ItemsGridPreview() {
             creationDate = 0,
             modificationDate = 0,
             size = 0,
-            mimetype = "image/gif"
         )
     }
     val album = remember {
@@ -200,7 +199,7 @@ private fun ItemsGridPreview() {
     }
     val items = remember { mutableStateListOf(image, video, gif, album) }
     val selectedItems1 = remember { mutableStateListOf<MediaItemUI>() }
-
+    
     GalleryTheme {
         ItemsGrid(
             items = items,
@@ -223,7 +222,7 @@ private fun Modifier.dragSelectable(
 ) = pointerInput(key) {
     var initialIndex: Int? = null
     var lastIndex: Int? = null
-
+    
     detectDragGesturesAfterLongPress(
         onDragStart = { offset ->
             // add gesture initial item to selection list
