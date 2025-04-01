@@ -9,17 +9,17 @@ plugins {
 android {
     namespace = "nikmax.gallery.core"
     compileSdk = 35
-
+    
     defaultConfig {
         minSdk = 30
-
+        
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
-
+    
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

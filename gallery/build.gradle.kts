@@ -9,17 +9,17 @@ plugins {
 android {
     namespace = "nikmax.gallery.gallery"
     compileSdk = 35
-
+    
     defaultConfig {
         minSdk = 30
-
+        
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
-
+    
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -37,7 +37,7 @@ dependencies {
     implementation(project(":gallery:core"))
     implementation(project(":gallery:explorer"))
     implementation(project(":gallery:viewer"))
-
+    
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

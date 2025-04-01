@@ -20,7 +20,7 @@ android {
     
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -62,8 +62,6 @@ dependencies {
     implementation(libs.material.icons.extended)
     // Timber
     implementation(libs.timber)
-    // Tika
-    implementation(libs.tika.core)
     // Serialization
     implementation(libs.kotlinx.serialization.json)
     // Datastore

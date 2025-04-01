@@ -54,7 +54,7 @@ fun GalleryNavHost() {
 object GalleryRoutes {
     @Serializable
     data class Explorer(val albumPath: String? = null)
-
+    
     @Serializable
     data class Viewer(val filePath: String)
 }
