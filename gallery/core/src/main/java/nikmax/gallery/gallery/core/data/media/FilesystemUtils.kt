@@ -1,15 +1,16 @@
 package nikmax.gallery.gallery.core.data.media
 
 import androidx.annotation.VisibleForTesting
-import nikmax.gallery.gallery.core.data.media.FilesUtils.copy
-import nikmax.gallery.gallery.core.data.media.FilesUtils.delete
-import nikmax.gallery.gallery.core.data.media.FilesUtils.move
-import nikmax.gallery.gallery.core.data.media.FilesUtils.rename
+import nikmax.gallery.gallery.core.data.media.FilesystemUtils.copy
+import nikmax.gallery.gallery.core.data.media.FilesystemUtils.delete
+import nikmax.gallery.gallery.core.data.media.FilesystemUtils.move
+import nikmax.gallery.gallery.core.data.media.FilesystemUtils.rename
 import java.io.File
 import java.nio.file.FileAlreadyExistsException
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.extension
+import kotlin.io.path.isWritable
 import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.pathString
 
@@ -18,12 +19,16 @@ import kotlin.io.path.pathString
  *
  * Provides functions for [copy], [move], [delete], and [rename] files.
  */
-internal object FilesUtils {
-
+internal object FilesystemUtils {
+    
     fun checkExistence(filePath: String): Boolean {
         return Path(filePath).exists()
     }
-
+    
+    fun checkWriteAccess(filePath: String): Boolean {
+        return Path(filePath).isWritable()
+    }
+    
     /**
      * Copy a file from one location to another.
      *
@@ -64,11 +69,12 @@ internal object FilesUtils {
                 )
             }
             Result.success(destinationFile)
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             Result.failure(e)
         }
     }
-
+    
     /**
      * Delete a file.
      *
@@ -80,11 +86,12 @@ internal object FilesUtils {
             val file = File(filePath)
             file.deleteRecursively()
             Result.success(file)
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             Result.failure(e)
         }
     }
-
+    
     /**
      * Move a file from one location to another.
      * Uses [copy]+[delete] "under the hood" to increase files safety:
@@ -106,11 +113,12 @@ internal object FilesUtils {
                 true -> delete(sourceFilePath)
                 false -> Result.failure(copyResult.exceptionOrNull()!!)
             }
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             Result.failure(e)
         }
     }
-
+    
     /**
      * Rename a file.
      * Uses [move] "under the hood" to increase files safety:
@@ -128,7 +136,7 @@ internal object FilesUtils {
     ): Result<File> {
         return move(sourceFilePath, destinationFilePath, conflictResolution)
     }
-
+    
     /**
      * Appends a number to the file name to avoid collisions with existing files.
      * E.g. if the file name is `example.txt`, it will be renamed to `example(1).txt`,

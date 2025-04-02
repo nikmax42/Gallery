@@ -39,6 +39,8 @@ interface MediaItemsRepo {
     
     suspend fun checkExistence(filePath: String): Boolean
     
+    suspend fun checkWriteAccess(directoryPath: String): Boolean
+    
     suspend fun executeFileOperations(operations: List<FileOperation>): LiveData<List<WorkInfo>>
 }
 
@@ -117,8 +119,12 @@ internal class MediaItemRepoImpl(
     
     override suspend fun checkExistence(filePath: String): Boolean {
         return withContext(Dispatchers.IO) {
-            FilesUtils.checkExistence(filePath)
+            FilesystemUtils.checkExistence(filePath)
         }
+    }
+    
+    override suspend fun checkWriteAccess(directoryPath: String): Boolean {
+        return FilesystemUtils.checkWriteAccess(directoryPath)
     }
     
     override suspend fun executeFileOperations(operations: List<FileOperation>): LiveData<List<WorkInfo>> {
