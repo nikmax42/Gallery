@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -52,8 +52,6 @@ fun AlbumPickerFullScreenDialog(
     val preferences by GalleryPreferencesUtils
         .getPreferencesFlow(LocalContext.current)
         .collectAsState(GalleryPreferences())
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     
     LaunchedEffect(null) {
         vm.onAction(AlbumPickerVm.UserAction.Launch)
@@ -67,50 +65,59 @@ fun AlbumPickerFullScreenDialog(
     BackHandler { vm.onAction(AlbumPickerVm.UserAction.NavigateBack) }
     
     AnimatedVisibility(true) { // to show dialog with crossfade animation
-        val strSnackbarText = stringResource(R.string.pick_destination_first)
         AlbumPickerContent(
             items = state.items,
             selectedAlbum = state.pickedAlbum,
+            albumIsNotWritable = state.pickedAlbumIsNotWritable,
             loading = state.loading,
             onRefresh = { vm.onAction(AlbumPickerVm.UserAction.Refresh) },
             onItemClick = {
                 if (it is MediaItemUI.Album) vm.onAction(AlbumPickerVm.UserAction.NavigateIn(it))
             },
-            onConfirm = {
-                when (state.pickedAlbum != null) {
-                    true -> onConfirm(state.pickedAlbum!!.path)
-                    false -> scope.launch { snackbarHostState.showSnackbar(strSnackbarText) }
-                }
-                
-            },
+            onConfirm = { onConfirm(it) },
             onDismiss = { onDismiss() },
             gridColumnsPortrait = preferences.appearance.gridAppearance.portraitColumns,
             gridColumnsLandscape = preferences.appearance.gridAppearance.landscapeColumns,
-            snackbarHostState = snackbarHostState
         )
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AlbumPickerContent(
     items: List<MediaItemUI>,
     selectedAlbum: MediaItemUI.Album?,
+    albumIsNotWritable: Boolean,
     loading: Boolean,
     onRefresh: () -> Unit,
     onItemClick: (MediaItemUI) -> Unit,
-    onConfirm: () -> Unit,
+    onConfirm: (albumPath: String) -> Unit,
     onDismiss: () -> Unit,
     gridColumnsPortrait: Int,
     gridColumnsLandscape: Int,
-    snackbarHostState: SnackbarHostState
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val albumIsNotSelectedYet = selectedAlbum == null
+    val strDirectoryIsNotWritable = stringResource(R.string.directory_is_not_writable)
+    val strPickDestination = stringResource(R.string.pick_destination_first)
+    
     Scaffold(
         topBar = {
             AlbumPickerTopBar(
-                onConfirmClick = { onConfirm() },
+                onConfirmClick = {
+                    scope.launch {
+                        if (albumIsNotSelectedYet)
+                            snackbarHostState.showSnackbar(strPickDestination)
+                        else if (albumIsNotWritable)
+                            snackbarHostState.showSnackbar(strDirectoryIsNotWritable)
+                        else onConfirm(selectedAlbum.path)
+                    }
+                },
                 onDismissClick = { onDismiss() },
-                albumIsNotSelectedYet = selectedAlbum == null
+                albumIsNotSelectedYet = albumIsNotSelectedYet,
+                albumIsNotWritable = albumIsNotWritable
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -132,6 +139,7 @@ private fun AlbumPickerContent(
         }
     }
 }
+
 @Preview
 @Composable
 private fun Preview() {
@@ -151,6 +159,7 @@ private fun Preview() {
         AlbumPickerContent(
             items = items,
             selectedAlbum = null,
+            albumIsNotWritable = true,
             loading = loading,
             onRefresh = {
                 scope.launch {
@@ -164,7 +173,6 @@ private fun Preview() {
             onConfirm = {},
             gridColumnsPortrait = 3,
             gridColumnsLandscape = 4,
-            snackbarHostState = remember { SnackbarHostState() }
         )
     }
 }
@@ -175,20 +183,12 @@ private fun Preview() {
 private fun AlbumPickerTopBar(
     onConfirmClick: () -> Unit,
     onDismissClick: () -> Unit,
-    albumIsNotSelectedYet: Boolean
+    albumIsNotSelectedYet: Boolean,
+    albumIsNotWritable: Boolean
 ) {
     TopAppBar(
         navigationIcon = {
-            IconButton(
-                onClick = { onDismissClick() },
-                colors = when (albumIsNotSelectedYet) {
-                    true -> IconButtonDefaults.iconButtonColors().copy(
-                        contentColor = IconButtonDefaults.iconButtonColors().disabledContentColor,
-                        containerColor = IconButtonDefaults.iconButtonColors().disabledContainerColor,
-                    )
-                    false -> IconButtonDefaults.iconButtonColors()
-                }
-            ) {
+            IconButton(onClick = { onDismissClick() }) {
                 Icon(
                     imageVector = Icons.Default.Clear,
                     contentDescription = stringResource(R.string.cancel)
@@ -197,7 +197,16 @@ private fun AlbumPickerTopBar(
         },
         title = { Text(stringResource(R.string.pick_destination)) },
         actions = {
-            TextButton(onClick = { onConfirmClick() }) {
+            TextButton(
+                onClick = { onConfirmClick() },
+                colors = when (albumIsNotSelectedYet || albumIsNotWritable) {
+                    true -> ButtonDefaults.textButtonColors().copy(
+                        contentColor = ButtonDefaults.textButtonColors().disabledContentColor,
+                        containerColor = ButtonDefaults.textButtonColors().disabledContainerColor,
+                    )
+                    false -> ButtonDefaults.textButtonColors()
+                }
+            ) {
                 Text(stringResource(R.string.ok))
             }
         }

@@ -36,7 +36,8 @@ class AlbumPickerVm
     data class UiState(
         val items: List<MediaItemUI> = listOf(),
         val loading: Boolean = false,
-        val pickedAlbum: MediaItemUI.Album? = null
+        val pickedAlbum: MediaItemUI.Album? = null,
+        val pickedAlbumIsNotWritable: Boolean = true
     )
     
     sealed interface UserAction {
@@ -186,12 +187,13 @@ class AlbumPickerVm
     
     private suspend fun reflectNavStackFlowChanges() {
         _navStackFlow.collectLatest { newNavStack ->
-            withContext(Dispatchers.Main) {
-                _uiState.update {
-                    it.copy(
-                        pickedAlbum = newNavStack.lastOrNull()
-                    )
-                }
+            val currentDirectory = newNavStack.lastOrNull()
+            val isWritable = galleryRepo.checkWriteAccess(currentDirectory?.path.toString())
+            _uiState.update {
+                it.copy(
+                    pickedAlbum = currentDirectory,
+                    pickedAlbumIsNotWritable = !isWritable
+                )
             }
         }
     }

@@ -20,4 +20,5 @@
     <string name="skip">Skip this item</string>
     <string name="keep_both">Keep both</string>
     <string name="overwrite">Overwrite with new</string>
+    <string name="directory_is_not_writable">This directory is not writable</string>
 </resources>
