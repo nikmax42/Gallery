@@ -41,7 +41,8 @@ object ItemsUtils {
                 filesCount = this.imagesCount + this.videosCount + this.gifsCount,
                 imagesCount = this.imagesCount,
                 videosCount = this.videosCount,
-                gifsCount = this.gifsCount
+                gifsCount = this.gifsCount,
+                nestedAlbumsCountLInt = this.nestedDirectoriesCount
             )
         }
     }

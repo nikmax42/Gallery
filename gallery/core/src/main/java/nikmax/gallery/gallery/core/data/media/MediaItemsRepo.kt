@@ -202,14 +202,19 @@ internal class MediaItemRepoImpl(
             //fill albums with metadata
             albums.values.forEach { album ->
                 val albumOwnFiles = this.filter { Path(it.path).parent.pathString == album.path }
+                //files placed in nested albums
                 val albumDeepFiles = this.filter { Path(it.path).startsWith(album.path) } - albumOwnFiles
+                //size of whole directory (including nested directories)
                 val albumSize = (albumOwnFiles + albumDeepFiles).sumOf { it.size }
+                //count of nested images (include placed nested albums)
                 val imagesCount = (albumOwnFiles + albumDeepFiles)
                     .count { it.mediaType == MediaItemData.File.Type.IMAGE }
                 val videosCount = (albumOwnFiles + albumDeepFiles)
                     .count { it.mediaType == MediaItemData.File.Type.VIDEO }
                 val gifsCount = (albumOwnFiles + albumDeepFiles)
                     .count { it.mediaType == MediaItemData.File.Type.GIF }
+                //count of child deep albums
+                val nestedAlbumsCount = albums.values.count { it.path.startsWith(album.path) && it.path != album.path }
                 val creationDate = (albumOwnFiles + albumDeepFiles).minOf { it.dateCreated }
                 val modificationDate = (albumOwnFiles + albumDeepFiles).minOf { it.dateModified }
                 val thumbnail = albumOwnFiles.firstOrNull()?.path ?: albumDeepFiles.firstOrNull()?.path ?: ""
@@ -223,6 +228,7 @@ internal class MediaItemRepoImpl(
                         imagesCount = imagesCount,
                         videosCount = videosCount,
                         gifsCount = gifsCount,
+                        nestedDirectoriesCount = nestedAlbumsCount,
                         dateCreated = creationDate,
                         dateModified = modificationDate,
                         thumbnail = thumbnail
