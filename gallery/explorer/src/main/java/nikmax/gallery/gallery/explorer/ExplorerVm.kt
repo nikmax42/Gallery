@@ -25,8 +25,8 @@ import nikmax.gallery.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.gallery.core.data.media.FileOperation
 import nikmax.gallery.gallery.core.data.media.MediaItemData
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
+import nikmax.gallery.gallery.core.mappers.MediaItemMapper.mapToUi
 import nikmax.gallery.gallery.core.ui.MediaItemUI
-import nikmax.gallery.gallery.core.utils.ItemsUtils.mapToUi
 import nikmax.material_tree.gallery.dialogs.Dialog
 import javax.inject.Inject
 import kotlin.concurrent.timer

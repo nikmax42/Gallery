@@ -20,8 +20,8 @@ import nikmax.gallery.core.preferences.GalleryPreferences
 import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.core.data.media.MediaItemData
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
+import nikmax.gallery.gallery.core.mappers.MediaItemMapper.mapToUi
 import nikmax.gallery.gallery.core.ui.MediaItemUI
-import nikmax.gallery.gallery.core.utils.ItemsUtils.mapToUi
 import javax.inject.Inject
 
 @HiltViewModel
