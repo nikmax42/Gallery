@@ -2,6 +2,9 @@ package nikmax.gallery.gallery.core.data.media
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.applyItemTypeFilters
+import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.applyMediaTypeFilters
+import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.applyVisibilityFilters
 import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.createGalleryAlbumsList
 import org.junit.Before
 import org.junit.Test
@@ -107,4 +110,55 @@ class MediaItemRepoImplTest {
           assert(realResult.map { it.path }.toSet() == desiredResult.map { it.path }.toSet())
           assert(realResult.sumOf { it.size } == desiredResult.sumOf { it.size })
       } */
+    
+    @Test
+    fun itemTypeFiltering_correct() {
+        val albumsOnlyResult = galleryAlbums.applyItemTypeFilters(includeAlbums = true, includeFiles = false)
+        assert(albumsOnlyResult.all { it is MediaItemData.Album })
+        
+        val filesOnlyResult = galleryAlbums.applyItemTypeFilters(includeAlbums = false, includeFiles = true)
+        assert(filesOnlyResult.all { it is MediaItemData.File })
+    }
+    
+    @Test
+    fun mediaTypeFiltering_correct() {
+        val imagesOnlyResult = galleryAlbums.applyMediaTypeFilters(
+            includeImages = true, includeVideos = false, includeGifs = false
+        )
+        assert(
+            imagesOnlyResult.all {
+                it is MediaItemData.File && it.mediaType == MediaItemData.File.Type.IMAGE ||
+                        it is MediaItemData.Album && it.imagesCount > 0
+            }
+        )
+        
+        val videosOnlyResult = galleryAlbums.applyMediaTypeFilters(
+            includeImages = false, includeVideos = true, includeGifs = false
+        )
+        assert(
+            videosOnlyResult.all {
+                it is MediaItemData.File && it.mediaType == MediaItemData.File.Type.VIDEO ||
+                        it is MediaItemData.Album && it.videosCount > 0
+            }
+        )
+        
+        val gifsOnlyResult = galleryAlbums.applyMediaTypeFilters(
+            includeImages = false, includeVideos = false, includeGifs = true
+        )
+        assert(
+            gifsOnlyResult.all {
+                it is MediaItemData.File && it.mediaType == MediaItemData.File.Type.GIF ||
+                        it is MediaItemData.Album && it.gifsCount > 0
+            }
+        )
+    }
+    
+    @Test
+    fun visibilityFiltering_correct() {
+        val unhiddenOnlyResult = galleryAlbums.applyVisibilityFilters(includeUnhidden = true, includeHidden = false)
+        assert(unhiddenOnlyResult.all { !it.isHidden })
+        
+        val hiddenOnlyResult = galleryAlbums.applyVisibilityFilters(includeUnhidden = false, includeHidden = true)
+        assert(hiddenOnlyResult.all { it.isHidden })
+    }
 }

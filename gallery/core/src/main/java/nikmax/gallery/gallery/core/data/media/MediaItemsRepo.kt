@@ -283,10 +283,13 @@ internal class MediaItemRepoImpl(
                 val gifsCount = (albumOwnFiles + albumDeepFiles).count { it.mediaType == MediaItemData.File.Type.GIF }
                 //count of child deep albums
                 val nestedAlbumsCount = albums.values.count { it.path.startsWith(album.path) && it.path != album.path }
+                val hiddenCount = (albumOwnFiles + albumDeepFiles).count { it.isHidden }
+                val unhiddenCount = (albumOwnFiles + albumDeepFiles).count { !it.isHidden }
                 val creationDate = (albumOwnFiles + albumDeepFiles).minOfOrNull { it.dateCreated } ?: 0
                 val modificationDate = (albumOwnFiles + albumDeepFiles).maxOfOrNull { it.dateModified } ?: 0
                 val thumbnail = albumOwnFiles.firstOrNull()?.path
-                    ?: albumDeepFiles.filterNot { it.isHidden }.firstOrNull()?.path //hidden excluded for "safety"
+                //hidden children excluded from thumbnail calculation for "safety reasons"
+                    ?: albumDeepFiles.filterNot { it.isHidden }.firstOrNull()?.path
                     ?: ""
                 
                 albums.put(
@@ -298,9 +301,11 @@ internal class MediaItemRepoImpl(
                         imagesCount = imagesCount,
                         videosCount = videosCount,
                         gifsCount = gifsCount,
-                        nestedDirectoriesCount = nestedAlbumsCount,
+                        hiddenCount = hiddenCount,
+                        unhiddenCount = unhiddenCount,
                         dateCreated = creationDate,
                         dateModified = modificationDate,
+                        nestedDirectoriesCount = nestedAlbumsCount,
                         thumbnail = thumbnail
                     )
                 )
