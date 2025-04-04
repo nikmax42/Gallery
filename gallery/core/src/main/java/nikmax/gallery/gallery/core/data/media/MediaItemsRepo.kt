@@ -2,6 +2,7 @@ package nikmax.gallery.gallery.core.data.media
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.LiveData
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -16,6 +17,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import nikmax.gallery.core.data.Resource
+import timber.log.Timber
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
 
@@ -105,6 +107,8 @@ internal class MediaItemRepoImpl(
     }
     
     override suspend fun rescan() {
+        val startTime = System.currentTimeMillis()
+        Timber.d("Rescan initiated")
         _loadingFlow.update { true }
         withContext(Dispatchers.IO) {
             val galleryData = MediastoreUtils
@@ -115,6 +119,8 @@ internal class MediaItemRepoImpl(
                 _loadingFlow.update { false }
             }
         }
+        val endTime = System.currentTimeMillis()
+        Timber.d("Rescan finished. Took ${endTime - startTime} ms")
     }
     
     override suspend fun checkExistence(filePath: String): Boolean {
@@ -185,13 +191,20 @@ internal class MediaItemRepoImpl(
             this
                 .groupBy { Path(it.path).parent.pathString }
                 .forEach { albumGroup ->
-                    val pathNodes = mutableListOf<String>()
-                    var node = Path(albumGroup.key).pathString
+                    albums.put(
+                        albumGroup.key,
+                        MediaItemData.Album(
+                            path = albumGroup.key,
+                            files = albumGroup.value
+                        )
+                    )
+                    val parentDirectories = mutableListOf<String>()
+                    var node = Path(albumGroup.key).parent.pathString
                     while (node != "null") {
-                        pathNodes.add(node)
+                        parentDirectories.add(node)
                         node = Path(node).parent?.toString() ?: "null"
                     }
-                    pathNodes.forEach { albumPath ->
+                    parentDirectories.forEach { albumPath ->
                         albums.put(
                             albumPath,
                             MediaItemData.Album(path = albumPath)
@@ -201,18 +214,22 @@ internal class MediaItemRepoImpl(
             
             //fill albums with metadata
             albums.values.forEach { album ->
-                val albumOwnFiles = this.filter { Path(it.path).parent.pathString == album.path }
-                val albumDeepFiles = this.filter { Path(it.path).startsWith(album.path) } - albumOwnFiles
+                val albumOwnFiles = album.files
+                //files placed in nested albums
+                val albumDeepFiles = this.fastFilter { it.path.startsWith(album.path) } - albumOwnFiles
+                //size of whole directory (including nested directories)
                 val albumSize = (albumOwnFiles + albumDeepFiles).sumOf { it.size }
-                val imagesCount = (albumOwnFiles + albumDeepFiles)
-                    .count { it.mediaType == MediaItemData.File.Type.IMAGE }
-                val videosCount = (albumOwnFiles + albumDeepFiles)
-                    .count { it.mediaType == MediaItemData.File.Type.VIDEO }
-                val gifsCount = (albumOwnFiles + albumDeepFiles)
-                    .count { it.mediaType == MediaItemData.File.Type.GIF }
-                val creationDate = (albumOwnFiles + albumDeepFiles).minOf { it.dateCreated }
-                val modificationDate = (albumOwnFiles + albumDeepFiles).minOf { it.dateModified }
-                val thumbnail = albumOwnFiles.firstOrNull()?.path ?: albumDeepFiles.firstOrNull()?.path ?: ""
+                //count of nested images (include placed nested albums)
+                val imagesCount = (albumOwnFiles + albumDeepFiles).count { it.mediaType == MediaItemData.File.Type.IMAGE }
+                val videosCount = (albumOwnFiles + albumDeepFiles).count { it.mediaType == MediaItemData.File.Type.VIDEO }
+                val gifsCount = (albumOwnFiles + albumDeepFiles).count { it.mediaType == MediaItemData.File.Type.GIF }
+                //count of child deep albums
+                val nestedAlbumsCount = albums.values.count { it.path.startsWith(album.path) && it.path != album.path }
+                val creationDate = (albumOwnFiles + albumDeepFiles).minOfOrNull { it.dateCreated } ?: 0
+                val modificationDate = (albumOwnFiles + albumDeepFiles).maxOfOrNull { it.dateModified } ?: 0
+                val thumbnail = albumOwnFiles.firstOrNull()?.path
+                    ?: albumDeepFiles.filterNot { it.isHidden }.firstOrNull()?.path //hidden excluded for "safety"
+                    ?: ""
                 
                 albums.put(
                     album.path,
@@ -223,6 +240,7 @@ internal class MediaItemRepoImpl(
                         imagesCount = imagesCount,
                         videosCount = videosCount,
                         gifsCount = gifsCount,
+                        nestedDirectoriesCount = nestedAlbumsCount,
                         dateCreated = creationDate,
                         dateModified = modificationDate,
                         thumbnail = thumbnail

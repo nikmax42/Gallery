@@ -11,11 +11,6 @@ import android.provider.MediaStore
  */
 internal object MediastoreUtils {
     
-    /**
-     * Retrieves a list of images and videos (including placed in hidden .directories) from the mediastore.
-     *
-     * @return a list of [MediaFileData] objects.
-     */
     fun getAllImagesAndVideos(context: Context): List<MediaItemData.File> {
         return getAllImageAndVideoFiles(context)
     }
@@ -53,12 +48,6 @@ internal object MediastoreUtils {
         return filesData
     }
     
-    /**
-     * Creates a [MediaFileData] object from a mediastore cursor.
-     *
-     * @param cursor the cursor to create the [MediaFileData] object from.
-     * @return a [MediaFileData] object.
-     */
     private fun createMediaFileData(cursor: Cursor): MediaItemData.File {
         val data = cursor.getString(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)

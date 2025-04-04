@@ -38,7 +38,8 @@ fun SelectionTopBar(
     onSelectAllClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val affectedAlbumsCount = selectedItems.count { it is MediaItemUI.Album }
+    val selectedAlbums = selectedItems.filterIsInstance<MediaItemUI.Album>()
+    val affectedAlbumsCount = selectedAlbums.size + selectedAlbums.sumOf { it.nestedAlbumsCountLInt }
     // including files in selected albums
     val affectedFilesCount = selectedItems.count { it is MediaItemUI.File } +
             selectedItems.filterIsInstance<MediaItemUI.Album>().sumOf { it.filesCount }
