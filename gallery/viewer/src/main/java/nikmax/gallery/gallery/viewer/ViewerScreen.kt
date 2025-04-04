@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.Scaffold
@@ -42,6 +43,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -59,6 +61,11 @@ import nikmax.gallery.gallery.viewer.components.Seekbar
 import nikmax.gallery.gallery.viewer.components.Video
 import nikmax.gallery.gallery.viewer.components.bottom_bar.ViewerBottomBar
 import nikmax.gallery.gallery.viewer.components.top_bar.ViewerTopBar
+import nikmax.material_tree.gallery.dialogs.Dialog
+import nikmax.material_tree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
+import nikmax.material_tree.gallery.dialogs.conflict_resolver.ConflictResolverDialog
+import nikmax.material_tree.gallery.dialogs.deletion.DeletionDialog
+import nikmax.material_tree.gallery.dialogs.renaming.RenamingDialog
 import kotlin.math.roundToInt
 
 @Composable
@@ -68,14 +75,14 @@ fun ViewerScreen(
     vm: ViewerVm = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
-
+    
     ViewerContent(
         state = state,
         onAction = { vm.onAction(it) },
         initialFilePath = filePath,
         onClose = { onClose() }
     )
-
+    
     LaunchedEffect(filePath) {
         vm.onAction(ViewerVm.UserAction.Launch(filePath))
     }
@@ -90,13 +97,13 @@ private fun ViewerContent(
     onClose: () -> Unit,
 ) {
     val context = LocalContext.current
-
+    
     AnimatedContent(targetState = state.files.isEmpty()) { filesIsEmpty ->
         when (filesIsEmpty) {
             true -> {
-                /* todo add loading placeholder content here */
+                /* todo add loading placeholder content here? */
             }
-            false -> ContentReady(
+            false -> MainContent(
                 files = state.files,
                 initialFilePath = initialFilePath,
                 showUi = state.showControls,
@@ -110,25 +117,25 @@ private fun ViewerContent(
             )
         }
     }
-
+    
     // dialogs block
     when (val dialog = state.dialog) {
-        nikmax.material_tree.gallery.dialogs.Dialog.None -> {}
-        is nikmax.material_tree.gallery.dialogs.Dialog.AlbumPicker -> nikmax.material_tree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog(
+        Dialog.None -> {}
+        is Dialog.AlbumPicker -> AlbumPickerFullScreenDialog(
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }
         )
-        is nikmax.material_tree.gallery.dialogs.Dialog.ConflictResolver -> nikmax.material_tree.gallery.dialogs.conflict_resolver.ConflictResolverDialog(
+        is Dialog.ConflictResolver -> ConflictResolverDialog(
             conflictItem = dialog.conflictItem,
             onResolve = { resolution, _ -> dialog.onConfirm(resolution) },
             onDismiss = { dialog.onDismiss() }
         )
-        is nikmax.material_tree.gallery.dialogs.Dialog.DeletionConfirmation -> nikmax.material_tree.gallery.dialogs.deletion.DeletionDialog(
+        is Dialog.DeletionConfirmation -> DeletionDialog(
             items = dialog.items,
             onConfirm = { dialog.onConfirm() },
             onDismiss = { dialog.onDismiss() }
         )
-        is nikmax.material_tree.gallery.dialogs.Dialog.Renaming -> nikmax.material_tree.gallery.dialogs.renaming.RenamingDialog(
+        is Dialog.Renaming -> RenamingDialog(
             mediaItem = dialog.item,
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }
@@ -166,7 +173,7 @@ private fun ViewerContentPreview() {
         )
     }
     val showUi = remember { true }
-
+    
     var state by remember {
         mutableStateOf(
             ViewerVm.UIState(
@@ -175,7 +182,7 @@ private fun ViewerContentPreview() {
             )
         )
     }
-
+    
     fun onAction(action: ViewerVm.UserAction) {
         when (action) {
             is ViewerVm.UserAction.Launch -> {}
@@ -188,7 +195,7 @@ private fun ViewerContentPreview() {
             }
         }
     }
-
+    
     GalleryTheme {
         ViewerContent(
             state = state,
@@ -202,7 +209,7 @@ private fun ViewerContentPreview() {
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ContentReady(
+fun MainContent(
     files: List<MediaItemUI.File>, // must not be empty!
     initialFilePath: String,
     showUi: Boolean,
@@ -223,7 +230,7 @@ fun ContentReady(
     }
     val pagerState = remember(files) { PagerState(initialPage) { files.size } }
     val currentFile = files[pagerState.settledPage]
-
+    
     // for videos and gifs only
     val player = remember(currentFile) {
         ExoPlayer.Builder(context).build().apply {
@@ -250,7 +257,7 @@ fun ContentReady(
             delay(100)
         }
     }
-
+    
     Scaffold(
         topBar = {
             AnimatedVisibility(
@@ -285,7 +292,9 @@ fun ContentReady(
                             onSeekFinished = {
                                 videoSeekInProgress = false
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 8.dp)
                         )
                     }
                     ViewerBottomBar(
@@ -305,11 +314,11 @@ fun ContentReady(
                 modifier = modifier
             ) {
                 val scope = rememberCoroutineScope()
-
+                
                 val animatableZoom = remember { Animatable(1f) }
                 val animatableOffsetX = remember { Animatable(Offset.Zero.x) }
                 val animatableOffsetY = remember { Animatable(Offset.Zero.y) }
-
+                
                 val transformationState = rememberTransformableState { zoomChange, panChange, rotationChange ->
                     val zoom = (animatableZoom.value * zoomChange).coerceIn(1f, 5f)
                     val extraWidth = (zoom - 1) * constraints.maxWidth
@@ -326,33 +335,33 @@ fun ContentReady(
                         animatableOffsetY.snapTo(offset.y)
                     }
                 }
-
+                
                 fun zoomToDoubleTap(tapPoint: Offset) {
                     val newZoom = 2.5f
                     scope.launch { animatableZoom.animateTo(newZoom) }
-
+                    
                     val centerX = this.constraints.maxWidth / 2
                     val centerOffsetX = (tapPoint.x - centerX).roundToInt()
                     val newX = (animatableOffsetX.value - centerOffsetX) * newZoom
                     scope.launch { animatableOffsetX.animateTo(newX) }
-
+                    
                     val centerY = this.constraints.maxHeight / 2
                     val centerOffsetY = (tapPoint.y - centerY).roundToInt()
                     val newY = (animatableOffsetX.value - centerOffsetY) * newZoom
                     scope.launch { animatableOffsetY.animateTo(newY) }
                 }
-
+                
                 fun resetZoomAndOffset() {
                     scope.launch { animatableZoom.animateTo(1f) }
                     scope.launch { animatableOffsetX.animateTo(Offset.Zero.x) }
                     scope.launch { animatableOffsetY.animateTo(Offset.Zero.y) }
                 }
-
+                
                 // reset transformation on file switch
                 LaunchedEffect(currentFile) { resetZoomAndOffset() }
                 // reset transformation on back press
                 BackHandler(animatableZoom.value != 1f) { resetZoomAndOffset() }
-
+                
                 // pager to swipe files
                 HorizontalPager(
                     state = pagerState,
@@ -428,7 +437,7 @@ fun ContentReady(
                         )
                     }
                 }
-
+                
                 // if not in transformation mode - enable screen borders gestures
                 if (animatableZoom.value == 1f) {
                     Box(
@@ -482,7 +491,7 @@ fun ContentReady(
                     )
                 }
             }
-
+            
             // show play/pause button if file is video and user not seeking it
             AnimatedVisibility(
                 visible = currentFile.isVideoOrGif && showUi && !videoSeekInProgress,
