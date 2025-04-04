@@ -13,7 +13,7 @@ sealed interface MediaItemData {
     val dateModified: Long
     val size: Long
     val name: String get() = Path(path).name
-    val isHidden: Boolean get() = Path(path).name.startsWith(".")
+    val isHidden: Boolean get() = path.contains("/.")
     val storage: Storage
         get() {
             return if (path.startsWith("/storage/emulated/")) Storage.DEVICE
