@@ -21,8 +21,6 @@ import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.core.data.media.MediaItemData
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
 import nikmax.gallery.gallery.core.ui.MediaItemUI
-import nikmax.gallery.gallery.core.utils.ItemsUtils.applyFilters
-import nikmax.gallery.gallery.core.utils.ItemsUtils.applySorting
 import nikmax.gallery.gallery.core.utils.ItemsUtils.mapToUi
 import javax.inject.Inject
 
@@ -118,7 +116,18 @@ class AlbumPickerVm
             galleryRepo.getAlbumContentFlow(
                 path = navStack.lastOrNull()?.path,
                 searchQuery = null,
-                treeMode = prefs.appearance.nestedAlbumsEnabled
+                treeMode = prefs.appearance.nestedAlbumsEnabled,
+                includeImages = prefs.filtering.includeImages,
+                includeVideos = prefs.filtering.includeVideos,
+                includeGifs = prefs.filtering.includeGifs,
+                includeUnhidden = prefs.filtering.includeUnHidden,
+                includeHidden = prefs.filtering.includeHidden,
+                includeFiles = prefs.filtering.includeFiles,
+                includeAlbums = prefs.filtering.includeAlbums,
+                sortingOrder = prefs.sorting.order,
+                descendSorting = prefs.sorting.descend,
+                albumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
+                filesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP
             )
         }.collectLatest { newDataFlow ->
             newDataFlow.collectLatest { newData ->
@@ -142,21 +151,6 @@ class AlbumPickerVm
                 is Resource.Loading -> data.data
                 is Resource.Error -> emptyList()
             }.mapToUi()
-                .applyFilters(
-                    includeImages = prefs.filtering.includeImages,
-                    includeVideos = prefs.filtering.includeVideos,
-                    includeGifs = prefs.filtering.includeGifs,
-                    includeUnHidden = prefs.filtering.includeUnHidden,
-                    includeHidden = prefs.filtering.includeHidden,
-                    includeFiles = prefs.filtering.includeFiles,
-                    includeAlbums = prefs.filtering.includeAlbums
-                )
-                .applySorting(
-                    sortingOrder = prefs.sorting.order,
-                    descend = prefs.sorting.descend,
-                    albumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
-                    filesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP
-                )
         }.collectLatest { newItemsList ->
             _itemsFlow.update { newItemsList }
         }

@@ -21,9 +21,8 @@ import nikmax.gallery.gallery.core.data.media.FileOperation
 import nikmax.gallery.gallery.core.data.media.MediaItemData
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
 import nikmax.gallery.gallery.core.ui.MediaItemUI
-import nikmax.gallery.gallery.core.utils.ItemsUtils.applyFilters
-import nikmax.gallery.gallery.core.utils.ItemsUtils.applySorting
 import nikmax.gallery.gallery.core.utils.ItemsUtils.mapToUi
+import nikmax.material_tree.gallery.dialogs.Dialog
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
@@ -43,7 +42,7 @@ class ViewerVm
         val files: List<MediaItemUI.File> = emptyList(),
         val isLoading: Boolean = false,
         val showControls: Boolean = true,
-        val dialog: nikmax.material_tree.gallery.dialogs.Dialog = nikmax.material_tree.gallery.dialogs.Dialog.None
+        val dialog: Dialog = Dialog.None
     )
     
     
@@ -54,11 +53,6 @@ class ViewerVm
         data class Move(val file: MediaItemUI.File) : UserAction
         data class Rename(val file: MediaItemUI.File) : UserAction
         data class Delete(val file: MediaItemUI.File) : UserAction
-    }
-    
-    
-    sealed interface Event {
-    
     }
     
     
@@ -178,12 +172,25 @@ class ViewerVm
     
     
     private suspend fun keepDataFlowUpdated(albumPath: String) {
-        mediaItemsRepo.getAlbumContentFlow(
-            path = albumPath,
-            searchQuery = null,
-            treeMode = false
-        ).collectLatest { albumFilesData ->
-            _dataResourceFlow.update { albumFilesData }
+        _galleryPreferencesFlow.collectLatest { prefs ->
+            mediaItemsRepo.getAlbumContentFlow(
+                path = albumPath,
+                searchQuery = null,
+                treeMode = false,
+                includeImages = prefs.filtering.includeImages,
+                includeVideos = prefs.filtering.includeVideos,
+                includeGifs = prefs.filtering.includeGifs,
+                includeUnhidden = prefs.filtering.includeUnHidden,
+                includeHidden = prefs.filtering.includeHidden,
+                includeFiles = prefs.filtering.includeFiles,
+                includeAlbums = prefs.filtering.includeAlbums,
+                sortingOrder = prefs.sorting.order,
+                descendSorting = prefs.sorting.descend,
+                albumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
+                filesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP
+            ).collectLatest { albumFilesData ->
+                _dataResourceFlow.update { albumFilesData }
+            }
         }
     }
     
@@ -193,23 +200,7 @@ class ViewerVm
                 is Resource.Success -> dataRes.data
                 is Resource.Loading -> dataRes.data
                 is Resource.Error -> emptyList()
-            }.mapToUi()
-                .applyFilters(
-                    includeImages = prefs.filtering.includeImages,
-                    includeVideos = prefs.filtering.includeVideos,
-                    includeGifs = prefs.filtering.includeGifs,
-                    includeUnHidden = prefs.filtering.includeUnHidden,
-                    includeHidden = prefs.filtering.includeHidden,
-                    includeFiles = true,
-                    includeAlbums = false
-                )
-                .applySorting(
-                    sortingOrder = prefs.sorting.order,
-                    descend = prefs.sorting.descend,
-                    albumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
-                    filesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP
-                )
-                .filterIsInstance<MediaItemUI.File>()
+            }.mapToUi().filterIsInstance<MediaItemUI.File>()
         }.collectLatest { actualItemsList ->
             _filesFlow.update { actualItemsList }
         }
