@@ -71,7 +71,7 @@ internal fun GridItem(
         }
         else MaterialTheme.colorScheme.outlineVariant
     )
-
+    
     OutlinedCard(
         border = BorderStroke(borderWidth, selectionColor),
         modifier = modifier
@@ -101,7 +101,7 @@ internal fun GridItem(
                     bottomEndRadius = 30F,
                     modifier = Modifier.align(Alignment.TopStart)
                 )
-                else if (isPlacedOnPluggableVolume) IconCorner(
+                else if (isPlacedOnPluggableVolume && isAlbum) IconCorner(
                     icon = Icons.Default.SdStorage,
                     contentDescription = stringResource(R.string.pluggable_storage),
                     bottomEndRadius = 30F,
@@ -281,7 +281,7 @@ private fun IconCorner(
         bottomStart = bottomStartRadius,
         bottomEnd = bottomEndRadius
     )
-
+    
     Surface(
         color = color,
         modifier = modifier.clip(shape)
@@ -293,7 +293,7 @@ private fun IconCorner(
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-
+                
                 )
             if (label != null) Text(
                 text = label,
