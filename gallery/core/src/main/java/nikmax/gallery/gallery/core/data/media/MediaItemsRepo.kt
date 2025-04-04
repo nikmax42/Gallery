@@ -249,5 +249,80 @@ internal class MediaItemRepoImpl(
             }
             return albums.values.toList()
         }
+        
+        
+        @VisibleForTesting
+        internal fun List<MediaItemData>.applyMediaTypeFilters(
+            includeImages: Boolean,
+            includeVideos: Boolean,
+            includeGifs: Boolean,
+        ): List<MediaItemData> {
+            val files = this.filterIsInstance<MediaItemData.File>()
+            val albums = this.filterIsInstance<MediaItemData.Album>()
+            
+            val filteredFiles = files.filterFilesByMediaType(includeImages, includeVideos, includeGifs)
+            val filteredAlbums = albums.filterAlbumsByMediaType(includeImages, includeVideos, includeGifs)
+            
+            return filteredFiles + filteredAlbums
+        }
+        
+        @VisibleForTesting
+        internal fun List<MediaItemData>.applyVisibilityFilters(
+            includeUnhidden: Boolean,
+            includeHidden: Boolean,
+        ): List<MediaItemData> {
+            val files = this.filterIsInstance<MediaItemData.File>()
+            val albums = this.filterIsInstance<MediaItemData.Album>()
+            
+            val filteredFiles = files.filterFilesByVisibility(includeUnhidden, includeHidden)
+            val filteredAlbums = albums.filterAlbumsByVisibility(includeUnhidden, includeHidden)
+            
+            return filteredFiles + filteredAlbums
+        }
+        
+        
+        private fun List<MediaItemData.File>.filterFilesByMediaType(
+            includeImages: Boolean,
+            includeVideos: Boolean,
+            includeGifs: Boolean,
+        ): List<MediaItemData.File> {
+            val imageFiltered = if (includeImages) this.filter { it.mediaType == MediaItemData.File.Type.IMAGE } else emptyList()
+            val videoFiltered = if (includeVideos) this.filter { it.mediaType == MediaItemData.File.Type.VIDEO } else emptyList()
+            val gifFiltered = if (includeGifs) this.filter { it.mediaType == MediaItemData.File.Type.GIF } else emptyList()
+            
+            return (imageFiltered + videoFiltered + gifFiltered).distinct()
+        }
+        
+        private fun List<MediaItemData.Album>.filterAlbumsByMediaType(
+            includeImages: Boolean,
+            includeVideos: Boolean,
+            includeGifs: Boolean,
+        ): List<MediaItemData.Album> {
+            val imageFiltered = if (includeImages) this.filter { it.imagesCount > 0 } else emptyList()
+            val videoFiltered = if (includeVideos) this.filter { it.videosCount > 0 } else emptyList()
+            val gifFiltered = if (includeGifs) this.filter { it.gifsCount > 0 } else emptyList()
+            
+            return (imageFiltered + videoFiltered + gifFiltered).distinct()
+        }
+        
+        private fun List<MediaItemData.File>.filterFilesByVisibility(
+            includeUnhidden: Boolean,
+            includeHidden: Boolean
+        ): List<MediaItemData.File> {
+            val unhidden = if (includeUnhidden) this.filterNot { it.isHidden } else emptyList()
+            val hidden = if (includeHidden) this.filter { it.isHidden } else emptyList()
+            
+            return (unhidden + hidden).distinct()
+        }
+        
+        private fun List<MediaItemData.Album>.filterAlbumsByVisibility(
+            includeUnhidden: Boolean,
+            includeHidden: Boolean
+        ): List<MediaItemData.Album> {
+            val unhidden = if (includeUnhidden) this.filter { !it.isHidden && it.unhiddenCount > 0 } else emptyList()
+            val hidden = if (includeHidden) this.filter { it.isHidden && it.hiddenCount > 0 } else emptyList()
+            return (unhidden + hidden).distinct()
+        }
+        
     }
 }

@@ -48,6 +48,8 @@ sealed interface MediaItemData {
         val imagesCount: Int = 0,
         val videosCount: Int = 0,
         val gifsCount: Int = 0,
+        val unhiddenCount: Int = 0,
+        val hiddenCount: Int = 0,
         val nestedDirectoriesCount: Int = 0,
         val thumbnail: String = ""
     ) : MediaItemData
