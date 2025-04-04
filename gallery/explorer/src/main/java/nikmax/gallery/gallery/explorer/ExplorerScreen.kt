@@ -166,26 +166,25 @@ private fun ExplorerScreenContent(
                             )
                         }
                     )
-                    false -> {
-                        // when selected items is empty - show searchbar
-                        SearchTopBar(
-                            searchQuery = state.searchQuery,
-                            onQueryChange = { onAction(ExplorerVm.UserAction.SearchQueryChange(it)) },
-                            onSearch = { /* search performs on query change */ },
-                            actions = {
-                                Row {
-                                    IconButton(onClick = { showAppearanceSheet = !showAppearanceSheet }) {
-                                        Icon(
-                                            Icons.AutoMirrored.Filled.Sort,
-                                            stringResource(R.string.appearance)
-                                        )
-                                    }
+                    // when selected items is empty - show searchbar
+                    false -> SearchTopBar(
+                        searchQuery = state.searchQuery,
+                        onQueryChange = { onAction(ExplorerVm.UserAction.SearchQueryChange(it)) },
+                        onSearch = { /* search performs on query change */ },
+                        albumName = state.albumPath?.substringAfterLast('/'),
+                        actions = {
+                            Row {
+                                IconButton(onClick = { showAppearanceSheet = !showAppearanceSheet }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.Sort,
+                                        stringResource(R.string.appearance)
+                                    )
                                 }
-                            },
-                            scrollBehavior = topBarScrollBehavior,
-                            focusManager = focusManager
-                        )
-                    }
+                            }
+                        },
+                        scrollBehavior = topBarScrollBehavior,
+                        focusManager = focusManager
+                    )
                 }
             }
         },

@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import nikmax.gallery.explorer.R
@@ -40,6 +41,7 @@ internal fun SearchTopBar(
     onQueryChange: (String?) -> Unit,
     onSearch: (query: String) -> Unit,
     actions: @Composable (() -> Unit) = {},
+    albumName: String? = null,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     focusManager: FocusManager = LocalFocusManager.current
 ) {
@@ -47,7 +49,7 @@ internal fun SearchTopBar(
         focusManager.clearFocus()
         onQueryChange(null)
     }
-
+    
     TopAppBar(
         navigationIcon = {
             Surface(
@@ -66,11 +68,19 @@ internal fun SearchTopBar(
                     onSearch = { onSearch(it) },
                     expanded = false,
                     onExpandedChange = { },
-                    placeholder = { Text(text = stringResource(R.string.search_placeholder)) },
+                    placeholder = {
+                        Text(
+                            text = if (albumName != null) stringResource(R.string.search_in, albumName)
+                            else stringResource(R.string.search_in_gallery),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = stringResource(R.string.search_placeholder)
+                            contentDescription = if (albumName != null) stringResource(R.string.search_in, albumName)
+                            else stringResource(R.string.search_in_gallery)
                         )
                     },
                     trailingIcon = {
@@ -107,11 +117,12 @@ internal fun SearchTopBar(
 @Composable
 private fun SearchbarPreview() {
     var query by remember { mutableStateOf<String?>(null) }
-
+    
     SearchTopBar(
         searchQuery = query,
         onQueryChange = { query = it },
         onSearch = {},
+        albumName = "Album",
         actions = {
             AnimatedVisibility(
                 visible = !query.isNullOrBlank(),

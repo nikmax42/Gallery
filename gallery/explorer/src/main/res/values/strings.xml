@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="back">Back</string>
-    <string name="search_placeholder">Search media…</string>
+    <string name="search_in_gallery">Search in gallery</string>
+    <string name="search_in">Search in %s</string>
     <string name="clear_search_query">Clear search query</string>
     <string name="appearance">Appearance</string>
     <string name="sorting">Sorting</string>
