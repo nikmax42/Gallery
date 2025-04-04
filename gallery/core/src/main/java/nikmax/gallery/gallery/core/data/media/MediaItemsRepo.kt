@@ -17,6 +17,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import nikmax.gallery.core.data.Resource
+import nikmax.gallery.core.preferences.GalleryPreferences
 import timber.log.Timber
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
@@ -26,12 +27,30 @@ interface MediaItemsRepo {
     fun getAlbumContentFlow(
         path: String?,
         searchQuery: String?,
-        treeMode: Boolean = true
+        treeMode: Boolean = true,
+        includeAlbums: Boolean = true,
+        includeFiles: Boolean = true,
+        includeImages: Boolean = true,
+        includeVideos: Boolean = true,
+        includeGifs: Boolean = true,
+        includeUnhidden: Boolean = true,
+        includeHidden: Boolean = false,
+        sortingOrder: GalleryPreferences.Sorting.Order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
+        descendSorting: Boolean = false
     ): Flow<Resource<List<MediaItemData>>>
     
     fun getSearchResultFlow(
         query: String,
-        basePath: String? = null
+        basePath: String? = null,
+        includeAlbums: Boolean = true,
+        includeFiles: Boolean = true,
+        includeImages: Boolean = true,
+        includeVideos: Boolean = true,
+        includeGifs: Boolean = true,
+        includeUnhidden: Boolean = true,
+        includeHidden: Boolean = false,
+        sortingOrder: GalleryPreferences.Sorting.Order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
+        descendSorting: Boolean = false
     ): Flow<Resource<List<MediaItemData>>>
     
     /**
@@ -59,10 +78,19 @@ internal class MediaItemRepoImpl(
     override fun getAlbumContentFlow(
         path: String?,
         searchQuery: String?,
-        treeMode: Boolean
+        treeMode: Boolean,
+        includeAlbums: Boolean,
+        includeFiles: Boolean,
+        includeImages: Boolean,
+        includeVideos: Boolean,
+        includeGifs: Boolean,
+        includeUnhidden: Boolean,
+        includeHidden: Boolean,
+        sortingOrder: GalleryPreferences.Sorting.Order,
+        descendSorting: Boolean
     ): Flow<Resource<List<MediaItemData>>> {
         return combine(_albumsFlow, _loadingFlow) { albums, loading ->
-            val data = when (treeMode) {
+            val rawData = when (treeMode) {
                 true -> getDirectoryContent(
                     directoryPath = path ?: galleryRootPath,
                     galleryAlbums = albums
@@ -75,16 +103,32 @@ internal class MediaItemRepoImpl(
                     )
                 }
             }
+            
+            val filteredData = rawData
+                .applyItemTypeFilters(includeAlbums, includeFiles)
+                .applyVisibilityFilters(includeUnhidden, includeHidden)
+                .applyMediaTypeFilters(includeImages, includeVideos, includeGifs)
+            val sortedData = filteredData.applySorting(sortingOrder, descendSorting)
+            
             when (loading) {
-                true -> Resource.Loading(data)
-                false -> Resource.Success(data)
+                true -> Resource.Loading(sortedData)
+                false -> Resource.Success(sortedData)
             }
         }
     }
     
     override fun getSearchResultFlow(
         query: String,
-        basePath: String?
+        basePath: String?,
+        includeAlbums: Boolean,
+        includeFiles: Boolean,
+        includeImages: Boolean,
+        includeVideos: Boolean,
+        includeGifs: Boolean,
+        includeUnhidden: Boolean,
+        includeHidden: Boolean,
+        sortingOrder: GalleryPreferences.Sorting.Order,
+        descendSorting: Boolean
     ): Flow<Resource<List<MediaItemData>>> {
         return combine(_albumsFlow, _loadingFlow) { galleryAlbums, loading ->
             val foundAlbums = galleryAlbums
@@ -95,13 +139,19 @@ internal class MediaItemRepoImpl(
                 .filter { file -> file.path.contains(query) }
                 .filterNot { foundAlbums.map { it.files }.flatten().contains(it) }
             
-            val data = when (basePath != null) {
+            val rawData = when (basePath != null) {
                 true -> (foundAlbums + foundFiles).filter { it.path.startsWith(basePath) }
                 false -> foundAlbums + foundFiles
             }
+            val filteredData = rawData
+                .applyItemTypeFilters(includeAlbums, includeFiles)
+                .applyVisibilityFilters(includeUnhidden, includeHidden)
+                .applyMediaTypeFilters(includeImages, includeVideos, includeGifs)
+            val sortedData = filteredData.applySorting(sortingOrder, descendSorting)
+            
             when (loading) {
-                true -> Resource.Loading(data)
-                false -> Resource.Success(data)
+                true -> Resource.Loading(sortedData)
+                false -> Resource.Success(sortedData)
             }
         }
     }
@@ -278,6 +328,38 @@ internal class MediaItemRepoImpl(
             val filteredAlbums = albums.filterAlbumsByVisibility(includeUnhidden, includeHidden)
             
             return filteredFiles + filteredAlbums
+        }
+        
+        @VisibleForTesting
+        internal fun List<MediaItemData>.applyItemTypeFilters(
+            includeAlbums: Boolean,
+            includeFiles: Boolean
+        ): List<MediaItemData> {
+            val filesFiltered = if (includeFiles) this.filterIsInstance<MediaItemData.File>() else emptyList()
+            val albumsFiltered = if (includeAlbums) this.filterIsInstance<MediaItemData.Album>() else emptyList()
+            
+            return (filesFiltered + albumsFiltered).distinct()
+        }
+        
+        @VisibleForTesting
+        internal fun List<MediaItemData>.applySorting(
+            order: GalleryPreferences.Sorting.Order,
+            descend: Boolean
+        ): List<MediaItemData> {
+            val sorted = when (order) {
+                GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.dateCreated }
+                GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
+                GalleryPreferences.Sorting.Order.NAME -> this.sortedBy { it.name }
+                GalleryPreferences.Sorting.Order.SIZE -> this.sortedBy { it.size }
+                GalleryPreferences.Sorting.Order.EXTENSION -> this
+                    .filterIsInstance<MediaItemData.File>()
+                    .sortedBy { it.extension }
+                GalleryPreferences.Sorting.Order.RANDOM -> this.shuffled()
+            }.apply {
+                if (descend) reversed()
+            }
+            
+            return sorted
         }
         
         
