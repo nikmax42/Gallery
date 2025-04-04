@@ -36,7 +36,9 @@ interface MediaItemsRepo {
         includeUnhidden: Boolean = true,
         includeHidden: Boolean = false,
         sortingOrder: GalleryPreferences.Sorting.Order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
-        descendSorting: Boolean = false
+        descendSorting: Boolean = false,
+        filesFirst: Boolean = false,
+        albumsFirst: Boolean = false
     ): Flow<Resource<List<MediaItemData>>>
     
     fun getSearchResultFlow(
@@ -50,7 +52,9 @@ interface MediaItemsRepo {
         includeUnhidden: Boolean = true,
         includeHidden: Boolean = false,
         sortingOrder: GalleryPreferences.Sorting.Order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
-        descendSorting: Boolean = false
+        descendSorting: Boolean = false,
+        filesFirst: Boolean = false,
+        albumsFirst: Boolean = false
     ): Flow<Resource<List<MediaItemData>>>
     
     /**
@@ -87,7 +91,9 @@ internal class MediaItemRepoImpl(
         includeUnhidden: Boolean,
         includeHidden: Boolean,
         sortingOrder: GalleryPreferences.Sorting.Order,
-        descendSorting: Boolean
+        descendSorting: Boolean,
+        filesFirst: Boolean,
+        albumsFirst: Boolean
     ): Flow<Resource<List<MediaItemData>>> {
         return combine(_albumsFlow, _loadingFlow) { albums, loading ->
             val rawData = when (treeMode) {
@@ -108,7 +114,7 @@ internal class MediaItemRepoImpl(
                 .applyItemTypeFilters(includeAlbums, includeFiles)
                 .applyVisibilityFilters(includeUnhidden, includeHidden)
                 .applyMediaTypeFilters(includeImages, includeVideos, includeGifs)
-            val sortedData = filteredData.applySorting(sortingOrder, descendSorting)
+            val sortedData = filteredData.applySorting(sortingOrder, descendSorting, filesFirst, albumsFirst)
             
             when (loading) {
                 true -> Resource.Loading(sortedData)
@@ -128,7 +134,9 @@ internal class MediaItemRepoImpl(
         includeUnhidden: Boolean,
         includeHidden: Boolean,
         sortingOrder: GalleryPreferences.Sorting.Order,
-        descendSorting: Boolean
+        descendSorting: Boolean,
+        filesFirst: Boolean,
+        albumsFirst: Boolean
     ): Flow<Resource<List<MediaItemData>>> {
         return combine(_albumsFlow, _loadingFlow) { galleryAlbums, loading ->
             val foundAlbums = galleryAlbums
@@ -147,7 +155,7 @@ internal class MediaItemRepoImpl(
                 .applyItemTypeFilters(includeAlbums, includeFiles)
                 .applyVisibilityFilters(includeUnhidden, includeHidden)
                 .applyMediaTypeFilters(includeImages, includeVideos, includeGifs)
-            val sortedData = filteredData.applySorting(sortingOrder, descendSorting)
+            val sortedData = filteredData.applySorting(sortingOrder, descendSorting, filesFirst, albumsFirst)
             
             when (loading) {
                 true -> Resource.Loading(sortedData)
@@ -344,7 +352,9 @@ internal class MediaItemRepoImpl(
         @VisibleForTesting
         internal fun List<MediaItemData>.applySorting(
             order: GalleryPreferences.Sorting.Order,
-            descend: Boolean
+            descend: Boolean,
+            albumsFirst: Boolean,
+            filesFirst: Boolean
         ): List<MediaItemData> {
             val sorted = when (order) {
                 GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.dateCreated }
@@ -357,6 +367,8 @@ internal class MediaItemRepoImpl(
                 GalleryPreferences.Sorting.Order.RANDOM -> this.shuffled()
             }.apply {
                 if (descend) reversed()
+                if (albumsFirst) filterIsInstance<MediaItemData.Album>() + filterIsInstance<MediaItemData.File>()
+                if (filesFirst) filterIsInstance<MediaItemData.File>() + filterIsInstance<MediaItemData.Album>()
             }
             
             return sorted
