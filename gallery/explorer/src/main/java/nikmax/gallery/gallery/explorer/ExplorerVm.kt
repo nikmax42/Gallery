@@ -62,7 +62,7 @@ class ExplorerVm
     }
     
     sealed interface UserAction {
-        data class ScreenLaunch(val folderPath: String?) : UserAction
+        data object Launch : UserAction
         data object Refresh : UserAction
         data class ItemOpen(val item: MediaItemUI) : UserAction
         data object NavigateOutOfAlbum : UserAction
@@ -91,12 +91,12 @@ class ExplorerVm
     
     
     // Raw data flows
+    private val _navStackFlow = MutableStateFlow(emptyList<String>())
     private val _galleryPreferencesFlow = GalleryPreferencesUtils.getPreferencesFlow(context)
     private var _dataResourceFlow: MutableStateFlow<Resource<List<MediaItemData>>> =
         MutableStateFlow(Resource.Loading(emptyList()))
     
     // UI-related data flows
-    private val _navStackFlow = MutableStateFlow(emptyList<String>())
     private val _itemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
     private val _isLoadingFlow = MutableStateFlow(true)
     private val _searchQueryFlow = MutableStateFlow<String?>(null)
@@ -114,7 +114,7 @@ class ExplorerVm
     fun onAction(action: UserAction) {
         viewModelScope.launch {
             when (action) {
-                is UserAction.ScreenLaunch -> onLaunch()
+                is UserAction.Launch -> onLaunch()
                 UserAction.Refresh -> onRefresh()
                 is UserAction.ItemOpen -> onItemOpen(action.item)
                 UserAction.NavigateOutOfAlbum -> onNavigateBack()
@@ -130,7 +130,10 @@ class ExplorerVm
     
     
     private fun onLaunch() {
-        viewModelScope.launch { onRefresh() }
+        viewModelScope.launch {
+            //initiate automatic rescan only when there is no items to display
+            if (_itemsFlow.value.isEmpty()) onRefresh()
+        }
         
         viewModelScope.launch { keepDataFlowUpdated() }
         viewModelScope.launch { keepItemsFlowUpdated() }

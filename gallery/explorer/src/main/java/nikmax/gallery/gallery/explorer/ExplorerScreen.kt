@@ -75,8 +75,8 @@ fun ExplorerScreen(
     val strFailed = stringResource(R.string.operation_failed)
     val strComplete = stringResource(R.string.operation_complete)
     
-    LaunchedEffect(Unit) {
-        vm.onAction(ExplorerVm.UserAction.ScreenLaunch(albumPath))
+    LaunchedEffect(albumPath) {
+        vm.onAction(ExplorerVm.UserAction.Launch)
         vm.event.collectLatest { event ->
             when (event) {
                 is ExplorerVm.Event.OpenViewer -> onFileOpen(event.file)
