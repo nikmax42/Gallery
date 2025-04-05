@@ -6,4 +6,8 @@
     <string name="files_count">Nested files count</string>
     <string name="directories_count">Nested albums count</string>
     <string name="album_size">Size</string>
+    <string name="b">%s B</string>
+    <string name="kb">%s KB</string>
+    <string name="mb">%s MB</string>
+    <string name="gb">%s GB</string>
 </resources>
