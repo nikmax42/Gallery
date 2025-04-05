@@ -60,7 +60,7 @@ sealed interface MediaItemUI {
         val imagesCount: Int = 0,
         val videosCount: Int = 0,
         val gifsCount: Int = 0,
-        val nestedAlbumsCountLInt: Int = 0
+        val nestedAlbumsCount: Int = 0
     ) : MediaItemUI {
         val isVolume: Boolean
             get() {

@@ -113,6 +113,7 @@ fun ItemsGrid(
                 val albumFilesCount = if (item is MediaItemUI.Album) item.filesCount else 0
                 val isPlacedOnPluggableVolume = item.belongsToVolume == MediaItemUI.Volume.PLUGGABLE
                 val isSelected = selectedItems.contains(item)
+                val nestedAlbumsCount = if (item is MediaItemUI.Album) item.nestedAlbumsCount else 0
                 
                 GridItem(
                     image = image,
@@ -125,6 +126,7 @@ fun ItemsGrid(
                     albumFilesCount = albumFilesCount,
                     isPlacedOnPluggableVolume = isPlacedOnPluggableVolume,
                     isSelected = isSelected,
+                    albumNestedAlbumsCount = nestedAlbumsCount,
                     modifier = Modifier
                         .animateItem(
                             fadeInSpec = tween(),

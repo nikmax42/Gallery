@@ -29,7 +29,7 @@ object MediaItemMapper {
                 imagesCount = this.imagesCount,
                 videosCount = this.videosCount,
                 gifsCount = this.gifsCount,
-                nestedAlbumsCountLInt = this.nestedDirectoriesCount
+                nestedAlbumsCount = this.nestedDirectoriesCount
             )
         }
     }
