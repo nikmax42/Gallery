@@ -2,8 +2,10 @@ package nikmax.gallery.gallery.core.data.media
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import nikmax.gallery.core.preferences.GalleryPreferences
 import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.applyItemTypeFilters
 import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.applyMediaTypeFilters
+import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.applySorting
 import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.applyVisibilityFilters
 import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.createGalleryAlbumsList
 import org.junit.Before
@@ -160,5 +162,133 @@ class MediaItemRepoImplTest {
         
         val hiddenOnlyResult = galleryAlbums.applyVisibilityFilters(includeUnhidden = false, includeHidden = true)
         assert(hiddenOnlyResult.all { it.isHidden })
+    }
+    
+    @Test
+    fun sorting_by_modification_date__correct() {
+        val realResult = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
+            descend = false,
+            filesFirst = false,
+            albumsFirst = false
+        )
+        val desiredResult = (galleryAlbums + files).sortedBy { it.dateModified }
+        assert(realResult == desiredResult)
+        
+        val realResultDescend = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
+            descend = true,
+            filesFirst = false,
+            albumsFirst = false
+        )
+        val desiredResultDescend = desiredResult.reversed()
+        assert(realResultDescend == desiredResultDescend)
+    }
+    
+    @Test
+    fun sorting_by_name__correct() {
+        val realResult = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.NAME,
+            descend = false,
+            filesFirst = false,
+            albumsFirst = false
+        )
+        val desiredResult = (galleryAlbums + files).sortedBy { it.name }
+        assert(realResult == desiredResult)
+        
+        val realResultDescend = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.NAME,
+            descend = true,
+            filesFirst = false,
+            albumsFirst = false
+        )
+        val desiredResultDescend = desiredResult.reversed()
+        assert(realResultDescend == desiredResultDescend)
+    }
+    
+    @Test
+    fun sorting_by_size__correct() {
+        val realResult = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.SIZE,
+            descend = false,
+            filesFirst = false,
+            albumsFirst = false
+        )
+        val desiredResult = (galleryAlbums + files).sortedBy { it.size }
+        assert(realResult == desiredResult)
+        
+        val realResultDescend = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.SIZE,
+            descend = true,
+            filesFirst = false,
+            albumsFirst = false
+        )
+        val desiredResultDescend = desiredResult.reversed()
+        assert(realResultDescend == desiredResultDescend)
+    }
+    
+    @Test
+    fun sorting_by_extension__correct() {
+        val realResult = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.EXTENSION,
+            descend = false,
+            filesFirst = false,
+            albumsFirst = false
+        )
+        val desiredResult = (galleryAlbums + files).filterIsInstance<MediaItemData.File>().sortedBy { it.extension } +
+                (galleryAlbums + files).filterIsInstance<MediaItemData.Album>()
+        assert(realResult == desiredResult)
+        
+        val realResultDescend = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.EXTENSION,
+            descend = true,
+            filesFirst = false,
+            albumsFirst = false
+        )
+        val desiredResultDescend = desiredResult.reversed()
+        assert(realResultDescend == desiredResultDescend)
+    }
+    
+    @Test
+    fun sorting_by_random__correct() {
+        val realResult = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.RANDOM,
+            descend = false,
+            filesFirst = false,
+            albumsFirst = false
+        )
+        assert(realResult != galleryAlbums)
+    }
+    
+    @Test
+    fun sorting_with_files_on_top__correct() {
+        val realResult = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
+            descend = false,
+            filesFirst = true,
+            albumsFirst = false
+        )
+        val desiredResult = (galleryAlbums + files)
+            .sortedBy { it.dateModified }
+            .let {
+                it.filterIsInstance<MediaItemData.File>() + it.filterIsInstance<MediaItemData.Album>()
+            }
+        assert(realResult == desiredResult)
+    }
+    
+    @Test
+    fun sorting_with_albums_on_top__correct() {
+        val realResult = (galleryAlbums + files).applySorting(
+            order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
+            descend = false,
+            filesFirst = false,
+            albumsFirst = true
+        )
+        val desiredResult = (galleryAlbums + files)
+            .sortedBy { it.dateModified }
+            .let {
+                it.filterIsInstance<MediaItemData.Album>() + it.filterIsInstance<MediaItemData.File>()
+            }
+        assert(realResult == desiredResult)
     }
 }
