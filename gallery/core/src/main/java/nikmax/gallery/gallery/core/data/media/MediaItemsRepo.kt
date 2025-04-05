@@ -354,32 +354,6 @@ internal class MediaItemRepoImpl(
             return (filesFiltered + albumsFiltered).distinct()
         }
         
-        @VisibleForTesting
-        internal fun List<MediaItemData>.applySorting(
-            order: GalleryPreferences.Sorting.Order,
-            descend: Boolean,
-            albumsFirst: Boolean,
-            filesFirst: Boolean
-        ): List<MediaItemData> {
-            val sorted = when (order) {
-                GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.dateCreated }
-                GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
-                GalleryPreferences.Sorting.Order.NAME -> this.sortedBy { it.name }
-                GalleryPreferences.Sorting.Order.SIZE -> this.sortedBy { it.size }
-                GalleryPreferences.Sorting.Order.EXTENSION -> this
-                    .filterIsInstance<MediaItemData.File>()
-                    .sortedBy { it.extension }
-                GalleryPreferences.Sorting.Order.RANDOM -> this.shuffled()
-            }.apply {
-                if (descend) reversed()
-                if (albumsFirst) filterIsInstance<MediaItemData.Album>() + filterIsInstance<MediaItemData.File>()
-                if (filesFirst) filterIsInstance<MediaItemData.File>() + filterIsInstance<MediaItemData.Album>()
-            }
-            
-            return sorted
-        }
-        
-        
         private fun List<MediaItemData.File>.filterFilesByMediaType(
             includeImages: Boolean,
             includeVideos: Boolean,
@@ -423,5 +397,39 @@ internal class MediaItemRepoImpl(
             return (unhidden + hidden).distinct()
         }
         
+        
+        @VisibleForTesting
+        internal fun List<MediaItemData>.applySorting(
+            order: GalleryPreferences.Sorting.Order,
+            descend: Boolean,
+            albumsFirst: Boolean,
+            filesFirst: Boolean
+        ): List<MediaItemData> {
+            return when (order) {
+                GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.dateCreated }
+                GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
+                GalleryPreferences.Sorting.Order.NAME -> this.sortedBy { it.name }
+                GalleryPreferences.Sorting.Order.SIZE -> this.sortedBy { it.size }
+                GalleryPreferences.Sorting.Order.EXTENSION -> this.sortByExtension()
+                GalleryPreferences.Sorting.Order.RANDOM -> this.shuffled()
+            }.apply {
+                if (descend) reversed()
+                if (albumsFirst) placeAlbumsFirst()
+                else if (filesFirst) placeFilesFirst()
+            }
+        }
+        
+        private fun List<MediaItemData>.sortByExtension(): List<MediaItemData> {
+            val files = filterIsInstance<MediaItemData.File>()
+            return files.sortedBy { it.extension } + (this - files)
+        }
+        
+        private fun List<MediaItemData>.placeAlbumsFirst(): List<MediaItemData> {
+            return filterIsInstance<MediaItemData.Album>() + filterIsInstance<MediaItemData.File>()
+        }
+        
+        private fun List<MediaItemData>.placeFilesFirst(): List<MediaItemData> {
+            return filterIsInstance<MediaItemData.File>() + filterIsInstance<MediaItemData.Album>()
+        }
     }
 }
