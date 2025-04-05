@@ -13,14 +13,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import nikmax.gallery.core.ui.theme.GalleryTheme
 
-val UndrawLockedImageFolder: ImageVector
+/*
+* Based on illustration from https://undraw.co/
+*  */
+
+val StoragePermissionNotGranted: ImageVector
     @Composable
     get() {
         if (_UndrawLockedImageFolder != null) {
             return _UndrawLockedImageFolder!!
         }
         _UndrawLockedImageFolder = ImageVector.Builder(
-            name = "UndrawLockedImageFolder",
+            name = "StoragePermissionNotGranted",
             defaultWidth = 570.dp,
             defaultHeight = 477.51.dp,
             viewportWidth = 570f,
@@ -410,7 +414,7 @@ val UndrawLockedImageFolder: ImageVector
                 close()
             }
         }.build()
-
+        
         return _UndrawLockedImageFolder!!
     }
 
@@ -425,7 +429,7 @@ private var _UndrawLockedImageFolder: ImageVector? = null
 private fun Preview() {
     GalleryTheme {
         Surface {
-            Image(UndrawLockedImageFolder, null)
+            Image(StoragePermissionNotGranted, null)
         }
     }
 }

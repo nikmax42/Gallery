@@ -20,7 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.explorer.R
-import nikmax.gallery.gallery.explorer.components.drawables.UndrawNothingFound
+import nikmax.gallery.gallery.explorer.components.drawables.NothingFound
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +40,7 @@ internal fun NothingFoundContent(
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                imageVector = UndrawNothingFound,
+                imageVector = NothingFound,
                 contentDescription = null
             )
             Text(

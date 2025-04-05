@@ -13,14 +13,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import nikmax.gallery.core.ui.theme.GalleryTheme
 
-val UndrawNothingFound: ImageVector
+/* 
+* Based on illustration from https://undraw.co/
+*  */
+
+val NothingFound: ImageVector
     @Composable
     get() {
         if (_IconName != null) {
             return _IconName!!
         }
         _IconName = ImageVector.Builder(
-            name = "UndrawNothingFound",
+            name = "NothingFound",
             defaultWidth = 368.dp,
             defaultHeight = 245.dp,
             viewportWidth = 368f,
@@ -277,7 +281,7 @@ private var _IconName: ImageVector? = null
 private fun Preview() {
     GalleryTheme {
         Surface {
-            Image(UndrawNothingFound, "")
+            Image(NothingFound, "")
         }
     }
 }

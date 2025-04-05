@@ -19,7 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.explorer.R
-import nikmax.gallery.gallery.explorer.components.drawables.UndrawLockedImageFolder
+import nikmax.gallery.gallery.explorer.components.drawables.StoragePermissionNotGranted
 
 @Composable
 internal fun PermissionNotGrantedContent(
@@ -36,7 +36,7 @@ internal fun PermissionNotGrantedContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Image(
-                    imageVector = UndrawLockedImageFolder,
+                    imageVector = StoragePermissionNotGranted,
                     contentDescription = null
                 )
                 Text(
