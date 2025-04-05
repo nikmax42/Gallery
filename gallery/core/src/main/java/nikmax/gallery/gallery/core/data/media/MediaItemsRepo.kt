@@ -111,10 +111,25 @@ internal class MediaItemRepoImpl(
             }
             
             val filteredData = rawData
-                .applyItemTypeFilters(includeAlbums, includeFiles)
-                .applyVisibilityFilters(includeUnhidden, includeHidden)
-                .applyMediaTypeFilters(includeImages, includeVideos, includeGifs)
-            val sortedData = filteredData.applySorting(sortingOrder, descendSorting, filesFirst, albumsFirst)
+                .applyItemTypeFilters(
+                    includeAlbums = includeAlbums,
+                    includeFiles = includeFiles
+                )
+                .applyVisibilityFilters(
+                    includeUnhidden = includeUnhidden,
+                    includeHidden = includeHidden
+                )
+                .applyMediaTypeFilters(
+                    includeImages = includeImages,
+                    includeVideos = includeVideos,
+                    includeGifs = includeGifs
+                )
+            val sortedData = filteredData.applySorting(
+                order = sortingOrder,
+                descend = descendSorting,
+                albumsFirst = albumsFirst,
+                filesFirst = filesFirst
+            )
             
             when (loading) {
                 true -> Resource.Loading(sortedData)
@@ -152,10 +167,25 @@ internal class MediaItemRepoImpl(
                 false -> foundAlbums + foundFiles
             }
             val filteredData = rawData
-                .applyItemTypeFilters(includeAlbums, includeFiles)
-                .applyVisibilityFilters(includeUnhidden, includeHidden)
-                .applyMediaTypeFilters(includeImages, includeVideos, includeGifs)
-            val sortedData = filteredData.applySorting(sortingOrder, descendSorting, filesFirst, albumsFirst)
+                .applyItemTypeFilters(
+                    includeAlbums = includeAlbums,
+                    includeFiles = includeFiles
+                )
+                .applyVisibilityFilters(
+                    includeUnhidden = includeUnhidden,
+                    includeHidden = includeHidden
+                )
+                .applyMediaTypeFilters(
+                    includeImages = includeImages,
+                    includeVideos = includeVideos,
+                    includeGifs = includeGifs
+                )
+            val sortedData = filteredData.applySorting(
+                order = sortingOrder,
+                descend = descendSorting,
+                albumsFirst = albumsFirst,
+                filesFirst = filesFirst
+            )
             
             when (loading) {
                 true -> Resource.Loading(sortedData)
