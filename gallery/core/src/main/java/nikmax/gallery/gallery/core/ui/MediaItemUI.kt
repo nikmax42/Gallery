@@ -16,15 +16,17 @@ sealed interface MediaItemUI {
     val size: Long
     val creationDate: Long
     val modificationDate: Long
+    val hidden
+        get() = path.contains("/.")
     val belongsToVolume: Volume
-    val hidden get() = path.contains("/.")
+        get() = if (path.startsWith("/storage/emulated")) Volume.DEVICE
+        else Volume.PLUGGABLE
     
     data class File(
         override val path: String,
         override val size: Long = 0,
         override val creationDate: Long = 0,
         override val modificationDate: Long = 0,
-        override val belongsToVolume: Volume = Volume.DEVICE,
         override val name: String = Path(path).name,
         override val thumbnail: String? = null,
         val duration: Long = 0,
@@ -35,19 +37,17 @@ sealed interface MediaItemUI {
         val mimetype: String = MimeTypeMap.getSingleton()
             .getMimeTypeFromExtension(extension)
             .toString()
-        
         val mediaType: MediaType
             get() = if (mimetype.startsWith("video/")) MediaType.VIDEO
             else if (mimetype == "image/gif") MediaType.GIF
             else MediaType.IMAGE
-        
         val isVideoOrGif = mediaType == MediaType.VIDEO || mediaType == MediaType.GIF
         val extension: String
             get() = Path(path).extension
-        
         val nameWithoutExtension: String
             get() = Path(path).nameWithoutExtension
     }
+    
     
     data class Album(
         override val path: String,
@@ -55,7 +55,6 @@ sealed interface MediaItemUI {
         override val size: Long = 0,
         override val creationDate: Long = 0,
         override val modificationDate: Long = 0,
-        override val belongsToVolume: Volume = Volume.DEVICE,
         override val thumbnail: String? = null,
         val filesCount: Int = 0,
         val imagesCount: Int = 0,

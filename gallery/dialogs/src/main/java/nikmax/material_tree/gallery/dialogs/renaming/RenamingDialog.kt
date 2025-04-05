@@ -140,7 +140,6 @@ private fun DialogPreview() {
         size = 0,
         creationDate = 0,
         modificationDate = 0,
-        belongsToVolume = MediaItemUI.Volume.DEVICE,
     )
     
     GalleryTheme {

@@ -145,7 +145,8 @@ fun ItemsGrid(
                                             }.let { onSelectionChange(it) }
                                     }
                                 }
-                            })
+                            }
+                        )
                 )
             }
         }
@@ -160,7 +161,6 @@ private fun ItemsGridPreview() {
         MediaItemUI.File(
             path = "",
             name = "image.png",
-            belongsToVolume = MediaItemUI.Volume.DEVICE,
             creationDate = 0,
             modificationDate = 0,
             size = 0,
@@ -170,7 +170,6 @@ private fun ItemsGridPreview() {
         MediaItemUI.File(
             path = "",
             name = "video.mp4",
-            belongsToVolume = MediaItemUI.Volume.DEVICE,
             creationDate = 0,
             modificationDate = 0,
             size = 0,
@@ -180,7 +179,6 @@ private fun ItemsGridPreview() {
         MediaItemUI.File(
             path = "",
             name = "gif.gif",
-            belongsToVolume = MediaItemUI.Volume.DEVICE,
             creationDate = 0,
             modificationDate = 0,
             size = 0,
@@ -190,7 +188,6 @@ private fun ItemsGridPreview() {
         MediaItemUI.Album(
             path = "",
             name = "album",
-            belongsToVolume = MediaItemUI.Volume.DEVICE,
             creationDate = 0,
             modificationDate = 0,
             size = 0,

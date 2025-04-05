@@ -82,7 +82,7 @@ fun SelectionTopBar(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = stringResource(R.string.files, affectedFilesCount),
+                                text = stringResource(R.string.files_count, affectedFilesCount),
                                 style = MaterialTheme.typography.labelLarge
                             )
                         }
@@ -125,7 +125,6 @@ private fun SelectionTopBarPreview() {
             size = 3253636,
             creationDate = 0,
             modificationDate = 0,
-            belongsToVolume = MediaItemUI.Volume.DEVICE,
         )
     }
     val file2 = remember {
@@ -135,7 +134,6 @@ private fun SelectionTopBarPreview() {
             size = 123456,
             creationDate = 0,
             modificationDate = 0,
-            belongsToVolume = MediaItemUI.Volume.DEVICE,
         )
     }
     val album1 = remember {
@@ -145,7 +143,6 @@ private fun SelectionTopBarPreview() {
             size = 0,
             creationDate = 0,
             modificationDate = 0,
-            belongsToVolume = MediaItemUI.Volume.DEVICE,
             filesCount = 3
         )
     }

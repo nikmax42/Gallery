@@ -79,7 +79,6 @@ private fun DeletionDialogPreview() {
         size = 0,
         creationDate = 0,
         modificationDate = 0,
-        belongsToVolume = nikmax.gallery.gallery.core.ui.MediaItemUI.Volume.DEVICE,
     )
 
     GalleryTheme {

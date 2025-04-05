@@ -37,7 +37,6 @@ import nikmax.gallery.core.preferences.GalleryPreferences
 import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.gallery.core.ui.MediaItemUI
-import nikmax.gallery.gallery.core.ui.MediaItemUI.Volume
 import nikmax.gallery.gallery.core.ui.components.grid.ItemsGrid
 import nikmax.material_tree.gallery.dialogs.R
 
@@ -148,7 +147,6 @@ private fun Preview() {
         MediaItemUI.File(
             path = "",
             name = "image.png",
-            belongsToVolume = Volume.DEVICE,
             creationDate = 0,
             modificationDate = 0,
             size = 0,

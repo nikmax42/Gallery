@@ -17,10 +17,6 @@ object MediaItemMapper {
                 duration = this.duration,
                 creationDate = this.dateCreated,
                 modificationDate = this.dateModified,
-                belongsToVolume = when (this.storage) {
-                    MediaItemData.Storage.DEVICE -> MediaItemUI.Volume.DEVICE
-                    MediaItemData.Storage.PLUGGABLE -> MediaItemUI.Volume.PLUGGABLE
-                },
                 thumbnail = this.path
             )
             is MediaItemData.Album -> MediaItemUI.Album(
@@ -28,10 +24,6 @@ object MediaItemMapper {
                 size = this.size,
                 creationDate = this.dateCreated,
                 modificationDate = this.dateModified,
-                belongsToVolume = when (this.storage) {
-                    MediaItemData.Storage.DEVICE -> MediaItemUI.Volume.DEVICE
-                    MediaItemData.Storage.PLUGGABLE -> MediaItemUI.Volume.PLUGGABLE
-                },
                 thumbnail = this.thumbnail,
                 filesCount = this.imagesCount + this.videosCount + this.gifsCount,
                 imagesCount = this.imagesCount,
