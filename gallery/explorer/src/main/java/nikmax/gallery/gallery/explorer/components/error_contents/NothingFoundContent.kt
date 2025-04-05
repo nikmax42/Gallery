@@ -32,12 +32,12 @@ internal fun NothingFoundContent(
         isRefreshing = false,
         onRefresh = { onRefresh() },
         contentAlignment = Alignment.Center,
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = modifier
+            modifier = Modifier.fillMaxSize()
         ) {
             Image(
                 imageVector = UndrawNothingFound,

@@ -9,8 +9,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import nikmax.gallery.core.preferences.GalleryPreferences
 import nikmax.gallery.core.preferences.GalleryPreferencesUtils
+import nikmax.gallery.core.ui.theme.GalleryTheme
+import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.ui.components.grid.ItemsGrid
 import nikmax.gallery.gallery.explorer.ExplorerVm
 
@@ -29,6 +32,7 @@ internal fun MainContent(
         PullToRefreshBox(
             isRefreshing = state.isLoading,
             onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
+            modifier = modifier
         ) {
             ItemsGrid(
                 items = state.items,
@@ -37,8 +41,24 @@ internal fun MainContent(
                 onSelectionChange = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
                 columnsAmountPortrait = preferences.appearance.gridAppearance.portraitColumns,
                 columnsAmountLandscape = preferences.appearance.gridAppearance.landscapeColumns,
-                modifier = modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun MainContentPreview() {
+    val state = ExplorerVm.UIState(
+        items = listOf(
+            MediaItemUI.File("/test.jpg"),
+            MediaItemUI.Album("/test"),
+        ),
+        selectedItems = emptyList(),
+        isLoading = false
+    )
+    GalleryTheme {
+        MainContent(state, onAction = {})
     }
 }
