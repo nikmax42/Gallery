@@ -10,12 +10,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PermMedia
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.SdStorage
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.CardDefaults
@@ -59,6 +63,7 @@ internal fun GridItem(
     albumSize: Long = 0,
     isPlacedOnPluggableVolume: Boolean = false,
     albumFilesCount: Int = 0,
+    albumNestedAlbumsCount: Int = 0,
 ) {
     val borderWidth by animateDpAsState(
         if (isSelected) 2.dp
@@ -101,12 +106,6 @@ internal fun GridItem(
                     bottomEndRadius = 30F,
                     modifier = Modifier.align(Alignment.TopStart)
                 )
-                else if (isPlacedOnPluggableVolume && isAlbum) IconCorner(
-                    icon = Icons.Default.SdStorage,
-                    contentDescription = stringResource(R.string.pluggable_storage),
-                    bottomEndRadius = 30F,
-                    modifier = Modifier.align(Alignment.TopStart)
-                )
                 if (isSelected) {
                     when (isVolume) {
                         true -> IconCorner(
@@ -133,7 +132,7 @@ internal fun GridItem(
                 )
             }
             if (isAlbum || isVolume) {
-                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+                Column(modifier = Modifier.padding(4.dp)) {
                     Text(
                         text = name,
                         style = MaterialTheme.typography.titleMedium,
@@ -142,13 +141,50 @@ internal fun GridItem(
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = stringResource(R.string.files, albumFilesCount),
-                            style = MaterialTheme.typography.labelMedium,
-                            maxLines = 1
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Image,
+                                contentDescription = stringResource(R.string.files_count),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = albumFilesCount.toString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1
+                            )
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PermMedia,
+                                contentDescription = stringResource(R.string.directories_count),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = albumNestedAlbumsCount.toString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // switch between phone and sdcard icon depends on album volume
+                        val icon = if (isPlacedOnPluggableVolume) Icons.Default.SdStorage else Icons.Default.Smartphone
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = stringResource(R.string.album_size),
+                            modifier = Modifier.size(16.dp)
                         )
                         Text(
                             text = albumSize.sizeToString(),

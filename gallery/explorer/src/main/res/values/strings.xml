@@ -54,7 +54,7 @@
     <string name="unselect">Unselect</string>
     <string name="refresh">Refresh</string>
     <string name="albums">%1$d albums</string>
-    <string name="files">%1$d files</string>
+    <string name="files_count">%1$d files</string>
     <!-- <string name="copying">Copying %1$d items…</string>
      <string name="moving">Moving %1$d items…</string>
      <string name="renaming">Renaming %1$d items…</string>

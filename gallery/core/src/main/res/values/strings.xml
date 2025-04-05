@@ -3,5 +3,7 @@
     <string name="pluggable_storage">Pluggable Storage</string>
     <string name="item_selected">Item selected</string>
     <string name="its_volume">It is volume</string>
-    <string name="files">%d files</string>
+    <string name="files_count">Nested files count</string>
+    <string name="directories_count">Nested albums count</string>
+    <string name="album_size">Size</string>
 </resources>
