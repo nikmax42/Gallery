@@ -412,10 +412,12 @@ internal class MediaItemRepoImpl(
                 GalleryPreferences.Sorting.Order.SIZE -> this.sortedBy { it.size }
                 GalleryPreferences.Sorting.Order.EXTENSION -> this.sortByExtension()
                 GalleryPreferences.Sorting.Order.RANDOM -> this.shuffled()
-            }.apply {
-                if (descend) reversed()
-                if (albumsFirst) placeAlbumsFirst()
-                else if (filesFirst) placeFilesFirst()
+            }.let {
+                if (descend) it.reversed() else it
+            }.let {
+                if (albumsFirst) it.placeAlbumsFirst()
+                else if (filesFirst) it.placeFilesFirst()
+                else it
             }
         }
         
