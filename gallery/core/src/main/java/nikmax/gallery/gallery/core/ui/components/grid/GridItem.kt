@@ -144,36 +144,38 @@ internal fun GridItem(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(2.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Image,
-                                contentDescription = stringResource(R.string.files_count),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = albumFilesCount.toString(),
-                                style = MaterialTheme.typography.labelMedium,
-                                maxLines = 1
-                            )
-                        }
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(2.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PermMedia,
-                                contentDescription = stringResource(R.string.directories_count),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = albumNestedAlbumsCount.toString(),
-                                style = MaterialTheme.typography.labelMedium,
-                                maxLines = 1
-                            )
-                        }
+                        if (albumFilesCount > 0)
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Image,
+                                    contentDescription = stringResource(R.string.files_count),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = albumFilesCount.toString(),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1
+                                )
+                            }
+                        if (albumNestedAlbumsCount > 0)
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PermMedia,
+                                    contentDescription = stringResource(R.string.directories_count),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = albumNestedAlbumsCount.toString(),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1
+                                )
+                            }
                     }
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
