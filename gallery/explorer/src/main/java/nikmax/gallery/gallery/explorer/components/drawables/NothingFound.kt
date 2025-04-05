@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -19,10 +20,12 @@ import nikmax.gallery.core.ui.theme.GalleryTheme
 
 val NothingFound: ImageVector
     @Composable
+    @ReadOnlyComposable
     get() {
-        if (_IconName != null) {
+        //objects must be recreated each time to reflect theme or dynamic colors changes
+        /* if (_IconName != null) {
             return _IconName!!
-        }
+        } */
         _IconName = ImageVector.Builder(
             name = "NothingFound",
             defaultWidth = 368.dp,
@@ -267,7 +270,7 @@ val NothingFound: ImageVector
                 close()
             }
         }.build()
-
+        
         return _IconName!!
     }
 

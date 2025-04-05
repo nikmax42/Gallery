@@ -10,9 +10,6 @@ import androidx.compose.ui.unit.dp
 
 val PaletteDisabled: ImageVector
     get() {
-        if (_IconName != null) {
-            return _IconName!!
-        }
         _IconName = ImageVector.Builder(
             name = "PaletteDisabled",
             defaultWidth = 19.dp,
@@ -120,7 +117,7 @@ val PaletteDisabled: ImageVector
                 }
             }
         }.build()
-
+        
         return _IconName!!
     }
 

@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -19,10 +20,8 @@ import nikmax.gallery.core.ui.theme.GalleryTheme
 
 val StoragePermissionNotGranted: ImageVector
     @Composable
+    @ReadOnlyComposable
     get() {
-        if (_UndrawLockedImageFolder != null) {
-            return _UndrawLockedImageFolder!!
-        }
         _UndrawLockedImageFolder = ImageVector.Builder(
             name = "StoragePermissionNotGranted",
             defaultWidth = 570.dp,
