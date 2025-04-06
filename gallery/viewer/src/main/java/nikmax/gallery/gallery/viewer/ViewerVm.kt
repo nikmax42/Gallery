@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -39,11 +41,16 @@ class ViewerVm
 ) : ViewModel() {
     
     data class UIState(
-        val files: List<MediaItemUI.File> = emptyList(),
-        val isLoading: Boolean = false,
         val showControls: Boolean = true,
+        val refreshing: Boolean = false,
+        val content: Content = Content.Initiating,
         val dialog: Dialog = Dialog.None
-    )
+    ) {
+        sealed interface Content {
+            data object Initiating : Content
+            data class Main(val files: List<MediaItemUI.File>) : Content
+        }
+    }
     
     
     sealed interface UserAction {
@@ -53,6 +60,11 @@ class ViewerVm
         data class Move(val file: MediaItemUI.File) : UserAction
         data class Rename(val file: MediaItemUI.File) : UserAction
         data class Delete(val file: MediaItemUI.File) : UserAction
+    }
+    
+    
+    sealed interface Event {
+        data object CloseViewer : Event
     }
     
     
@@ -68,6 +80,9 @@ class ViewerVm
     
     private val _uiState = MutableStateFlow(UIState())
     val uiState = _uiState.asStateFlow()
+    
+    private val _event = MutableSharedFlow<Event>()
+    val event = _event.asSharedFlow()
     
     
     fun onAction(action: UserAction) {
@@ -86,6 +101,7 @@ class ViewerVm
     
     private fun onLaunch(filePath: String) {
         viewModelScope.launch {
+            _uiState.update { it.copy(content = UIState.Content.Initiating) }
             Path(filePath).parent.pathString.let { albumPath ->
                 keepDataFlowUpdated(albumPath)
             }
@@ -218,7 +234,15 @@ class ViewerVm
     private suspend fun reflectFilesChanges() {
         _filesFlow.collectLatest { newFiles ->
             withContext(Dispatchers.Main) {
-                _uiState.update { it.copy(files = newFiles) }
+                when (newFiles.isEmpty() && _uiState.value.content !is UIState.Content.Initiating) {
+                    //if there is no files remains after update - close viewer
+                    true -> _event.emit(Event.CloseViewer)
+                    false -> _uiState.update {
+                        it.copy(
+                            content = UIState.Content.Main(newFiles)
+                        )
+                    }
+                }
             }
         }
     }
@@ -226,7 +250,7 @@ class ViewerVm
     private suspend fun reflectLoadingChanges() {
         _isLoadingFlow.collectLatest { isLoading ->
             withContext(Dispatchers.Main) {
-                _uiState.update { it.copy(isLoading = isLoading) }
+                _uiState.update { it.copy(refreshing = isLoading) }
             }
         }
     }
@@ -311,7 +335,7 @@ class ViewerVm
         }
     }
     
-    private fun setDialog(newDialog: nikmax.material_tree.gallery.dialogs.Dialog) {
+    private fun setDialog(newDialog: Dialog) {
         _uiState.update { it.copy(dialog = newDialog) }
     }
     

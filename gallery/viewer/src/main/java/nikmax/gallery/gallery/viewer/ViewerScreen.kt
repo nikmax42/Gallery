@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.media.AudioManager
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -25,7 +26,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +50,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -50,10 +59,19 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.gallery.core.ui.MediaItemUI
+import nikmax.gallery.gallery.core.ui.components.shimmerBackground
 import nikmax.gallery.gallery.core.utils.SharingUtils
+import nikmax.gallery.gallery.viewer.ViewerVm.UIState.Content
+import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.Copy
+import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.Delete
+import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.Launch
+import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.Move
+import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.Rename
+import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.SwitchControls
 import nikmax.gallery.gallery.viewer.components.FramePreview
 import nikmax.gallery.gallery.viewer.components.Image
 import nikmax.gallery.gallery.viewer.components.PlayPauseButton
@@ -61,6 +79,7 @@ import nikmax.gallery.gallery.viewer.components.Seekbar
 import nikmax.gallery.gallery.viewer.components.Video
 import nikmax.gallery.gallery.viewer.components.bottom_bar.ViewerBottomBar
 import nikmax.gallery.gallery.viewer.components.top_bar.ViewerTopBar
+import nikmax.gallery.viewer.R
 import nikmax.material_tree.gallery.dialogs.Dialog
 import nikmax.material_tree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
 import nikmax.material_tree.gallery.dialogs.conflict_resolver.ConflictResolverDialog
@@ -75,6 +94,7 @@ fun ViewerScreen(
     vm: ViewerVm = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
+    val event = vm.event
     
     ViewerContent(
         state = state,
@@ -84,7 +104,12 @@ fun ViewerScreen(
     )
     
     LaunchedEffect(filePath) {
-        vm.onAction(ViewerVm.UserAction.Launch(filePath))
+        vm.onAction(Launch(filePath))
+        event.collectLatest { event ->
+            when (event) {
+                ViewerVm.Event.CloseViewer -> onClose()
+            }
+        }
     }
 }
 
@@ -98,21 +123,21 @@ private fun ViewerContent(
 ) {
     val context = LocalContext.current
     
-    AnimatedContent(targetState = state.files.isEmpty()) { filesIsEmpty ->
-        when (filesIsEmpty) {
-            true -> {
-                /* todo add loading placeholder content here? */
-            }
-            false -> MainContent(
-                files = state.files,
+    AnimatedContent(targetState = state.content) { content ->
+        when (content) {
+            Content.Initiating -> InitializationContent(
+                onClose = { onClose() }
+            )
+            is Content.Main -> MainContent(
+                files = content.files,
                 initialFilePath = initialFilePath,
                 showUi = state.showControls,
-                onSwitchUi = { onAction(ViewerVm.UserAction.SwitchControls) },
+                onSwitchUi = { onAction(SwitchControls) },
                 onClose = { onClose() },
-                onCopy = { onAction(ViewerVm.UserAction.Copy(it)) },
-                onMove = { onAction(ViewerVm.UserAction.Move(it)) },
-                onRename = { onAction(ViewerVm.UserAction.Rename(it)) },
-                onDelete = { onAction(ViewerVm.UserAction.Delete(it)) },
+                onCopy = { onAction(Copy(it)) },
+                onMove = { onAction(Move(it)) },
+                onRename = { onAction(Rename(it)) },
+                onDelete = { onAction(Delete(it)) },
                 onShare = { SharingUtils.shareSingleFile(it, context) }
             )
         }
@@ -147,34 +172,35 @@ private fun ViewerContent(
 @Preview
 @Composable
 private fun ViewerContentPreview() {
-    val files = remember {
-        listOf(
-            MediaItemUI.File(
-                path = "/storage/emulated/0/DCIM/Camera/IMG1234567890.jpg",
-                size = 0,
-                creationDate = 0,
-                modificationDate = 0,
-            ),
-            MediaItemUI.File(
-                path = "/storage/emulated/0/Images/wallpaper.jpg",
-                size = 0,
-                creationDate = 0,
-                modificationDate = 0,
-            ),
-            MediaItemUI.File(
-                path = "/storage/emulated/0/Movies/VID1234567890.mp4",
-                size = 0,
-                creationDate = 0,
-                modificationDate = 0,
+    var files by remember {
+        mutableStateOf(
+            listOf(
+                MediaItemUI.File(
+                    path = "/storage/emulated/0/DCIM/Camera/IMG1234567890.jpg",
+                    size = 0,
+                    creationDate = 0,
+                    modificationDate = 0,
+                ),
+                MediaItemUI.File(
+                    path = "/storage/emulated/0/Images/wallpaper.jpg",
+                    size = 0,
+                    creationDate = 0,
+                    modificationDate = 0,
+                ),
+                MediaItemUI.File(
+                    path = "/storage/emulated/0/Movies/VID1234567890.mp4",
+                    size = 0,
+                    creationDate = 0,
+                    modificationDate = 0,
+                )
             )
         )
     }
     val showUi = remember { true }
-    
     var state by remember {
         mutableStateOf(
             ViewerVm.UIState(
-                files = files,
+                content = Content.Main(files),
                 showControls = showUi
             )
         )
@@ -182,23 +208,26 @@ private fun ViewerContentPreview() {
     
     fun onAction(action: ViewerVm.UserAction) {
         when (action) {
-            is ViewerVm.UserAction.Launch -> {}
-            is ViewerVm.UserAction.Copy -> {}
-            is ViewerVm.UserAction.Delete -> {}
-            is ViewerVm.UserAction.Move -> {}
-            is ViewerVm.UserAction.Rename -> {}
-            ViewerVm.UserAction.SwitchControls -> {
+            is Launch -> {}
+            is Copy -> {}
+            is Delete -> {
+                files -= action.file
+            }
+            is Move -> {}
+            is Rename -> {}
+            SwitchControls -> {
                 state = state.copy(showControls = !state.showControls)
             }
         }
     }
     
+    val context = LocalContext.current
     GalleryTheme {
         ViewerContent(
             state = state,
             onAction = { onAction(it) },
             initialFilePath = files[1].path,
-            onClose = {}
+            onClose = { Toast.makeText(context, "onClose", Toast.LENGTH_SHORT).show() }
         )
     }
 }
@@ -383,7 +412,7 @@ fun MainContent(
                             )
                         }
                     // todo close viewer on vertical up-to-down swipe (if not in transformation mode)
-                    // fixme conflicts with transformation
+                    // fixme conflicts with other gesture
                     /* .then(
                         if (animatableZoom.value == 1f)
                             Modifier.pointerInput(Unit) {
@@ -504,6 +533,60 @@ fun MainContent(
         }
     }
 }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InitializationContent(
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = { onClose() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
+                },
+                title = {
+                    Text(
+                        text = "",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shimmerBackground()
+                    )
+                },
+                modifier = Modifier.shimmerBackground()
+            )
+        },
+    ) { paddings ->
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(
+                    top = paddings.calculateTopPadding(),
+                    bottom = paddings.calculateBottomPadding()
+                )
+                .shimmerBackground()
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun InitializationContentPreview() {
+    GalleryTheme {
+        InitializationContent(
+            onClose = { /*TODO*/ },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
 
 private fun changeBrightness(context: Context, newBrightness: Float) {
     (context as Activity).window.attributes.apply {
