@@ -5,42 +5,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import nikmax.gallery.core.preferences.GalleryPreferences
-import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.ui.components.grid.ItemsGrid
-import nikmax.gallery.gallery.explorer.ExplorerVm
+import nikmax.gallery.gallery.explorer.Action
+import nikmax.gallery.gallery.explorer.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun MainContent(
-    state: ExplorerVm.UIState,
-    onAction: (ExplorerVm.UserAction) -> Unit,
+    state: UiState,
+    onAction: (Action) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val preferences by GalleryPreferencesUtils
-        .getPreferencesFlow(LocalContext.current)
-        .collectAsState(GalleryPreferences())
-    
     Box {
         PullToRefreshBox(
             isRefreshing = state.isLoading,
-            onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
+            onRefresh = { onAction(Action.Refresh) },
             modifier = modifier
         ) {
             ItemsGrid(
                 items = state.items,
                 selectedItems = state.selectedItems,
-                onItemOpen = { onAction(ExplorerVm.UserAction.ItemOpen(it)) },
-                onSelectionChange = { onAction(ExplorerVm.UserAction.ItemsSelectionChange(it)) },
-                columnsAmountPortrait = preferences.appearance.gridAppearance.portraitColumns,
-                columnsAmountLandscape = preferences.appearance.gridAppearance.landscapeColumns,
+                onItemOpen = { onAction(Action.ItemOpen(it)) },
+                onSelectionChange = { onAction(Action.ItemsSelectionChange(it)) },
+                columnsAmountPortrait = state.portraitGridColumns,
+                columnsAmountLandscape = state.landscapeGridColumns,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -50,7 +42,7 @@ internal fun MainContent(
 @Preview
 @Composable
 private fun MainContentPreview() {
-    val state = ExplorerVm.UIState(
+    val state = UiState(
         items = listOf(
             MediaItemUI.File("/test.jpg"),
             MediaItemUI.Album("/test"),

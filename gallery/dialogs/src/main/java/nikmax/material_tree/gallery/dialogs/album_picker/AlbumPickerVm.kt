@@ -16,10 +16,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nikmax.gallery.core.data.Resource
-import nikmax.gallery.core.preferences.GalleryPreferences
-import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.gallery.core.data.media.MediaItemData
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
+import nikmax.gallery.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.gallery.core.data.preferences.GalleryPreferences.GalleryMode
+import nikmax.gallery.gallery.core.data.preferences.GalleryPreferencesRepo
 import nikmax.gallery.gallery.core.mappers.MediaItemMapper.mapToUi
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import javax.inject.Inject
@@ -28,60 +29,44 @@ import javax.inject.Inject
 class AlbumPickerVm
 @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val galleryRepo: MediaItemsRepo
+    private val galleryRepo: MediaItemsRepo,
+    private val prefsRepo: GalleryPreferencesRepo
 ) : ViewModel() {
     
-    data class UiState(
-        val items: List<MediaItemUI> = listOf(),
-        val loading: Boolean = false,
-        val pickedAlbum: MediaItemUI.Album? = null,
-        val pickedAlbumIsNotWritable: Boolean = true
-    )
-    
-    sealed interface UserAction {
-        data object Launch : UserAction
-        data class NavigateIn(val album: MediaItemUI.Album) : UserAction
-        data object NavigateBack : UserAction
-        data object Refresh : UserAction
-    }
-    
-    sealed interface Event {
-        data object DismissDialog : Event
-    }
-    
-    
     private val _navStackFlow = MutableStateFlow(listOf<MediaItemUI.Album?>())
-    private var _dataResourceFlow: MutableStateFlow<Resource<List<MediaItemData>>> =
-        MutableStateFlow(Resource.Loading(emptyList()))
-    private val _galleryPreferencesFlow = GalleryPreferencesUtils.getPreferencesFlow(context)
+    private var _dataResourceFlow: MutableStateFlow<Resource<List<MediaItemData>>> = MutableStateFlow(
+        Resource.Loading(emptyList())
+    )
+    private val _galleryPreferencesFlow = MutableStateFlow(GalleryPreferences())
     
     private val _itemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
     private val _isLoadingFlow = MutableStateFlow(false)
     
     private val _uiState = MutableStateFlow(UiState())
-    val state = _uiState.asStateFlow()
+    internal val state = _uiState.asStateFlow()
     
     private val _event = MutableSharedFlow<Event>()
-    val event = _event.asSharedFlow()
+    internal val event = _event.asSharedFlow()
     
-    fun onAction(action: UserAction) {
+    internal fun onAction(action: Action) {
         viewModelScope.launch {
             when (action) {
-                is UserAction.Launch -> onLaunch()
-                is UserAction.NavigateIn -> navigateIn(action.album)
-                UserAction.NavigateBack -> navigateBack()
-                UserAction.Refresh -> onRefresh()
+                is Action.Launch -> onLaunch()
+                is Action.NavigateIn -> navigateIn(action.album)
+                Action.NavigateBack -> navigateBack()
+                Action.Refresh -> onRefresh()
             }
         }
     }
     
     
-    private suspend fun onLaunch() {
+    private fun onLaunch() {
         viewModelScope.launch { resetNavStack() }
         
-        viewModelScope.launch { keepDataFlowUpdated() }
-        viewModelScope.launch { keepLoadingFlowUpdated() }
-        viewModelScope.launch { keepItemsFlowUpdated() }
+        viewModelScope.launch { keepDataFlow() }
+        viewModelScope.launch { keepPreferencesFlow() }
+        viewModelScope.launch { keepLoadingFlow() }
+        viewModelScope.launch { keepItemsFlow() }
         
         viewModelScope.launch { reflectLoadingFlowChanges() }
         viewModelScope.launch { reflectItemsFlowChanges() }
@@ -108,7 +93,7 @@ class AlbumPickerVm
     }
     
     
-    private suspend fun keepDataFlowUpdated() {
+    private suspend fun keepDataFlow() {
         combine(
             _galleryPreferencesFlow,
             _navStackFlow,
@@ -116,18 +101,25 @@ class AlbumPickerVm
             galleryRepo.getAlbumContentFlow(
                 path = navStack.lastOrNull()?.path,
                 searchQuery = null,
-                treeMode = prefs.appearance.nestedAlbumsEnabled,
-                includeImages = prefs.filtering.includeImages,
-                includeVideos = prefs.filtering.includeVideos,
-                includeGifs = prefs.filtering.includeGifs,
-                includeUnhidden = prefs.filtering.includeUnHidden,
-                includeHidden = prefs.filtering.includeHidden,
-                includeFiles = prefs.filtering.includeFiles,
-                includeAlbums = prefs.filtering.includeAlbums,
-                sortingOrder = prefs.sorting.order,
-                descendSorting = prefs.sorting.descend,
-                albumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
-                filesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP
+                treeMode = prefs.galleryMode === GalleryMode.TREE,
+                includeImages = prefs.showImages,
+                includeVideos = prefs.showVideos,
+                includeGifs = prefs.showGifs,
+                includeUnhidden = prefs.showUnHidden,
+                includeHidden = prefs.showHidden,
+                includeFiles = prefs.showFiles,
+                includeAlbums = prefs.showAlbums,
+                sortingOrder = when (prefs.sortOrder) {
+                    GalleryPreferences.SortOrder.CREATION_DATE -> MediaItemsRepo.SortOrder.CREATION_DATE
+                    GalleryPreferences.SortOrder.MODIFICATION_DATE -> MediaItemsRepo.SortOrder.MODIFICATION_DATE
+                    GalleryPreferences.SortOrder.NAME -> MediaItemsRepo.SortOrder.NAME
+                    GalleryPreferences.SortOrder.EXTENSION -> MediaItemsRepo.SortOrder.EXTENSION
+                    GalleryPreferences.SortOrder.SIZE -> MediaItemsRepo.SortOrder.SIZE
+                    GalleryPreferences.SortOrder.RANDOM -> MediaItemsRepo.SortOrder.RANDOM
+                },
+                descendSorting = prefs.descendSortOrder,
+                albumsFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.ALBUMS_ON_TOP,
+                filesFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.FILES_ON_TOP
             )
         }.collectLatest { newDataFlow ->
             newDataFlow.collectLatest { newData ->
@@ -136,7 +128,15 @@ class AlbumPickerVm
         }
     }
     
-    private suspend fun keepLoadingFlowUpdated() {
+    private suspend fun keepPreferencesFlow() {
+        prefsRepo
+            .getPreferencesFlow()
+            .collectLatest { prefs ->
+                _galleryPreferencesFlow.update { prefs }
+            }
+    }
+    
+    private suspend fun keepLoadingFlow() {
         _dataResourceFlow.collectLatest { resource ->
             _isLoadingFlow.update {
                 resource is Resource.Loading
@@ -144,7 +144,7 @@ class AlbumPickerVm
         }
     }
     
-    private suspend fun keepItemsFlowUpdated() {
+    private suspend fun keepItemsFlow() {
         combine(_dataResourceFlow, _galleryPreferencesFlow) { data, prefs ->
             when (data) {
                 is Resource.Success -> data.data

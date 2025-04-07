@@ -58,6 +58,19 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    // hilt
+    // Dagger Core
+    implementation(libs.dagger)
+    ksp(libs.dagger.compiler)
+    // Dagger Android
+    api(libs.dagger.android)
+    api(libs.dagger.android.support)
+    ksp(libs.dagger.android.processor)
+    // Dagger Hilt
+    implementation(libs.hilt.android)
+    implementation(libs.com.google.dagger.hilt.android.gradle.plugin)
+    ksp(libs.hilt.android.compiler)
+    ksp(libs.hilt.compiler)
     // Serialization
     implementation(libs.kotlinx.serialization.json)
     // Datastore

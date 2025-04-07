@@ -2,7 +2,6 @@ package nikmax.gallery.gallery.core.data.media
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import nikmax.gallery.core.preferences.GalleryPreferences
 import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.applyItemTypeFilters
 import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.applyMediaTypeFilters
 import nikmax.gallery.gallery.core.data.media.MediaItemRepoImpl.Companion.applySorting

@@ -48,7 +48,7 @@ import nikmax.gallery.gallery.explorer.components.error_contents.NothingFoundCon
 import nikmax.gallery.gallery.explorer.components.error_contents.PermissionNotGrantedContent
 import nikmax.gallery.gallery.explorer.components.main_contents.InitializationContent
 import nikmax.gallery.gallery.explorer.components.main_contents.MainContent
-import nikmax.gallery.gallery.explorer.components.sheets.GalleryPreferencesSheet
+import nikmax.gallery.gallery.explorer.components.preferences_sheet.GalleryPreferencesSheet
 import nikmax.gallery.gallery.explorer.components.top_bars.SearchTopBar
 import nikmax.gallery.gallery.explorer.components.top_bars.SelectionTopBar
 import nikmax.material_tree.gallery.dialogs.Dialog
@@ -76,12 +76,12 @@ fun ExplorerScreen(
     val strComplete = stringResource(R.string.operation_complete)
     
     LaunchedEffect(albumPath) {
-        vm.onAction(ExplorerVm.UserAction.Launch)
+        vm.onAction(Action.Launch)
         vm.event.collectLatest { event ->
             when (event) {
-                is ExplorerVm.Event.OpenViewer -> onFileOpen(event.file)
-                is ExplorerVm.Event.ShowSnackbar -> when (val snack = event.snackbar) {
-                    is ExplorerVm.SnackBar.ProtectedItems -> {
+                is Event.OpenViewer -> onFileOpen(event.file)
+                is Event.ShowSnackbar -> when (val snack = event.snackbar) {
+                    is SnackBar.ProtectedItems -> {
                         when (
                             snackbarHostState.showSnackbar(
                                 message = strProtectedItemsWarning,
@@ -93,7 +93,7 @@ fun ExplorerScreen(
                             SnackbarResult.Dismissed -> {}
                         }
                     }
-                    is ExplorerVm.SnackBar.OperationStarted -> {
+                    is SnackBar.OperationStarted -> {
                         val message = when (snack.operations.first()) {
                             is FileOperation.Copy -> strCopying
                             is FileOperation.Move -> strMoving
@@ -102,7 +102,7 @@ fun ExplorerScreen(
                         }
                         snackbarHostState.showSnackbar(message)
                     }
-                    is ExplorerVm.SnackBar.OperationFinished -> {
+                    is SnackBar.OperationFinished -> {
                         val message = when (snack.failedItems == 0) {
                             true -> strComplete
                             false -> strFailed
@@ -124,8 +124,8 @@ fun ExplorerScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExplorerScreenContent(
-    state: ExplorerVm.UIState,
-    onAction: (ExplorerVm.UserAction) -> Unit,
+    state: UiState,
+    onAction: (Action) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
     val context = LocalContext.current
@@ -135,16 +135,16 @@ private fun ExplorerScreenContent(
     
     // if it's not a gallery root - display parent album content
     BackHandler(state.albumPath != null) {
-        onAction(ExplorerVm.UserAction.NavigateOutOfAlbum)
+        onAction(Action.NavigateOutOfAlbum)
     }
     // if it's gallery root - cancel search mode
     BackHandler(state.searchQuery != null) {
-        onAction(ExplorerVm.UserAction.SearchQueryChange(null))
+        onAction(Action.SearchQueryChange(null))
         focusManager.clearFocus()
     }
     // if there are some selected items - clear selection
     BackHandler(state.selectedItems.isNotEmpty()) {
-        onAction(ExplorerVm.UserAction.ItemsSelectionChange(emptyList()))
+        onAction(Action.ItemsSelectionChange(emptyList()))
     }
     
     Scaffold(
@@ -157,19 +157,19 @@ private fun ExplorerScreenContent(
                         selectedItems = state.selectedItems,
                         onClearSelectionClick = {
                             onAction(
-                                ExplorerVm.UserAction.ItemsSelectionChange(emptyList())
+                                Action.ItemsSelectionChange(emptyList())
                             )
                         },
                         onSelectAllClick = {
                             onAction(
-                                ExplorerVm.UserAction.ItemsSelectionChange(state.items)
+                                Action.ItemsSelectionChange(state.items)
                             )
                         }
                     )
                     // when selected items is empty - show searchbar
                     false -> SearchTopBar(
                         searchQuery = state.searchQuery,
-                        onQueryChange = { onAction(ExplorerVm.UserAction.SearchQueryChange(it)) },
+                        onQueryChange = { onAction(Action.SearchQueryChange(it)) },
                         onSearch = { /* search performs on query change */ },
                         albumName = state.albumPath?.substringAfterLast('/'),
                         actions = {
@@ -197,14 +197,14 @@ private fun ExplorerScreenContent(
             ) {
                 SelectionBottomBar(
                     selectedItems = state.selectedItems,
-                    onCopy = { items -> onAction(ExplorerVm.UserAction.ItemsCopy(items)) },
-                    onMove = { items -> onAction(ExplorerVm.UserAction.ItemsMove(items)) },
-                    onRename = { items -> onAction(ExplorerVm.UserAction.ItemsRename(items)) },
-                    onDelete = { items -> onAction(ExplorerVm.UserAction.ItemsDelete(items)) },
+                    onCopy = { items -> onAction(Action.ItemsCopy(items)) },
+                    onMove = { items -> onAction(Action.ItemsMove(items)) },
+                    onRename = { items -> onAction(Action.ItemsRename(items)) },
+                    onDelete = { items -> onAction(Action.ItemsDelete(items)) },
                     onShare = { file -> SharingUtils.shareSingleFile(file, context) },
                     onUnavailableItemsUnselection = {
                         onAction(
-                            ExplorerVm.UserAction.ItemsSelectionChange(it)
+                            Action.ItemsSelectionChange(it)
                         )
                     },
                     snackbarHostState = snackbarHostState
@@ -216,7 +216,9 @@ private fun ExplorerScreenContent(
         Box {
             AnimatedContent(state.content) { content ->
                 when (content) {
-                    ExplorerVm.UIState.Content.Initialization -> InitializationContent(
+                    UiState.Content.Initialization -> InitializationContent(
+                        portraitGridColumns = state.portraitGridColumns,
+                        landscapeGridColumns = state.landscapeGridColumns,
                         modifier = Modifier.padding(
                             top = paddings.calculateTopPadding(),
                             bottom = paddings.calculateBottomPadding(),
@@ -224,7 +226,7 @@ private fun ExplorerScreenContent(
                             end = 16.dp
                         )
                     )
-                    ExplorerVm.UIState.Content.Normal -> MainContent(
+                    UiState.Content.Normal -> MainContent(
                         state = state,
                         onAction = onAction,
                         modifier = Modifier
@@ -236,8 +238,8 @@ private fun ExplorerScreenContent(
                             )
                             .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
                     )
-                    ExplorerVm.UIState.Content.Error.NothingFound -> NothingFoundContent(
-                        onRefresh = { onAction(ExplorerVm.UserAction.Refresh) },
+                    UiState.Content.Error.NothingFound -> NothingFoundContent(
+                        onRefresh = { onAction(Action.Refresh) },
                         modifier = Modifier.padding(
                             top = paddings.calculateTopPadding(),
                             bottom = paddings.calculateBottomPadding(),
@@ -245,7 +247,7 @@ private fun ExplorerScreenContent(
                             end = 16.dp
                         )
                     )
-                    is ExplorerVm.UIState.Content.Error.PermissionNotGranted -> PermissionNotGrantedContent(
+                    is UiState.Content.Error.PermissionNotGranted -> PermissionNotGrantedContent(
                         onGrantClick = { content.onGrantClick() },
                         modifier = Modifier.padding(
                             top = paddings.calculateTopPadding(),
@@ -295,9 +297,9 @@ private fun ExplorerScreenContent(
 @Preview
 @Composable
 private fun ExplorerContentPreview() {
-    var state by remember { mutableStateOf(ExplorerVm.UIState(isLoading = true)) }
+    var state by remember { mutableStateOf(UiState(isLoading = true)) }
     val snackbarHostState = remember { SnackbarHostState() }
-    fun onAction(action: ExplorerVm.UserAction) {}
+    fun onAction(action: Action) {}
     
     LaunchedEffect(Unit) {
         delay(5000)

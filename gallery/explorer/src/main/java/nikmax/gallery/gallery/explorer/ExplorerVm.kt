@@ -18,13 +18,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nikmax.gallery.core.data.Resource
-import nikmax.gallery.core.preferences.GalleryPreferences
-import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.utils.PermissionsUtils
 import nikmax.gallery.gallery.core.data.media.ConflictResolution
 import nikmax.gallery.gallery.core.data.media.FileOperation
 import nikmax.gallery.gallery.core.data.media.MediaItemData
 import nikmax.gallery.gallery.core.data.media.MediaItemsRepo
+import nikmax.gallery.gallery.core.data.preferences.GalleryPreferences
+import nikmax.gallery.gallery.core.data.preferences.GalleryPreferencesRepo
 import nikmax.gallery.gallery.core.mappers.MediaItemMapper.mapToUi
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.material_tree.gallery.dialogs.Dialog
@@ -39,114 +39,70 @@ import kotlin.coroutines.suspendCoroutine
 class ExplorerVm
 @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val prefsRepo: GalleryPreferencesRepo,
     private val galleryRepo: MediaItemsRepo
 ) : ViewModel() {
     
-    data class UIState(
-        val albumPath: String? = null,
-        val items: List<MediaItemUI> = emptyList(),
-        val selectedItems: List<MediaItemUI> = emptyList(),
-        val searchQuery: String? = null,
-        val isLoading: Boolean = true,
-        val content: Content = Content.Initialization,
-        val dialog: Dialog = Dialog.None,
-    ) {
-        sealed interface Content {
-            data object Initialization : Content
-            data object Normal : Content
-            sealed interface Error : Content {
-                data class PermissionNotGranted(val onGrantClick: () -> Unit) : Error
-                data object NothingFound : Error
-            }
-        }
-    }
-    
-    sealed interface UserAction {
-        data object Launch : UserAction
-        data object Refresh : UserAction
-        data class ItemOpen(val item: MediaItemUI) : UserAction
-        data object NavigateOutOfAlbum : UserAction
-        data class SearchQueryChange(val newQuery: String?) : UserAction
-        data class ItemsSelectionChange(val newSelection: List<MediaItemUI>) : UserAction
-        data class ItemsCopy(val itemsToCopy: List<MediaItemUI>) : UserAction
-        data class ItemsMove(val itemsToMove: List<MediaItemUI>) : UserAction
-        data class ItemsRename(val itemsToRename: List<MediaItemUI>) : UserAction
-        data class ItemsDelete(val itemsToDelete: List<MediaItemUI>) : UserAction
-    }
-    
-    sealed interface Event {
-        data class OpenViewer(val file: MediaItemUI.File) : Event
-        data class ShowSnackbar(val snackbar: SnackBar) : Event
-    }
-    
-    sealed interface SnackBar {
-        data class ProtectedItems(
-            val protectedItems: List<MediaItemUI>,
-            val onConfirm: () -> Unit
-        ) : SnackBar
-        
-        data class OperationStarted(val operations: List<FileOperation>) : SnackBar
-        data class OperationFinished(val completeItems: Int, val failedItems: Int) : SnackBar
-    }
-    
-    
     // Raw data flows
     private val _navStackFlow = MutableStateFlow(emptyList<String>())
-    private val _galleryPreferencesFlow = GalleryPreferencesUtils.getPreferencesFlow(context)
-    private var _dataResourceFlow: MutableStateFlow<Resource<List<MediaItemData>>> =
-        MutableStateFlow(Resource.Loading(emptyList()))
+    private val _galleryPreferencesFlow = MutableStateFlow(GalleryPreferences())
+    private var _dataResourceFlow: MutableStateFlow<Resource<List<MediaItemData>>> = MutableStateFlow(
+        Resource.Loading(emptyList())
+    )
     
     // UI-related data flows
     private val _itemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
     private val _isLoadingFlow = MutableStateFlow(true)
     private val _searchQueryFlow = MutableStateFlow<String?>(null)
     private val _selectedItemsFlow = MutableStateFlow(emptyList<MediaItemUI>())
-    private val _contentFlow = MutableStateFlow(UIState.Content.Initialization)
+    private val _contentFlow = MutableStateFlow(UiState.Content.Initialization)
     private val _permissionStatusFlow = MutableStateFlow(PermissionsUtils.PermissionStatus.GRANTED)
     
-    private val _uiState = MutableStateFlow(UIState())
-    val uiState = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(UiState())
+    internal val uiState = _uiState.asStateFlow()
     
     private val _event = MutableSharedFlow<Event>()
-    val event = _event.asSharedFlow()
+    internal val event = _event.asSharedFlow()
     
     
-    fun onAction(action: UserAction) {
+    internal fun onAction(action: Action) {
         viewModelScope.launch {
             when (action) {
-                is UserAction.Launch -> onLaunch()
-                UserAction.Refresh -> onRefresh()
-                is UserAction.ItemOpen -> onItemOpen(action.item)
-                UserAction.NavigateOutOfAlbum -> onNavigateBack()
-                is UserAction.SearchQueryChange -> onSearchQueryChange(action.newQuery)
-                is UserAction.ItemsSelectionChange -> onSelectionChange(action.newSelection)
-                is UserAction.ItemsCopy -> onCopyOrMove(action.itemsToCopy)
-                is UserAction.ItemsMove -> onCopyOrMove(action.itemsToMove, move = true)
-                is UserAction.ItemsRename -> onRename(action.itemsToRename)
-                is UserAction.ItemsDelete -> onDelete(action.itemsToDelete)
+                is Action.Launch -> onLaunch()
+                Action.Refresh -> onRefresh()
+                is Action.ItemOpen -> onItemOpen(action.item)
+                Action.NavigateOutOfAlbum -> onNavigateBack()
+                is Action.SearchQueryChange -> onSearchQueryChange(action.newQuery)
+                is Action.ItemsSelectionChange -> onSelectionChange(action.newSelection)
+                is Action.ItemsCopy -> onCopyOrMove(action.itemsToCopy)
+                is Action.ItemsMove -> onCopyOrMove(action.itemsToMove, move = true)
+                is Action.ItemsRename -> onRename(action.itemsToRename)
+                is Action.ItemsDelete -> onDelete(action.itemsToDelete)
             }
         }
     }
     
     
     private fun onLaunch() {
+        //initiate automatic rescan only when there is no items to display
         viewModelScope.launch {
-            //initiate automatic rescan only when there is no items to display
             if (_itemsFlow.value.isEmpty()) onRefresh()
         }
         
-        viewModelScope.launch { keepDataFlowUpdated() }
-        viewModelScope.launch { keepItemsFlowUpdated() }
-        viewModelScope.launch { keepLoadingFlowUpdated() }
-        viewModelScope.launch { keepContentTypeFlowUpdated() }
-        viewModelScope.launch { keepPermissionStatusFlowUpdated() }
+        viewModelScope.launch { keepPreferences() }
+        viewModelScope.launch { keepDataFlow() }
+        viewModelScope.launch { keepItemsFlow() }
+        viewModelScope.launch { keepLoadingFlow() }
+        viewModelScope.launch { keepContentTypeFlow() }
+        viewModelScope.launch { keepPermissionStatusFlow() }
         
-        viewModelScope.launch { reflectContentTypeFlowChanges() }
-        viewModelScope.launch { reflectNavigationStackFlowChanges() }
-        viewModelScope.launch { reflectItemsFlowChanges() }
-        viewModelScope.launch { reflectLoadingChanges() }
-        viewModelScope.launch { reflectSelectedItemsFlowChanges() }
-        viewModelScope.launch { reflectSearchQueryFlowChanges() }
+        viewModelScope.launch { reflectContentTypeFlow() }
+        viewModelScope.launch { reflectNavigationStackFlow() }
+        viewModelScope.launch { reflectItemsFlow() }
+        viewModelScope.launch { reflectPreferencesFlow() }
+        viewModelScope.launch { reflectLoadingFlow() }
+        viewModelScope.launch { reflectSelectedItemsFlow() }
+        viewModelScope.launch { reflectSearchQueryFlow() }
     }
     
     private suspend fun onRefresh() {
@@ -259,7 +215,15 @@ class ExplorerVm
     }
     
     
-    private suspend fun keepDataFlowUpdated() {
+    private suspend fun keepPreferences() {
+        prefsRepo
+            .getPreferencesFlow()
+            .collectLatest { prefs ->
+                _galleryPreferencesFlow.update { prefs }
+            }
+    }
+    
+    private suspend fun keepDataFlow() {
         combine(
             _galleryPreferencesFlow,
             _navStackFlow,
@@ -270,34 +234,48 @@ class ExplorerVm
                 true -> galleryRepo.getAlbumContentFlow(
                     path = navStack.lastOrNull(),
                     searchQuery = searchQuery,
-                    treeMode = prefs.appearance.nestedAlbumsEnabled,
-                    includeImages = prefs.filtering.includeImages,
-                    includeVideos = prefs.filtering.includeVideos,
-                    includeGifs = prefs.filtering.includeGifs,
-                    includeUnhidden = prefs.filtering.includeUnHidden,
-                    includeHidden = prefs.filtering.includeHidden,
-                    includeFiles = prefs.filtering.includeFiles,
-                    includeAlbums = prefs.filtering.includeAlbums,
-                    sortingOrder = prefs.sorting.order,
-                    descendSorting = prefs.sorting.descend,
-                    albumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
-                    filesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP
+                    treeMode = prefs.galleryMode == GalleryPreferences.GalleryMode.TREE,
+                    includeImages = prefs.showImages,
+                    includeVideos = prefs.showVideos,
+                    includeGifs = prefs.showGifs,
+                    includeUnhidden = prefs.showUnHidden,
+                    includeHidden = prefs.showHidden,
+                    includeFiles = prefs.showFiles,
+                    includeAlbums = prefs.showAlbums,
+                    sortingOrder = when (prefs.sortOrder) {
+                        GalleryPreferences.SortOrder.CREATION_DATE -> MediaItemsRepo.SortOrder.CREATION_DATE
+                        GalleryPreferences.SortOrder.MODIFICATION_DATE -> MediaItemsRepo.SortOrder.MODIFICATION_DATE
+                        GalleryPreferences.SortOrder.NAME -> MediaItemsRepo.SortOrder.NAME
+                        GalleryPreferences.SortOrder.EXTENSION -> MediaItemsRepo.SortOrder.EXTENSION
+                        GalleryPreferences.SortOrder.SIZE -> MediaItemsRepo.SortOrder.SIZE
+                        GalleryPreferences.SortOrder.RANDOM -> MediaItemsRepo.SortOrder.RANDOM
+                    },
+                    descendSorting = prefs.descendSortOrder,
+                    albumsFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.ALBUMS_ON_TOP,
+                    filesFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.FILES_ON_TOP
                 )
                 //on search use search result data
                 false -> galleryRepo.getSearchResultFlow(
                     query = searchQuery,
                     basePath = navStack.lastOrNull(),
-                    includeImages = prefs.filtering.includeImages,
-                    includeVideos = prefs.filtering.includeVideos,
-                    includeGifs = prefs.filtering.includeGifs,
-                    includeUnhidden = prefs.filtering.includeUnHidden,
-                    includeHidden = prefs.filtering.includeHidden,
-                    includeFiles = prefs.filtering.includeFiles,
-                    includeAlbums = prefs.filtering.includeAlbums,
-                    sortingOrder = prefs.sorting.order,
-                    descendSorting = prefs.sorting.descend,
-                    albumsFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.ALBUMS_ON_TOP,
-                    filesFirst = prefs.sorting.onTop == GalleryPreferences.Sorting.OnTop.FILES_ON_TOP
+                    includeImages = prefs.showImages,
+                    includeVideos = prefs.showVideos,
+                    includeGifs = prefs.showGifs,
+                    includeUnhidden = prefs.showUnHidden,
+                    includeHidden = prefs.showHidden,
+                    includeFiles = prefs.showFiles,
+                    includeAlbums = prefs.showAlbums,
+                    sortingOrder = when (prefs.sortOrder) {
+                        GalleryPreferences.SortOrder.CREATION_DATE -> MediaItemsRepo.SortOrder.CREATION_DATE
+                        GalleryPreferences.SortOrder.MODIFICATION_DATE -> MediaItemsRepo.SortOrder.MODIFICATION_DATE
+                        GalleryPreferences.SortOrder.NAME -> MediaItemsRepo.SortOrder.NAME
+                        GalleryPreferences.SortOrder.EXTENSION -> MediaItemsRepo.SortOrder.EXTENSION
+                        GalleryPreferences.SortOrder.SIZE -> MediaItemsRepo.SortOrder.SIZE
+                        GalleryPreferences.SortOrder.RANDOM -> MediaItemsRepo.SortOrder.RANDOM
+                    },
+                    descendSorting = prefs.descendSortOrder,
+                    albumsFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.ALBUMS_ON_TOP,
+                    filesFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.FILES_ON_TOP
                 )
             }
             
@@ -308,7 +286,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun keepItemsFlowUpdated() {
+    private suspend fun keepItemsFlow() {
         combine(_dataResourceFlow, _galleryPreferencesFlow) { data, prefs ->
             when (data) {
                 is Resource.Success -> data.data
@@ -320,7 +298,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun keepLoadingFlowUpdated() {
+    private suspend fun keepLoadingFlow() {
         _dataResourceFlow.collectLatest { data ->
             _isLoadingFlow.update {
                 data is Resource.Loading
@@ -328,7 +306,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun keepContentTypeFlowUpdated() {
+    private suspend fun keepContentTypeFlow() {
         combine(
             _isLoadingFlow,
             _itemsFlow,
@@ -336,7 +314,7 @@ class ExplorerVm
             _permissionStatusFlow
         ) { isLoading, items, navStack, permissionStatus ->
             if (permissionStatus == PermissionsUtils.PermissionStatus.DENIED)
-                UIState.Content.Error.PermissionNotGranted(
+                UiState.Content.Error.PermissionNotGranted(
                     onGrantClick = {
                         PermissionsUtils.requestPermission(
                             PermissionsUtils.AppPermissions.MANAGE_EXTERNAL_STORAGE,
@@ -345,11 +323,11 @@ class ExplorerVm
                     }
                 )
             else if (!isLoading && items.isEmpty())
-                UIState.Content.Error.NothingFound
+                UiState.Content.Error.NothingFound
             else if (isLoading && navStack.isEmpty() && items.isEmpty())
-                UIState.Content.Initialization
+                UiState.Content.Initialization
             else
-                UIState.Content.Normal
+                UiState.Content.Normal
         }.collectLatest { newContentType ->
             withContext(Dispatchers.Main) {
                 _uiState.update {
@@ -359,7 +337,7 @@ class ExplorerVm
         }
     }
     
-    private fun keepPermissionStatusFlowUpdated() {
+    private fun keepPermissionStatusFlow() {
         timer(period = 3000) {
             val storageStatus = PermissionsUtils.checkPermission(
                 PermissionsUtils.AppPermissions.MANAGE_EXTERNAL_STORAGE,
@@ -371,13 +349,13 @@ class ExplorerVm
     
     
     
-    private suspend fun reflectNavigationStackFlowChanges() {
+    private suspend fun reflectNavigationStackFlow() {
         _navStackFlow.collectLatest { navEntries ->
             _uiState.update { it.copy(albumPath = navEntries.lastOrNull()) }
         }
     }
     
-    private suspend fun reflectItemsFlowChanges() {
+    private suspend fun reflectItemsFlow() {
         _itemsFlow.collectLatest { newItems ->
             withContext(Dispatchers.Main) {
                 _uiState.update {
@@ -395,7 +373,18 @@ class ExplorerVm
         }
     }
     
-    private suspend fun reflectLoadingChanges() {
+    private suspend fun reflectPreferencesFlow() {
+        _galleryPreferencesFlow.collectLatest { prefs ->
+            _uiState.update {
+                it.copy(
+                    portraitGridColumns = prefs.portraitGridColumns,
+                    landscapeGridColumns = prefs.landscapeGridColumns
+                )
+            }
+        }
+    }
+    
+    private suspend fun reflectLoadingFlow() {
         _isLoadingFlow.collectLatest { isLoading ->
             withContext(Dispatchers.Main) {
                 _uiState.update { it.copy(isLoading = isLoading) }
@@ -403,7 +392,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun reflectSearchQueryFlowChanges() {
+    private suspend fun reflectSearchQueryFlow() {
         _searchQueryFlow.collectLatest { newQuery ->
             _uiState.update {
                 it.copy(searchQuery = newQuery)
@@ -411,7 +400,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun reflectSelectedItemsFlowChanges() {
+    private suspend fun reflectSelectedItemsFlow() {
         _selectedItemsFlow.collectLatest { selectedItems ->
             _uiState.update {
                 it.copy(selectedItems = selectedItems)
@@ -419,7 +408,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun reflectContentTypeFlowChanges() {
+    private suspend fun reflectContentTypeFlow() {
         _contentFlow.collectLatest { contentType ->
             _uiState.update {
                 it.copy(content = contentType)

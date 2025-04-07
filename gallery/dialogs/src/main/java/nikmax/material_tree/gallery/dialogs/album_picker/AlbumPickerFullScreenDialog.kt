@@ -26,15 +26,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.preferences.GalleryPreferences
-import nikmax.gallery.core.preferences.GalleryPreferencesUtils
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.ui.components.grid.ItemsGrid
@@ -48,20 +45,17 @@ fun AlbumPickerFullScreenDialog(
     vm: AlbumPickerVm = hiltViewModel()
 ) {
     val state by vm.state.collectAsState()
-    val preferences by GalleryPreferencesUtils
-        .getPreferencesFlow(LocalContext.current)
-        .collectAsState(GalleryPreferences())
     
     LaunchedEffect(null) {
-        vm.onAction(AlbumPickerVm.UserAction.Launch)
+        vm.onAction(Action.Launch)
         vm.event.collectLatest { event ->
             when (event) {
-                AlbumPickerVm.Event.DismissDialog -> onDismiss()
+                Event.DismissDialog -> onDismiss()
             }
         }
     }
     
-    BackHandler { vm.onAction(AlbumPickerVm.UserAction.NavigateBack) }
+    BackHandler { vm.onAction(Action.NavigateBack) }
     
     AnimatedVisibility(true) { // to show dialog with crossfade animation
         AlbumPickerContent(
@@ -69,14 +63,12 @@ fun AlbumPickerFullScreenDialog(
             selectedAlbum = state.pickedAlbum,
             albumIsNotWritable = state.pickedAlbumIsNotWritable,
             loading = state.loading,
-            onRefresh = { vm.onAction(AlbumPickerVm.UserAction.Refresh) },
-            onItemClick = {
-                if (it is MediaItemUI.Album) vm.onAction(AlbumPickerVm.UserAction.NavigateIn(it))
-            },
+            onRefresh = { vm.onAction(Action.Refresh) },
+            onItemClick = { if (it is MediaItemUI.Album) vm.onAction(Action.NavigateIn(it)) },
             onConfirm = { onConfirm(it) },
             onDismiss = { onDismiss() },
-            gridColumnsPortrait = preferences.appearance.gridAppearance.portraitColumns,
-            gridColumnsLandscape = preferences.appearance.gridAppearance.landscapeColumns,
+            gridColumnsPortrait = state.portraitGridColumns,
+            gridColumnsLandscape = state.landscapeGridColumns
         )
     }
 }

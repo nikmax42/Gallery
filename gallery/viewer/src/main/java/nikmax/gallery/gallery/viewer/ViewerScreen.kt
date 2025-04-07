@@ -17,13 +17,6 @@ import kotlinx.coroutines.flow.collectLatest
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.gallery.core.ui.MediaItemUI
 import nikmax.gallery.gallery.core.utils.SharingUtils
-import nikmax.gallery.gallery.viewer.ViewerVm.UIState.Content
-import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.Copy
-import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.Delete
-import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.Launch
-import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.Move
-import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.Rename
-import nikmax.gallery.gallery.viewer.ViewerVm.UserAction.SwitchControls
 import nikmax.gallery.gallery.viewer.components.contents.InitializationContent
 import nikmax.gallery.gallery.viewer.components.contents.MainContent
 import nikmax.material_tree.gallery.dialogs.Dialog
@@ -49,10 +42,10 @@ fun ViewerScreen(
     )
     
     LaunchedEffect(filePath) {
-        vm.onAction(Launch(filePath))
+        vm.onAction(Action.Launch(filePath))
         event.collectLatest { event ->
             when (event) {
-                ViewerVm.Event.CloseViewer -> onClose()
+                Event.CloseViewer -> onClose()
             }
         }
     }
@@ -61,8 +54,8 @@ fun ViewerScreen(
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun ViewerContent(
-    state: ViewerVm.UIState,
-    onAction: (ViewerVm.UserAction) -> Unit,
+    state: UiState,
+    onAction: (Action) -> Unit,
     initialFilePath: String,
     onClose: () -> Unit,
 ) {
@@ -70,19 +63,19 @@ private fun ViewerContent(
     
     AnimatedContent(targetState = state.content) { content ->
         when (content) {
-            Content.Initiating -> InitializationContent(
+            UiState.Content.Initiating -> InitializationContent(
                 onClose = { onClose() }
             )
-            is Content.Main -> MainContent(
+            is UiState.Content.Main -> MainContent(
                 files = content.files,
                 initialFilePath = initialFilePath,
                 showUi = state.showControls,
-                onSwitchUi = { onAction(SwitchControls) },
+                onSwitchUi = { onAction(Action.SwitchControls) },
                 onClose = { onClose() },
-                onCopy = { onAction(Copy(it)) },
-                onMove = { onAction(Move(it)) },
-                onRename = { onAction(Rename(it)) },
-                onDelete = { onAction(Delete(it)) },
+                onCopy = { onAction(Action.Copy(it)) },
+                onMove = { onAction(Action.Move(it)) },
+                onRename = { onAction(Action.Rename(it)) },
+                onDelete = { onAction(Action.Delete(it)) },
                 onShare = { SharingUtils.shareSingleFile(it, context) }
             )
         }
@@ -144,23 +137,23 @@ private fun ViewerContentPreview() {
     val showUi = remember { true }
     var state by remember {
         mutableStateOf(
-            ViewerVm.UIState(
-                content = Content.Main(files),
+            UiState(
+                content = UiState.Content.Main(files),
                 showControls = showUi
             )
         )
     }
     
-    fun onAction(action: ViewerVm.UserAction) {
+    fun onAction(action: Action) {
         when (action) {
-            is Launch -> {}
-            is Copy -> {}
-            is Delete -> {
+            is Action.Launch -> {}
+            is Action.Copy -> {}
+            is Action.Delete -> {
                 files -= action.file
             }
-            is Move -> {}
-            is Rename -> {}
-            SwitchControls -> {
+            is Action.Move -> {}
+            is Action.Rename -> {}
+            Action.SwitchControls -> {
                 state = state.copy(showControls = !state.showControls)
             }
         }

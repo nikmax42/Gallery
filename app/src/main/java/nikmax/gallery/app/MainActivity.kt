@@ -6,35 +6,38 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
-import nikmax.gallery.core.preferences.GalleryPreferences
-import nikmax.gallery.core.preferences.GalleryPreferencesUtils
+import nikmax.gallery.core.preferences.CorePreferences
+import nikmax.gallery.core.preferences.CorePreferencesRepo
 import nikmax.gallery.core.ui.theme.GalleryTheme
 import nikmax.gallery.gallery.GalleryNavHost
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    @Inject
+    lateinit var prefsRepo: CorePreferencesRepo
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        
         setContent {
-            val context = LocalContext.current
-            val appPrefs = GalleryPreferencesUtils
-                .getPreferencesFlow(context)
-                .collectAsState(GalleryPreferences())
+            val appPrefs = prefsRepo
+                .getPreferencesFlow()
+                .collectAsState(CorePreferences())
+                .value
             
-            val useDarkTheme = when (appPrefs.value.appearance.theme) {
-                GalleryPreferences.Appearance.Theme.SYSTEM -> isSystemInDarkTheme()
-                GalleryPreferences.Appearance.Theme.LIGHT -> false
-                GalleryPreferences.Appearance.Theme.DARK -> true
+            val useDarkTheme = when (appPrefs.theme) {
+                CorePreferences.Theme.SYSTEM -> isSystemInDarkTheme()
+                CorePreferences.Theme.LIGHT -> false
+                CorePreferences.Theme.DARK -> true
             }
-            val useSystemDynamicColors = when (appPrefs.value.appearance.dynamicColors) {
-                GalleryPreferences.Appearance.DynamicColors.SYSTEM -> true
-                GalleryPreferences.Appearance.DynamicColors.DISABLED -> false
+            val useSystemDynamicColors = when (appPrefs.dynamicColors) {
+                CorePreferences.DynamicColors.SYSTEM -> true
+                CorePreferences.DynamicColors.DISABLED -> false
             }
             
             GalleryTheme(darkTheme = useDarkTheme, dynamicColor = useSystemDynamicColors) {

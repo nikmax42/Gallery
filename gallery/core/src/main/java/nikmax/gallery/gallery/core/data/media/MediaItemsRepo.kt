@@ -17,12 +17,21 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import nikmax.gallery.core.data.Resource
-import nikmax.gallery.core.preferences.GalleryPreferences
+import nikmax.gallery.gallery.core.data.media.MediaItemsRepo.SortOrder
 import timber.log.Timber
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
 
 interface MediaItemsRepo {
+    
+    enum class SortOrder {
+        NAME,
+        SIZE,
+        EXTENSION,
+        CREATION_DATE,
+        MODIFICATION_DATE,
+        RANDOM
+    }
     
     fun getAlbumContentFlow(
         path: String?,
@@ -35,7 +44,7 @@ interface MediaItemsRepo {
         includeGifs: Boolean = true,
         includeUnhidden: Boolean = true,
         includeHidden: Boolean = false,
-        sortingOrder: GalleryPreferences.Sorting.Order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
+        sortingOrder: SortOrder = SortOrder.MODIFICATION_DATE,
         descendSorting: Boolean = false,
         filesFirst: Boolean = false,
         albumsFirst: Boolean = false
@@ -51,7 +60,7 @@ interface MediaItemsRepo {
         includeGifs: Boolean = true,
         includeUnhidden: Boolean = true,
         includeHidden: Boolean = false,
-        sortingOrder: GalleryPreferences.Sorting.Order = GalleryPreferences.Sorting.Order.MODIFICATION_DATE,
+        sortingOrder: SortOrder = SortOrder.MODIFICATION_DATE,
         descendSorting: Boolean = false,
         filesFirst: Boolean = false,
         albumsFirst: Boolean = false
@@ -90,7 +99,7 @@ internal class MediaItemRepoImpl(
         includeGifs: Boolean,
         includeUnhidden: Boolean,
         includeHidden: Boolean,
-        sortingOrder: GalleryPreferences.Sorting.Order,
+        sortingOrder: SortOrder,
         descendSorting: Boolean,
         filesFirst: Boolean,
         albumsFirst: Boolean
@@ -148,7 +157,7 @@ internal class MediaItemRepoImpl(
         includeGifs: Boolean,
         includeUnhidden: Boolean,
         includeHidden: Boolean,
-        sortingOrder: GalleryPreferences.Sorting.Order,
+        sortingOrder: SortOrder,
         descendSorting: Boolean,
         filesFirst: Boolean,
         albumsFirst: Boolean
@@ -430,18 +439,18 @@ internal class MediaItemRepoImpl(
         
         @VisibleForTesting
         internal fun List<MediaItemData>.applySorting(
-            order: GalleryPreferences.Sorting.Order,
+            order: SortOrder,
             descend: Boolean,
             albumsFirst: Boolean,
             filesFirst: Boolean
         ): List<MediaItemData> {
             return when (order) {
-                GalleryPreferences.Sorting.Order.CREATION_DATE -> this.sortedBy { it.dateCreated }
-                GalleryPreferences.Sorting.Order.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
-                GalleryPreferences.Sorting.Order.NAME -> this.sortedBy { it.name }
-                GalleryPreferences.Sorting.Order.SIZE -> this.sortedBy { it.size }
-                GalleryPreferences.Sorting.Order.EXTENSION -> this.sortByExtension()
-                GalleryPreferences.Sorting.Order.RANDOM -> this.shuffled()
+                SortOrder.CREATION_DATE -> this.sortedBy { it.dateCreated }
+                SortOrder.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
+                SortOrder.NAME -> this.sortedBy { it.name }
+                SortOrder.SIZE -> this.sortedBy { it.size }
+                SortOrder.EXTENSION -> this.sortByExtension()
+                SortOrder.RANDOM -> this.shuffled()
             }.let {
                 if (descend) it.reversed() else it
             }.let {

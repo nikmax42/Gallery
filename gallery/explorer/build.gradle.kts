@@ -49,6 +49,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     // Coil
@@ -65,7 +67,7 @@ dependencies {
     api(libs.dagger.android)
     api(libs.dagger.android.support)
     ksp(libs.dagger.android.processor)
-    // Hilt
+    // Dagger Hilt
     implementation(libs.hilt.android)
     implementation(libs.com.google.dagger.hilt.android.gradle.plugin)
     ksp(libs.hilt.android.compiler)
