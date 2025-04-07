@@ -476,7 +476,7 @@ private fun AppearanceMenu(
                 val maxColumns = remember { 10F }
                 var value by remember { mutableFloatStateOf(gridLandscapeColumnsAmount.toFloat()) }
                 Text(
-                    text = stringResource(R.string.grid_cols_portrait, value.toInt()),
+                    text = stringResource(R.string.grid_cols_landscape, value.toInt()),
                     style = MaterialTheme.typography.labelMedium
                 )
                 Slider(
