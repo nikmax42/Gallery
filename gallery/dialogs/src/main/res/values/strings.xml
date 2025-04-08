@@ -3,9 +3,9 @@
     <string name="rename">Rename</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
-    <string name="filename">Filename</string>
-    <string name="new_filename">New filename</string>
-    <string name="invalid_filename">Invalid filename</string>
+    <string name="name">Name</string>
+    <string name="new_name">New name</string>
+    <string name="invalid_filename">Invalid name</string>
     <string name="extension">Extension</string>
     <string name="new_extension">New extension</string>
     <string name="invalid_extension">Invalid extension</string>

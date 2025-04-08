@@ -33,22 +33,22 @@ import kotlin.io.path.pathString
 
 
 @Composable
-fun RenamingDialog(
-    mediaItem: nikmax.mtree.gallery.core.ui.MediaItemUI,
+fun RenamerDialog(
+    mediaItem: MediaItemUI,
     onConfirm: (newPath: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var name by remember {
         val initialValue = when (mediaItem) {
-            is nikmax.mtree.gallery.core.ui.MediaItemUI.File -> mediaItem.nameWithoutExtension
-            is nikmax.mtree.gallery.core.ui.MediaItemUI.Album -> mediaItem.name
+            is MediaItemUI.File -> mediaItem.nameWithoutExtension
+            is MediaItemUI.Album -> mediaItem.name
         }
         mutableStateOf(initialValue)
     }
     var extension by remember {
         val initialValue = when (mediaItem) {
-            is nikmax.mtree.gallery.core.ui.MediaItemUI.File -> mediaItem.extension
-            is nikmax.mtree.gallery.core.ui.MediaItemUI.Album -> null
+            is MediaItemUI.File -> mediaItem.extension
+            is MediaItemUI.Album -> null
         }
         mutableStateOf(initialValue)
     }
@@ -77,7 +77,7 @@ fun RenamingDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(text = stringResource(id = R.string.new_filename)) },
+                    label = { Text(text = stringResource(id = R.string.new_name)) },
                     isError = nameIsValid.not(),
                     supportingText = {
                         if (nameIsValid.not()) {
@@ -143,7 +143,7 @@ private fun DialogPreview() {
     )
     
     GalleryTheme {
-        RenamingDialog(
+        RenamerDialog(
             mediaItem = item,
             onConfirm = {},
             onDismiss = {}

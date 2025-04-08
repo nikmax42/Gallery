@@ -42,7 +42,7 @@ import nikmax.material_tree.gallery.dialogs.Dialog
 import nikmax.material_tree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
 import nikmax.material_tree.gallery.dialogs.conflict_resolver.ConflictResolverDialog
 import nikmax.material_tree.gallery.dialogs.deletion.DeletionDialog
-import nikmax.material_tree.gallery.dialogs.renaming.RenamingDialog
+import nikmax.material_tree.gallery.dialogs.renaming.RenamerDialog
 import nikmax.mtree.core.ui.theme.GalleryTheme
 import nikmax.mtree.gallery.core.data.media.FileOperation
 import nikmax.mtree.gallery.core.ui.MediaItemUI
@@ -285,7 +285,7 @@ private fun ExplorerScreenContent(
             onConfirm = { dialog.onConfirm() },
             onDismiss = { dialog.onDismiss() }
         )
-        is Dialog.Renaming -> RenamingDialog(
+        is Dialog.Renaming -> RenamerDialog(
             mediaItem = dialog.item,
             onConfirm = { dialog.onConfirm(it) },
             onDismiss = { dialog.onDismiss() }
