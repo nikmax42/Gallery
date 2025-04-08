@@ -32,10 +32,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.gallery.core.ui.MediaItemUI
-import nikmax.gallery.gallery.core.ui.components.grid.ItemsGrid
-import nikmax.material_tree.gallery.dialogs.R
+import nikmax.mtree.core.ui.theme.GalleryTheme
+import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.components.grid.ItemsGrid
+import nikmax.mtree.gallery.dialogs.R
 
 
 @Composable

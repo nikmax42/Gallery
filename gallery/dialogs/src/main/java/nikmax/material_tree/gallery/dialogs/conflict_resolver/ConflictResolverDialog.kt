@@ -38,9 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.gallery.core.data.media.ConflictResolution
-import nikmax.material_tree.gallery.dialogs.R
+import nikmax.mtree.core.ui.theme.GalleryTheme
+import nikmax.mtree.gallery.core.data.media.ConflictResolution
+import nikmax.mtree.gallery.dialogs.R
 import kotlin.io.path.Path
 import kotlin.io.path.name
 import kotlin.io.path.pathString
@@ -48,14 +48,14 @@ import kotlin.io.path.pathString
 
 @Composable
 fun ConflictResolverDialog(
-    conflictItem: nikmax.gallery.gallery.core.ui.MediaItemUI,
+    conflictItem: nikmax.mtree.gallery.core.ui.MediaItemUI,
     onResolve: (resolution: ConflictResolution, applyToAll: Boolean) -> Unit,
     onDismiss: () -> Unit,
     conflictsCount: Int = 1
 ) {
     var selectedResolution by remember { mutableStateOf(ConflictResolution.entries.first()) }
     var applyToAll by remember { mutableStateOf(false) }
-
+    
     ContentWithInfo(
         conflictsCount = conflictsCount,
         conflictItemPath = conflictItem.path,
@@ -88,12 +88,12 @@ private fun ContentWithInfo(
 ) {
     val itemName = Path(conflictItemPath).name
     val parentPath = Path(conflictItemPath).parent.pathString
-
+    
     val supportingText = when (conflictsCount > 1) {
         true -> stringResource(R.string.x_files_already_exist, conflictsCount)
         false -> stringResource(R.string.file_already_exist)
     }
-
+    
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
@@ -105,16 +105,16 @@ private fun ContentWithInfo(
                     .fillMaxWidth()
             ) {
                 Icon(imageVector = Icons.Default.Warning, contentDescription = null)
-
+                
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.filename_conflict),
                     style = MaterialTheme.typography.headlineSmall,
                 )
-
+                
                 Spacer(Modifier.height(16.dp))
                 Text(supportingText)
-
+                
                 Spacer(Modifier.height(16.dp))
                 ItemInfo(
                     itemThumbnail = conflictItemThumbnail,
@@ -123,14 +123,14 @@ private fun ContentWithInfo(
                     created = conflictItemCreationDate,
                     size = conflictItemSize
                 )
-
+                
                 Spacer(Modifier.height(16.dp))
                 RadioButtonsGroup(
                     selectedOption = selectedResolution,
                     onSelectionChange = { onResolutionChange(it) },
                     modifier = Modifier.fillMaxWidth()
                 )
-
+                
                 //"apply to all" checkbox
                 // todo enable checkbox and add support to screens viewmodels
                 /* Spacer(Modifier.height(16.dp))
@@ -148,7 +148,7 @@ private fun ContentWithInfo(
                     )
                     Text(stringResource(R.string.apply_to_all))
                 } */
-
+                
                 Spacer(Modifier.height(24.dp))
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -170,7 +170,7 @@ private fun ContentWithInfo(
 private fun ConflictResolverPreview() {
     var selectedResolution by remember { mutableStateOf(ConflictResolution.entries.first()) }
     var applyToAll by remember { mutableStateOf(false) }
-
+    
     GalleryTheme {
         ContentWithInfo(
             conflictsCount = 2,

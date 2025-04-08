@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "nikmax.material_tree.gallery.dialogs"
+    namespace = "nikmax.mtree.gallery.dialogs"
     compileSdk = 35
     
     defaultConfig {

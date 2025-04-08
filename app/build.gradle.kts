@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "nikmax.gallery"
+    namespace = "nikmax.mtree"
     compileSdk = 35
     
     defaultConfig {
-        applicationId = "nikmax.gallery"
+        applicationId = "app"
         minSdk = 30
         targetSdk = 35
         versionCode = 4
@@ -22,6 +22,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        applicationIdSuffix = rootProject.extra["defaultApplicationIdSuffix"] as String
     }
     
     buildTypes {

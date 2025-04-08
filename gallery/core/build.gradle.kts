@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "nikmax.gallery.gallery.core"
+    namespace = "nikmax.mtree.gallery.core"
     compileSdk = 35
     
     defaultConfig {

@@ -20,13 +20,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.material_tree.gallery.dialogs.R
+import nikmax.mtree.core.ui.theme.GalleryTheme
+import nikmax.mtree.gallery.dialogs.R
 
 
 @Composable
 fun DeletionDialog(
-    items: List<nikmax.gallery.gallery.core.ui.MediaItemUI>,
+    items: List<nikmax.mtree.gallery.core.ui.MediaItemUI>,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -40,13 +40,13 @@ fun DeletionDialog(
                     text = stringResource(id = R.string.delete),
                     style = MaterialTheme.typography.headlineSmall,
                 )
-
+                
                 Spacer(modifier = Modifier.size(16.dp))
                 Text(
                     text = stringResource(R.string.delete_x_items, items.size),
                     style = MaterialTheme.typography.bodyMedium
                 )
-
+                
                 // todo add "move to trash bin" and "dont ask again" checkboxes
                 /* Spacer(modifier = Modifier.size(16.dp))
                 CheckBoxWithText(
@@ -54,7 +54,7 @@ fun DeletionDialog(
                     onCheckedChange = {},
                     text = "Dont ask again"
                 ) */
-
+                
                 Spacer(modifier = Modifier.size(16.dp))
                 Row(
                     horizontalArrangement = Arrangement.End,
@@ -74,13 +74,13 @@ fun DeletionDialog(
 @Preview
 @Composable
 private fun DeletionDialogPreview() {
-    val item = nikmax.gallery.gallery.core.ui.MediaItemUI.File(
+    val item = nikmax.mtree.gallery.core.ui.MediaItemUI.File(
         path = "test/image.png",
         size = 0,
         creationDate = 0,
         modificationDate = 0,
     )
-
+    
     GalleryTheme {
         DeletionDialog(
             items = listOf(item),

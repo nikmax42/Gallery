@@ -25,30 +25,30 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import nikmax.gallery.core.ui.theme.GalleryTheme
-import nikmax.gallery.gallery.core.ui.MediaItemUI
-import nikmax.material_tree.gallery.dialogs.R
+import nikmax.mtree.core.ui.theme.GalleryTheme
+import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.dialogs.R
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
 
 
 @Composable
 fun RenamingDialog(
-    mediaItem: nikmax.gallery.gallery.core.ui.MediaItemUI,
+    mediaItem: nikmax.mtree.gallery.core.ui.MediaItemUI,
     onConfirm: (newPath: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var name by remember {
         val initialValue = when (mediaItem) {
-            is nikmax.gallery.gallery.core.ui.MediaItemUI.File -> mediaItem.nameWithoutExtension
-            is nikmax.gallery.gallery.core.ui.MediaItemUI.Album -> mediaItem.name
+            is nikmax.mtree.gallery.core.ui.MediaItemUI.File -> mediaItem.nameWithoutExtension
+            is nikmax.mtree.gallery.core.ui.MediaItemUI.Album -> mediaItem.name
         }
         mutableStateOf(initialValue)
     }
     var extension by remember {
         val initialValue = when (mediaItem) {
-            is nikmax.gallery.gallery.core.ui.MediaItemUI.File -> mediaItem.extension
-            is nikmax.gallery.gallery.core.ui.MediaItemUI.Album -> null
+            is nikmax.mtree.gallery.core.ui.MediaItemUI.File -> mediaItem.extension
+            is nikmax.mtree.gallery.core.ui.MediaItemUI.Album -> null
         }
         mutableStateOf(initialValue)
     }
