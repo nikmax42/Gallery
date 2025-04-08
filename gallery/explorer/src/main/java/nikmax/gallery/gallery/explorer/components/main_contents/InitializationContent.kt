@@ -35,7 +35,7 @@ internal fun InitializationContent(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
     ) {
-        items(30) {
+        items(60) {
             Box(
                 Modifier
                     .fillMaxSize()
