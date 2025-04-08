@@ -3,6 +3,7 @@ package nikmax.gallery.gallery.explorer.components.preferences_sheet
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -64,6 +65,7 @@ internal class GalleryPreferencesSheetVm
         galleryPrefsRepo
             .getPreferencesFlow()
             .collectLatest { prefs ->
+                println(prefs.portraitGridColumns)
                 _galleryPrefsFLow.update { prefs }
             }
     }
@@ -124,8 +126,8 @@ internal class GalleryPreferencesSheetVm
     
     
     private fun onLaunch() {
-        viewModelScope.launch { keepCorePrefsFlow() }
-        viewModelScope.launch { keepGalleryPrefsFlow() }
+        viewModelScope.launch(Dispatchers.IO) { keepCorePrefsFlow() }
+        viewModelScope.launch(Dispatchers.IO) { keepGalleryPrefsFlow() }
         
         viewModelScope.launch { reflectCorePreferencesFlow() }
         viewModelScope.launch { reflectGalleryPreferencesFlow() }

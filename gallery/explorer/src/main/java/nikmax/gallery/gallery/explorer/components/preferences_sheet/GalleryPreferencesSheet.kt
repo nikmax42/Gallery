@@ -346,7 +346,9 @@ private fun AppearanceMenu(
             Column {
                 val minColumns = remember { 2F }
                 val maxColumns = remember { 7F }
-                var value by remember { mutableFloatStateOf(gridPortraitColumnsAmount.toFloat()) }
+                var value by remember(gridPortraitColumnsAmount) {
+                    mutableFloatStateOf(gridPortraitColumnsAmount.toFloat())
+                }
                 Text(
                     text = stringResource(R.string.grid_cols_portrait, value.toInt()),
                     style = MaterialTheme.typography.labelMedium
@@ -364,7 +366,9 @@ private fun AppearanceMenu(
             Column {
                 val minColumns = remember { 3F }
                 val maxColumns = remember { 10F }
-                var value by remember { mutableFloatStateOf(gridLandscapeColumnsAmount.toFloat()) }
+                var value by remember(gridLandscapeColumnsAmount) {
+                    mutableFloatStateOf(gridLandscapeColumnsAmount.toFloat())
+                }
                 Text(
                     text = stringResource(R.string.grid_cols_landscape, value.toInt()),
                     style = MaterialTheme.typography.labelMedium
