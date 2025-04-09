@@ -41,7 +41,7 @@ interface MediaItemsRepo {
     val galleryRootPath: String
         get() = "/storage"
     
-    fun getMediaItems(
+    fun getMediaItemsFlow(
         path: String?,
         searchQuery: String?,
         treeMode: Boolean = true,
@@ -111,7 +111,7 @@ internal class MediaItemsRepoImpl(
     private val _loadingFlow = MutableStateFlow(false)
     private val _albumsFlow = MutableStateFlow<List<MediaItemData.Album>>(emptyList())
     
-    override fun getMediaItems(
+    override fun getMediaItemsFlow(
         path: String?,
         searchQuery: String?,
         treeMode: Boolean,
@@ -129,7 +129,7 @@ internal class MediaItemsRepoImpl(
         return combine(_albumsFlow, _loadingFlow) { albums, loading ->
             //search mode
             val itemsList = if (searchQuery != null) {
-                albums.getSearchResult(
+                albums.getPlainSearchResult(
                     query = searchQuery,
                     baseDirectory = path
                 )
@@ -325,12 +325,13 @@ internal class MediaItemsRepoImpl(
     
     companion object {
         
-        internal fun List<MediaItemData.Album>.getSearchResult(
+        @VisibleForTesting
+        internal fun List<MediaItemData.Album>.getPlainSearchResult(
             query: String,
             baseDirectory: String? = null
         ): List<MediaItemData> {
             val foundAlbums = this
-                .filter { album -> album.path.contains(query) }
+                .filter { album -> album.path.contains(query, ignoreCase = true) }
             val foundFiles = this
                 .map { it.files }
                 .flatten()
