@@ -18,7 +18,7 @@ internal object MediaDataModule {
         @ApplicationContext context: Context,
         mediastoreDs: MediastoreDs
     ): MediaItemsRepo {
-        return MediaItemRepoImpl(
+        return MediaItemsRepoImpl(
             context = context,
             mediastoreDs = mediastoreDs
         )

@@ -103,7 +103,7 @@ interface MediaItemsRepo {
 }
 
 
-internal class MediaItemRepoImpl(
+internal class MediaItemsRepoImpl(
     private val mediastoreDs: MediastoreDs,
     private val context: Context
 ) : MediaItemsRepo {
