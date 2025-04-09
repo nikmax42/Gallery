@@ -1,10 +1,8 @@
 package nikmax.mtree.gallery.viewer
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,12 +34,9 @@ import kotlin.io.path.pathString
 @HiltViewModel
 class ViewerVm
 @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val prefsRepo: GalleryPreferencesRepo,
     private val mediaItemsRepo: MediaItemsRepo,
 ) : ViewModel() {
-    
-    
     
     // Raw data flows
     private val _galleryPreferencesFlow = MutableStateFlow(GalleryPreferences())
@@ -258,13 +253,13 @@ class ViewerVm
     private suspend fun awaitForAlbumPickerResult(): String {
         return suspendCoroutine { cont ->
             setDialog(
-                nikmax.material_tree.gallery.dialogs.Dialog.AlbumPicker(
+                Dialog.AlbumPicker(
                     onConfirm = { pickedAlbumPath ->
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resume(pickedAlbumPath)
                     },
                     onDismiss = {
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
@@ -276,14 +271,14 @@ class ViewerVm
         return suspendCoroutine { cont ->
             _uiState.update {
                 it.copy(
-                    dialog = nikmax.material_tree.gallery.dialogs.Dialog.Renaming(
+                    dialog = Dialog.Renaming(
                         item = itemToRename,
                         onConfirm = { newPath ->
-                            setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                            setDialog(Dialog.None)
                             cont.resume(newPath)
                         },
                         onDismiss = {
-                            setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                            setDialog(Dialog.None)
                             cont.resumeWithException(CancellationException())
                         }
                     )
@@ -295,14 +290,14 @@ class ViewerVm
     private suspend fun awaitForDeletionConfirm(itemsToDelete: List<MediaItemUI>): Boolean {
         return suspendCoroutine { cont ->
             setDialog(
-                nikmax.material_tree.gallery.dialogs.Dialog.DeletionConfirmation(
+                Dialog.DeletionConfirmation(
                     items = itemsToDelete,
                     onConfirm = {
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resume(true)
                     },
                     onDismiss = {
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
@@ -313,14 +308,14 @@ class ViewerVm
     private suspend fun awaitForConflictResolverResult(conflictItem: MediaItemUI): ConflictResolution {
         return suspendCoroutine { cont ->
             setDialog(
-                nikmax.material_tree.gallery.dialogs.Dialog.ConflictResolver(
+                Dialog.ConflictResolver(
                     conflictItem = conflictItem,
                     onConfirm = { resolution ->
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resume(resolution)
                     },
                     onDismiss = {
-                        setDialog(nikmax.material_tree.gallery.dialogs.Dialog.None)
+                        setDialog(Dialog.None)
                         cont.resumeWithException(CancellationException())
                     }
                 )
