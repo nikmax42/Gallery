@@ -3,6 +3,7 @@ package nikmax.mtree.gallery.explorer.components.preferences_sheet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import nikmax.mtree.gallery.core.data.preferences.GalleryPreferences
 import nikmax.mtree.gallery.core.data.preferences.GalleryPreferencesRepo
 
 class FakeGalleryPreferencesRepo(
