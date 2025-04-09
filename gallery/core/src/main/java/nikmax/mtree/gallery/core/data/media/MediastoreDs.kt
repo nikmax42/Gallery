@@ -5,13 +5,14 @@ import android.content.Context
 import android.database.Cursor
 import android.provider.MediaStore
 
+interface MediastoreDs {
+    fun getImagesAndVideos(): List<MediaItemData.File>
+}
 
-/**
- * Utilities for retrieving media files from the [MediaStore].
- */
-internal object MediastoreUtils {
+
+class MediastoreDsImpl(private val context: Context) : MediastoreDs {
     
-    fun getAllImagesAndVideos(context: Context): List<MediaItemData.File> {
+    override fun getImagesAndVideos(): List<MediaItemData.File> {
         return getAllImageAndVideoFiles(context)
     }
     
@@ -28,7 +29,6 @@ internal object MediastoreUtils {
         )
         val selection = "${MediaStore.Files.FileColumns.MIME_TYPE} LIKE 'image/%'" +
                 " OR ${MediaStore.Files.FileColumns.MIME_TYPE} LIKE 'video/%'"
-        
         val mediaStoreUri = MediaStore.Files.getContentUri("external")
         val cursor = context.contentResolver.query(
             mediaStoreUri,
@@ -71,7 +71,6 @@ internal object MediastoreUtils {
         val volumeName = cursor.getString(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.VOLUME_NAME)
         )
-        
         return MediaItemData.File(
             path = data,
             uri = contentUri.toString(),
@@ -81,5 +80,4 @@ internal object MediastoreUtils {
             dateModified = dateModified,
         )
     }
-    
 }

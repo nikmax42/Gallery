@@ -104,6 +104,7 @@ interface MediaItemsRepo {
 
 
 internal class MediaItemRepoImpl(
+    private val mediastoreDs: MediastoreDs,
     private val context: Context
 ) : MediaItemsRepo {
     
@@ -281,8 +282,8 @@ internal class MediaItemRepoImpl(
         Timber.d("Rescan initiated")
         _loadingFlow.update { true }
         withContext(Dispatchers.IO) {
-            val galleryData = MediastoreUtils
-                .getAllImagesAndVideos(context)
+            val galleryData = mediastoreDs
+                .getImagesAndVideos()
                 .createGalleryAlbumsList()
             withContext(Dispatchers.Main) {
                 _albumsFlow.update { galleryData }
