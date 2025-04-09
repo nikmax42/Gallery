@@ -23,6 +23,13 @@ android {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+        debug {
+            isMinifyEnabled = false
+            isShrinkResources = false
+            kotlinOptions {
+                freeCompilerArgs = listOf("-Xdebug")
+            }
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
