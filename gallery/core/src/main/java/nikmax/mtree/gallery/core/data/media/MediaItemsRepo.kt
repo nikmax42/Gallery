@@ -41,7 +41,7 @@ interface MediaItemsRepo {
     val galleryRootPath: String
         get() = "/storage"
     
-    fun getContent(
+    fun getMediaItems(
         path: String?,
         searchQuery: String?,
         treeMode: Boolean = true,
@@ -111,7 +111,7 @@ internal class MediaItemRepoImpl(
     private val _loadingFlow = MutableStateFlow(false)
     private val _albumsFlow = MutableStateFlow<List<MediaItemData.Album>>(emptyList())
     
-    override fun getContent(
+    override fun getMediaItems(
         path: String?,
         searchQuery: String?,
         treeMode: Boolean,
