@@ -33,6 +33,27 @@ interface MediaItemsRepo {
         RANDOM
     }
     
+    enum class PlaceOnTop {
+        ALBUMS_ON_TOP,
+        FILES_ON_TOP
+    }
+    
+    fun getContent(
+        path: String?,
+        searchQuery: String?,
+        treeMode: Boolean = true,
+        includeAlbums: Boolean = true,
+        includeFiles: Boolean = true,
+        includeImages: Boolean = true,
+        includeVideos: Boolean = true,
+        includeGifs: Boolean = true,
+        includeUnhidden: Boolean = true,
+        includeHidden: Boolean = false,
+        sortingOrder: SortOrder = SortOrder.MODIFICATION_DATE,
+        descendSorting: Boolean = false,
+        placeOnTop: PlaceOnTop = PlaceOnTop.ALBUMS_ON_TOP
+    ): Flow<Resource<List<MediaItemData>>>
+    
     fun getAlbumContentFlow(
         path: String?,
         searchQuery: String?,
@@ -88,6 +109,62 @@ internal class MediaItemRepoImpl(
     private val _loadingFlow = MutableStateFlow(false)
     private val _albumsFlow = MutableStateFlow<List<MediaItemData.Album>>(emptyList())
     
+    
+    override fun getContent(
+        path: String?,
+        searchQuery: String?,
+        treeMode: Boolean,
+        includeAlbums: Boolean,
+        includeFiles: Boolean,
+        includeImages: Boolean,
+        includeVideos: Boolean,
+        includeGifs: Boolean,
+        includeUnhidden: Boolean,
+        includeHidden: Boolean,
+        sortingOrder: SortOrder,
+        descendSorting: Boolean,
+        placeOnTop: MediaItemsRepo.PlaceOnTop
+    ): Flow<Resource<List<MediaItemData>>> {
+        return combine(_albumsFlow, _loadingFlow) { albums, loading ->
+            //search mode
+            val itemsList = if (searchQuery != null) {
+                albums.getSearchResult(
+                    query = searchQuery,
+                    baseDirectory = path
+                )
+            }
+            //directory content mode
+            else when (treeMode) {
+                true -> albums.filterDirectoryContent(directoryPath = path ?: galleryRootPath)
+                false -> when (path == null) {
+                    true -> albums.filterFlatListOfAllGalleryNotEmptyAlbums()
+                    false -> albums.filterAlbumOwnFilesList(albumPath = path)
+                }
+            }.applyItemTypeFilters(
+                includeAlbums = includeAlbums,
+                includeFiles = includeFiles
+            ).applyVisibilityFilters(
+                includeUnhidden = includeUnhidden,
+                includeHidden = includeHidden
+            ).applyMediaTypeFilters(
+                includeImages = includeImages,
+                includeVideos = includeVideos,
+                includeGifs = includeGifs
+            ).applySorting(
+                order = sortingOrder,
+                descend = descendSorting,
+                albumsFirst = placeOnTop == MediaItemsRepo.PlaceOnTop.ALBUMS_ON_TOP,
+                filesFirst = placeOnTop == MediaItemsRepo.PlaceOnTop.FILES_ON_TOP
+            )
+            
+            when (loading) {
+                true -> Resource.Loading(itemsList)
+                false -> Resource.Success(itemsList)
+            }
+        }
+    }
+    
+    
     override fun getAlbumContentFlow(
         path: String?,
         searchQuery: String?,
@@ -106,16 +183,12 @@ internal class MediaItemRepoImpl(
     ): Flow<Resource<List<MediaItemData>>> {
         return combine(_albumsFlow, _loadingFlow) { albums, loading ->
             val rawData = when (treeMode) {
-                true -> getDirectoryContent(
-                    directoryPath = path ?: galleryRootPath,
-                    galleryAlbums = albums
+                true -> albums.filterDirectoryContent(
+                    directoryPath = path ?: galleryRootPath
                 )
                 false -> when (path == null) {
-                    true -> getFlatListOfAllGalleryNotEmptyAlbums(galleryAlbums = albums)
-                    false -> getAlbumOwnFilesList(
-                        albumPath = path,
-                        galleryAlbums = albums
-                    )
+                    true -> albums.filterFlatListOfAllGalleryNotEmptyAlbums()
+                    false -> albums.filterAlbumOwnFilesList(albumPath = path)
                 }
             }
             
@@ -251,31 +324,45 @@ internal class MediaItemRepoImpl(
     
     companion object {
         
-        @VisibleForTesting
-        internal fun getDirectoryContent(
-            directoryPath: String,
-            galleryAlbums: List<MediaItemData.Album>
+        internal fun List<MediaItemData.Album>.getSearchResult(
+            query: String,
+            baseDirectory: String? = null
         ): List<MediaItemData> {
-            val files = getAlbumOwnFilesList(directoryPath, galleryAlbums)
-            val albums = galleryAlbums.filter {
+            val foundAlbums = this
+                .filter { album -> album.path.contains(query) }
+            val foundFiles = this
+                .map { it.files }
+                .flatten()
+                .filter { file -> file.path.contains(query) }
+                .filterNot { foundAlbums.map { it.files }.flatten().contains(it) }
+            
+            return when (baseDirectory != null) {
+                true -> (foundAlbums + foundFiles).filter { it.path.startsWith(baseDirectory) }
+                false -> foundAlbums + foundFiles
+            }
+        }
+        
+        @VisibleForTesting
+        internal fun List<MediaItemData.Album>.filterDirectoryContent(
+            directoryPath: String
+        ): List<MediaItemData> {
+            val files = filterAlbumOwnFilesList(directoryPath)
+            val albums = this.filter {
                 Path(it.path).parent?.pathString == directoryPath
             }
             return files + albums
         }
         
         @VisibleForTesting
-        internal fun getFlatListOfAllGalleryNotEmptyAlbums(
-            galleryAlbums: List<MediaItemData.Album>
-        ): List<MediaItemData.Album> {
-            return galleryAlbums.filter { it.files.isNotEmpty() }
+        internal fun List<MediaItemData.Album>.filterFlatListOfAllGalleryNotEmptyAlbums(): List<MediaItemData.Album> {
+            return this.filter { it.files.isNotEmpty() }
         }
         
         @VisibleForTesting
-        internal fun getAlbumOwnFilesList(
-            albumPath: String,
-            galleryAlbums: List<MediaItemData.Album>
+        internal fun List<MediaItemData.Album>.filterAlbumOwnFilesList(
+            albumPath: String
         ): List<MediaItemData.File> {
-            return galleryAlbums.find { it.path == albumPath }?.files ?: emptyList()
+            return this.find { it.path == albumPath }?.files ?: emptyList()
         }
         
         //convert plain list of files to plain list of albums.
