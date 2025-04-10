@@ -98,7 +98,7 @@ class AlbumPickerVm
             _galleryPreferencesFlow,
             _navStackFlow,
         ) { prefs, navStack ->
-            galleryRepo.getAlbumContentFlow(
+            galleryRepo.getMediaItemsFlow(
                 path = navStack.lastOrNull()?.path,
                 searchQuery = null,
                 treeMode = prefs.galleryMode === GalleryMode.TREE,
@@ -118,8 +118,11 @@ class AlbumPickerVm
                     GalleryPreferences.SortOrder.RANDOM -> MediaItemsRepo.SortOrder.RANDOM
                 },
                 descendSorting = prefs.descendSortOrder,
-                albumsFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.ALBUMS_ON_TOP,
-                filesFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.FILES_ON_TOP
+                placeOnTop = when (prefs.placeOnTop) {
+                    GalleryPreferences.PlaceOnTop.NONE -> MediaItemsRepo.PlaceOnTop.NONE
+                    GalleryPreferences.PlaceOnTop.ALBUMS_ON_TOP -> MediaItemsRepo.PlaceOnTop.ALBUMS_ON_TOP
+                    GalleryPreferences.PlaceOnTop.FILES_ON_TOP -> MediaItemsRepo.PlaceOnTop.FILES_ON_TOP
+                }
             )
         }.collectLatest { newDataFlow ->
             newDataFlow.collectLatest { newData ->

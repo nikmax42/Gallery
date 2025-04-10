@@ -170,7 +170,7 @@ class ViewerVm
     
     private suspend fun keepDataFlowUpdated(albumPath: String) {
         _galleryPreferencesFlow.collectLatest { prefs ->
-            mediaItemsRepo.getAlbumContentFlow(
+            mediaItemsRepo.getMediaItemsFlow(
                 path = albumPath,
                 searchQuery = null,
                 treeMode = false,
@@ -190,8 +190,11 @@ class ViewerVm
                     GalleryPreferences.SortOrder.RANDOM -> MediaItemsRepo.SortOrder.RANDOM
                 },
                 descendSorting = prefs.descendSortOrder,
-                albumsFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.ALBUMS_ON_TOP,
-                filesFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.FILES_ON_TOP
+                placeOnTop = when (prefs.placeOnTop) {
+                    GalleryPreferences.PlaceOnTop.NONE -> MediaItemsRepo.PlaceOnTop.NONE
+                    GalleryPreferences.PlaceOnTop.ALBUMS_ON_TOP -> MediaItemsRepo.PlaceOnTop.ALBUMS_ON_TOP
+                    GalleryPreferences.PlaceOnTop.FILES_ON_TOP -> MediaItemsRepo.PlaceOnTop.FILES_ON_TOP
+                }
             ).collectLatest { albumFilesData ->
                 _dataResourceFlow.update { albumFilesData }
             }

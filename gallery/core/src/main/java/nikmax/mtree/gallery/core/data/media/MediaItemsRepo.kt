@@ -34,6 +34,7 @@ interface MediaItemsRepo {
     }
     
     enum class PlaceOnTop {
+        NONE,
         ALBUMS_ON_TOP,
         FILES_ON_TOP
     }
@@ -55,39 +56,6 @@ interface MediaItemsRepo {
         sortingOrder: SortOrder = SortOrder.MODIFICATION_DATE,
         descendSorting: Boolean = false,
         placeOnTop: PlaceOnTop = PlaceOnTop.ALBUMS_ON_TOP
-    ): Flow<Resource<List<MediaItemData>>>
-    
-    fun getAlbumContentFlow(
-        path: String?,
-        searchQuery: String?,
-        treeMode: Boolean = true,
-        includeAlbums: Boolean = true,
-        includeFiles: Boolean = true,
-        includeImages: Boolean = true,
-        includeVideos: Boolean = true,
-        includeGifs: Boolean = true,
-        includeUnhidden: Boolean = true,
-        includeHidden: Boolean = false,
-        sortingOrder: SortOrder = SortOrder.MODIFICATION_DATE,
-        descendSorting: Boolean = false,
-        filesFirst: Boolean = false,
-        albumsFirst: Boolean = false
-    ): Flow<Resource<List<MediaItemData>>>
-    
-    fun getSearchResultFlow(
-        query: String,
-        basePath: String? = null,
-        includeAlbums: Boolean = true,
-        includeFiles: Boolean = true,
-        includeImages: Boolean = true,
-        includeVideos: Boolean = true,
-        includeGifs: Boolean = true,
-        includeUnhidden: Boolean = true,
-        includeHidden: Boolean = false,
-        sortingOrder: SortOrder = SortOrder.MODIFICATION_DATE,
-        descendSorting: Boolean = false,
-        filesFirst: Boolean = false,
-        albumsFirst: Boolean = false
     ): Flow<Resource<List<MediaItemData>>>
     
     /**
@@ -161,118 +129,6 @@ internal class MediaItemsRepoImpl(
             when (loading) {
                 true -> Resource.Loading(itemsList)
                 false -> Resource.Success(itemsList)
-            }
-        }
-    }
-    
-    
-    override fun getAlbumContentFlow(
-        path: String?,
-        searchQuery: String?,
-        treeMode: Boolean,
-        includeAlbums: Boolean,
-        includeFiles: Boolean,
-        includeImages: Boolean,
-        includeVideos: Boolean,
-        includeGifs: Boolean,
-        includeUnhidden: Boolean,
-        includeHidden: Boolean,
-        sortingOrder: SortOrder,
-        descendSorting: Boolean,
-        filesFirst: Boolean,
-        albumsFirst: Boolean
-    ): Flow<Resource<List<MediaItemData>>> {
-        return combine(_albumsFlow, _loadingFlow) { albums, loading ->
-            val rawData = when (treeMode) {
-                true -> albums.filterDirectoryContent(
-                    directoryPath = path ?: galleryRootPath
-                )
-                false -> when (path == null) {
-                    true -> albums.filterFlatListOfAllGalleryNotEmptyAlbums()
-                    false -> albums.filterAlbumOwnFilesList(albumPath = path)
-                }
-            }
-            
-            val filteredData = rawData
-                .applyItemTypeFilters(
-                    includeAlbums = includeAlbums,
-                    includeFiles = includeFiles
-                )
-                .applyVisibilityFilters(
-                    includeUnhidden = includeUnhidden,
-                    includeHidden = includeHidden
-                )
-                .applyMediaTypeFilters(
-                    includeImages = includeImages,
-                    includeVideos = includeVideos,
-                    includeGifs = includeGifs
-                )
-            val sortedData = filteredData.applySorting(
-                order = sortingOrder,
-                descend = descendSorting,
-                albumsFirst = albumsFirst,
-                filesFirst = filesFirst
-            )
-            
-            when (loading) {
-                true -> Resource.Loading(sortedData)
-                false -> Resource.Success(sortedData)
-            }
-        }
-    }
-    
-    override fun getSearchResultFlow(
-        query: String,
-        basePath: String?,
-        includeAlbums: Boolean,
-        includeFiles: Boolean,
-        includeImages: Boolean,
-        includeVideos: Boolean,
-        includeGifs: Boolean,
-        includeUnhidden: Boolean,
-        includeHidden: Boolean,
-        sortingOrder: SortOrder,
-        descendSorting: Boolean,
-        filesFirst: Boolean,
-        albumsFirst: Boolean
-    ): Flow<Resource<List<MediaItemData>>> {
-        return combine(_albumsFlow, _loadingFlow) { galleryAlbums, loading ->
-            val foundAlbums = galleryAlbums
-                .filter { album -> album.path.contains(query) }
-            val foundFiles = galleryAlbums
-                .map { it.files }
-                .flatten()
-                .filter { file -> file.path.contains(query) }
-                .filterNot { foundAlbums.map { it.files }.flatten().contains(it) }
-            
-            val rawData = when (basePath != null) {
-                true -> (foundAlbums + foundFiles).filter { it.path.startsWith(basePath) }
-                false -> foundAlbums + foundFiles
-            }
-            val filteredData = rawData
-                .applyItemTypeFilters(
-                    includeAlbums = includeAlbums,
-                    includeFiles = includeFiles
-                )
-                .applyVisibilityFilters(
-                    includeUnhidden = includeUnhidden,
-                    includeHidden = includeHidden
-                )
-                .applyMediaTypeFilters(
-                    includeImages = includeImages,
-                    includeVideos = includeVideos,
-                    includeGifs = includeGifs
-                )
-            val sortedData = filteredData.applySorting(
-                order = sortingOrder,
-                descend = descendSorting,
-                albumsFirst = albumsFirst,
-                filesFirst = filesFirst
-            )
-            
-            when (loading) {
-                true -> Resource.Loading(sortedData)
-                false -> Resource.Success(sortedData)
             }
         }
     }

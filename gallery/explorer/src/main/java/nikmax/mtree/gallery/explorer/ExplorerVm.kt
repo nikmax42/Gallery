@@ -229,56 +229,32 @@ class ExplorerVm
             _navStackFlow,
             _searchQueryFlow
         ) { prefs, navStack, searchQuery ->
-            when (searchQuery.isNullOrBlank()) {
-                //if there is not search query - use album content data
-                true -> mediaItemsRepo.getAlbumContentFlow(
-                    path = navStack.lastOrNull(),
-                    searchQuery = searchQuery,
-                    treeMode = prefs.galleryMode == GalleryPreferences.GalleryMode.TREE,
-                    includeImages = prefs.showImages,
-                    includeVideos = prefs.showVideos,
-                    includeGifs = prefs.showGifs,
-                    includeUnhidden = prefs.showUnHidden,
-                    includeHidden = prefs.showHidden,
-                    includeFiles = prefs.showFiles,
-                    includeAlbums = prefs.showAlbums,
-                    sortingOrder = when (prefs.sortOrder) {
-                        GalleryPreferences.SortOrder.CREATION_DATE -> MediaItemsRepo.SortOrder.CREATION_DATE
-                        GalleryPreferences.SortOrder.MODIFICATION_DATE -> MediaItemsRepo.SortOrder.MODIFICATION_DATE
-                        GalleryPreferences.SortOrder.NAME -> MediaItemsRepo.SortOrder.NAME
-                        GalleryPreferences.SortOrder.EXTENSION -> MediaItemsRepo.SortOrder.EXTENSION
-                        GalleryPreferences.SortOrder.SIZE -> MediaItemsRepo.SortOrder.SIZE
-                        GalleryPreferences.SortOrder.RANDOM -> MediaItemsRepo.SortOrder.RANDOM
-                    },
-                    descendSorting = prefs.descendSortOrder,
-                    albumsFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.ALBUMS_ON_TOP,
-                    filesFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.FILES_ON_TOP
-                )
-                //on search use search result data
-                false -> mediaItemsRepo.getSearchResultFlow(
-                    query = searchQuery,
-                    basePath = navStack.lastOrNull(),
-                    includeImages = prefs.showImages,
-                    includeVideos = prefs.showVideos,
-                    includeGifs = prefs.showGifs,
-                    includeUnhidden = prefs.showUnHidden,
-                    includeHidden = prefs.showHidden,
-                    includeFiles = prefs.showFiles,
-                    includeAlbums = prefs.showAlbums,
-                    sortingOrder = when (prefs.sortOrder) {
-                        GalleryPreferences.SortOrder.CREATION_DATE -> MediaItemsRepo.SortOrder.CREATION_DATE
-                        GalleryPreferences.SortOrder.MODIFICATION_DATE -> MediaItemsRepo.SortOrder.MODIFICATION_DATE
-                        GalleryPreferences.SortOrder.NAME -> MediaItemsRepo.SortOrder.NAME
-                        GalleryPreferences.SortOrder.EXTENSION -> MediaItemsRepo.SortOrder.EXTENSION
-                        GalleryPreferences.SortOrder.SIZE -> MediaItemsRepo.SortOrder.SIZE
-                        GalleryPreferences.SortOrder.RANDOM -> MediaItemsRepo.SortOrder.RANDOM
-                    },
-                    descendSorting = prefs.descendSortOrder,
-                    albumsFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.ALBUMS_ON_TOP,
-                    filesFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.FILES_ON_TOP
-                )
-            }
-            
+            mediaItemsRepo.getMediaItemsFlow(
+                path = navStack.lastOrNull(),
+                searchQuery = searchQuery,
+                treeMode = prefs.galleryMode == GalleryPreferences.GalleryMode.TREE,
+                includeImages = prefs.showImages,
+                includeVideos = prefs.showVideos,
+                includeGifs = prefs.showGifs,
+                includeUnhidden = prefs.showUnHidden,
+                includeHidden = prefs.showHidden,
+                includeFiles = prefs.showFiles,
+                includeAlbums = prefs.showAlbums,
+                sortingOrder = when (prefs.sortOrder) {
+                    GalleryPreferences.SortOrder.CREATION_DATE -> MediaItemsRepo.SortOrder.CREATION_DATE
+                    GalleryPreferences.SortOrder.MODIFICATION_DATE -> MediaItemsRepo.SortOrder.MODIFICATION_DATE
+                    GalleryPreferences.SortOrder.NAME -> MediaItemsRepo.SortOrder.NAME
+                    GalleryPreferences.SortOrder.EXTENSION -> MediaItemsRepo.SortOrder.EXTENSION
+                    GalleryPreferences.SortOrder.SIZE -> MediaItemsRepo.SortOrder.SIZE
+                    GalleryPreferences.SortOrder.RANDOM -> MediaItemsRepo.SortOrder.RANDOM
+                },
+                descendSorting = prefs.descendSortOrder,
+                placeOnTop = when (prefs.placeOnTop) {
+                    GalleryPreferences.PlaceOnTop.NONE -> MediaItemsRepo.PlaceOnTop.NONE
+                    GalleryPreferences.PlaceOnTop.ALBUMS_ON_TOP -> MediaItemsRepo.PlaceOnTop.ALBUMS_ON_TOP
+                    GalleryPreferences.PlaceOnTop.FILES_ON_TOP -> MediaItemsRepo.PlaceOnTop.FILES_ON_TOP
+                }
+            )
         }.collectLatest { newDataFlow ->
             newDataFlow.collectLatest { newData ->
                 _dataResourceFlow.update { newData }
