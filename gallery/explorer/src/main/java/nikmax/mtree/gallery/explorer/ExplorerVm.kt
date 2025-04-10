@@ -39,8 +39,8 @@ import kotlin.coroutines.suspendCoroutine
 class ExplorerVm
 @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val prefsRepo: GalleryPreferencesRepo,
-    private val galleryRepo: MediaItemsRepo
+    private val galleryPrefsRepo: GalleryPreferencesRepo,
+    private val mediaItemsRepo: MediaItemsRepo
 ) : ViewModel() {
     
     // Raw data flows
@@ -106,7 +106,7 @@ class ExplorerVm
     }
     
     private suspend fun onRefresh() {
-        galleryRepo.rescan()
+        mediaItemsRepo.rescan()
     }
     
     private suspend fun onItemOpen(item: MediaItemUI) {
@@ -142,7 +142,7 @@ class ExplorerVm
         // check for conflict filenames in the picked album
         // await for conflict resolutions
         val conflictsResolutions = destinationFilesPaths.mapIndexed { index, destinationPath ->
-            val alreadyExists = galleryRepo.checkExistence(destinationPath)
+            val alreadyExists = mediaItemsRepo.checkExistence(destinationPath)
             when (alreadyExists) {
                 true -> try {
                     awaitForConflictResolverDialogResult(itemsToCopyOrMove[index])
@@ -167,7 +167,7 @@ class ExplorerVm
                 )
             }
         }
-        performFileOperations(fileOperations, galleryRepo, viewModelScope)
+        performFileOperations(fileOperations, mediaItemsRepo, viewModelScope)
     }
     
     private suspend fun onRename(itemsToRename: List<MediaItemUI>) {
@@ -182,7 +182,7 @@ class ExplorerVm
         }
         // check for filename conflicts and await for resolutions
         val conflictsResolutions = newPaths.mapIndexed { index, newPath ->
-            val alreadyExists = galleryRepo.checkExistence(newPath)
+            val alreadyExists = mediaItemsRepo.checkExistence(newPath)
             when (alreadyExists) {
                 true -> try {
                     awaitForConflictResolverDialogResult(itemsToRename[index])
@@ -200,14 +200,14 @@ class ExplorerVm
                 conflictResolution = conflictsResolutions[index]
             )
         }
-        performFileOperations(fileOperations, galleryRepo, viewModelScope)
+        performFileOperations(fileOperations, mediaItemsRepo, viewModelScope)
     }
     
     private suspend fun onDelete(itemsToDelete: List<MediaItemUI>) {
         try {
             awaitForDeletionConfirmationDialogResult(itemsToDelete)
             val fileOperations = itemsToDelete.map { FileOperation.Delete(it.path) }
-            performFileOperations(fileOperations, galleryRepo, viewModelScope)
+            performFileOperations(fileOperations, mediaItemsRepo, viewModelScope)
         }
         catch (_: CancellationException) {
             return
@@ -216,7 +216,7 @@ class ExplorerVm
     
     
     private suspend fun keepPreferences() {
-        prefsRepo
+        galleryPrefsRepo
             .getPreferencesFlow()
             .collectLatest { prefs ->
                 _galleryPreferencesFlow.update { prefs }
@@ -231,7 +231,7 @@ class ExplorerVm
         ) { prefs, navStack, searchQuery ->
             when (searchQuery.isNullOrBlank()) {
                 //if there is not search query - use album content data
-                true -> galleryRepo.getAlbumContentFlow(
+                true -> mediaItemsRepo.getAlbumContentFlow(
                     path = navStack.lastOrNull(),
                     searchQuery = searchQuery,
                     treeMode = prefs.galleryMode == GalleryPreferences.GalleryMode.TREE,
@@ -255,7 +255,7 @@ class ExplorerVm
                     filesFirst = prefs.placeOnTop == GalleryPreferences.PlaceOnTop.FILES_ON_TOP
                 )
                 //on search use search result data
-                false -> galleryRepo.getSearchResultFlow(
+                false -> mediaItemsRepo.getSearchResultFlow(
                     query = searchQuery,
                     basePath = navStack.lastOrNull(),
                     includeImages = prefs.showImages,
