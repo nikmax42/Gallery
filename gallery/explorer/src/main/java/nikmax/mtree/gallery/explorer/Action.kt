@@ -6,7 +6,7 @@ internal sealed interface Action {
     data object Launch : Action
     data object Refresh : Action
     data class ItemOpen(val item: MediaItemUI) : Action
-    data object NavigateOutOfAlbum : Action
+    data object NavigateToParentAlbum : Action
     data class SearchQueryChange(val newQuery: String?) : Action
     data class ItemsSelectionChange(val newSelection: List<MediaItemUI>) : Action
     data class ItemsCopy(val itemsToCopy: List<MediaItemUI>) : Action

@@ -71,7 +71,7 @@ class ExplorerVm
                 is Action.Launch -> onLaunch()
                 Action.Refresh -> onRefresh()
                 is Action.ItemOpen -> onItemOpen(action.item)
-                Action.NavigateOutOfAlbum -> onNavigateBack()
+                Action.NavigateToParentAlbum -> onNavigateBack()
                 is Action.SearchQueryChange -> onSearchQueryChange(action.newQuery)
                 is Action.ItemsSelectionChange -> onSelectionChange(action.newSelection)
                 is Action.ItemsCopy -> onCopyOrMove(action.itemsToCopy)
@@ -89,14 +89,14 @@ class ExplorerVm
             if (_itemsFlow.value.isEmpty()) onRefresh()
         }
         
-        viewModelScope.launch { keepPreferences() }
+        viewModelScope.launch { keepGalleryPreferencesFlow() }
         viewModelScope.launch { keepDataFlow() }
         viewModelScope.launch { keepItemsFlow() }
         viewModelScope.launch { keepLoadingFlow() }
-        viewModelScope.launch { keepContentTypeFlow() }
+        viewModelScope.launch { keepContentsFlow() }
         viewModelScope.launch { keepPermissionStatusFlow() }
         
-        viewModelScope.launch { reflectContentTypeFlow() }
+        viewModelScope.launch { reflectContentsFlow() }
         viewModelScope.launch { reflectNavigationStackFlow() }
         viewModelScope.launch { reflectItemsFlow() }
         viewModelScope.launch { reflectPreferencesFlow() }
@@ -215,7 +215,7 @@ class ExplorerVm
     }
     
     
-    private suspend fun keepPreferences() {
+    private suspend fun keepGalleryPreferencesFlow() {
         galleryPrefsRepo
             .getPreferencesFlow()
             .collectLatest { prefs ->
@@ -282,7 +282,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun keepContentTypeFlow() {
+    private suspend fun keepContentsFlow() {
         combine(
             _isLoadingFlow,
             _itemsFlow,
@@ -327,7 +327,11 @@ class ExplorerVm
     
     private suspend fun reflectNavigationStackFlow() {
         _navStackFlow.collectLatest { navEntries ->
-            _uiState.update { it.copy(albumPath = navEntries.lastOrNull()) }
+            _uiState.update {
+                it.copy(
+                    albumPath = navEntries.lastOrNull()
+                )
+            }
         }
     }
     
@@ -339,9 +343,7 @@ class ExplorerVm
                         items = newItems,
                         // remove selection from items that not exists anymore
                         selectedItems = it.selectedItems.filter { selectedItem ->
-                            newItems.contains(
-                                selectedItem
-                            )
+                            newItems.contains(selectedItem)
                         }
                     )
                 }
@@ -384,7 +386,7 @@ class ExplorerVm
         }
     }
     
-    private suspend fun reflectContentTypeFlow() {
+    private suspend fun reflectContentsFlow() {
         _contentFlow.collectLatest { contentType ->
             _uiState.update {
                 it.copy(content = contentType)

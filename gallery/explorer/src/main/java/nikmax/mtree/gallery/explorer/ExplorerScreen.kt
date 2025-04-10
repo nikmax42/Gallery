@@ -134,7 +134,7 @@ private fun ExplorerScreenContent(
     
     // if it's not a gallery root - display parent album content
     BackHandler(state.albumPath != null) {
-        onAction(Action.NavigateOutOfAlbum)
+        onAction(Action.NavigateToParentAlbum)
     }
     // if it's gallery root - cancel search mode
     BackHandler(state.searchQuery != null) {
@@ -201,11 +201,7 @@ private fun ExplorerScreenContent(
                     onRename = { items -> onAction(Action.ItemsRename(items)) },
                     onDelete = { items -> onAction(Action.ItemsDelete(items)) },
                     onShare = { file -> SharingUtils.shareSingleFile(file, context) },
-                    onUnavailableItemsUnselection = {
-                        onAction(
-                            Action.ItemsSelectionChange(it)
-                        )
-                    },
+                    onUnavailableItemsUnselection = { newSelection -> onAction(Action.ItemsSelectionChange(newSelection)) },
                     snackbarHostState = snackbarHostState
                 )
             }
