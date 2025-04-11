@@ -1,4 +1,4 @@
-package nikmax.material_tree.gallery.dialogs.album_picker
+package nikmax.mtree.gallery.dialogs.album_picker
 
 import android.content.Context
 import androidx.lifecycle.ViewModel

@@ -1,4 +1,4 @@
-package nikmax.material_tree.gallery.dialogs
+package nikmax.mtree.gallery.dialogs
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

@@ -1,4 +1,4 @@
-package nikmax.material_tree.gallery.dialogs.deletion
+package nikmax.mtree.gallery.dialogs.deletion
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

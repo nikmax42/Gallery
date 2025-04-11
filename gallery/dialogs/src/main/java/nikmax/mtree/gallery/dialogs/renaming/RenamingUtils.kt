@@ -1,7 +1,7 @@
-package nikmax.material_tree.gallery.dialogs.renaming
+package nikmax.mtree.gallery.dialogs.renaming
 
 internal object RenamingUtils {
-
+    
     /**
      * Checks if file name is valid.
      *
@@ -18,7 +18,7 @@ internal object RenamingUtils {
         val filenameRegex = Regex("^(?!- )\\.*[\\w\\-_ +]{1,255}$")
         return filenameRegex.matches(filename)
     }
-
+    
     fun fileExtensionIsValid(extension: String): Boolean {
         val extensionWithDot = if (extension.startsWith('.')) extension else ".${extension}"
         val extensionRegex = Regex("\\.[a-zA-Z0-9]{1,10}\$")

@@ -1,4 +1,4 @@
-package nikmax.material_tree.gallery.dialogs.conflict_resolver
+package nikmax.mtree.gallery.dialogs.conflict_resolver
 
 import android.content.Context
 import androidx.compose.foundation.clickable

@@ -1,4 +1,4 @@
-package nikmax.material_tree.gallery.dialogs
+package nikmax.mtree.gallery.dialogs
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry

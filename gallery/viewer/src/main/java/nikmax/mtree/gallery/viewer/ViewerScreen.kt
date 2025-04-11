@@ -14,14 +14,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
-import nikmax.material_tree.gallery.dialogs.Dialog
-import nikmax.material_tree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
-import nikmax.material_tree.gallery.dialogs.conflict_resolver.ConflictResolverDialog
-import nikmax.material_tree.gallery.dialogs.deletion.DeletionDialog
-import nikmax.material_tree.gallery.dialogs.renaming.RenamerDialog
 import nikmax.mtree.core.ui.theme.GalleryTheme
 import nikmax.mtree.gallery.core.ui.MediaItemUI
 import nikmax.mtree.gallery.core.utils.SharingUtils
+import nikmax.mtree.gallery.dialogs.Dialog
+import nikmax.mtree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
+import nikmax.mtree.gallery.dialogs.conflict_resolver.ConflictResolverDialog
+import nikmax.mtree.gallery.dialogs.deletion.DeletionDialog
+import nikmax.mtree.gallery.dialogs.renaming.RenamerDialog
 import nikmax.mtree.gallery.viewer.components.contents.InitializationContent
 import nikmax.mtree.gallery.viewer.components.contents.MainContent
 

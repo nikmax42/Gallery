@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import nikmax.material_tree.gallery.dialogs.Dialog
 import nikmax.mtree.core.data.Resource
 import nikmax.mtree.core.utils.PermissionsUtils
 import nikmax.mtree.gallery.core.data.media.ConflictResolution
@@ -28,6 +27,7 @@ import nikmax.mtree.gallery.core.data.preferences.GalleryPreferences
 import nikmax.mtree.gallery.core.data.preferences.GalleryPreferencesRepo
 import nikmax.mtree.gallery.core.mappers.MediaItemMapper.mapToUi
 import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.dialogs.Dialog
 import javax.inject.Inject
 import kotlin.concurrent.timer
 import kotlin.coroutines.cancellation.CancellationException
@@ -96,6 +96,7 @@ class ExplorerVm
         viewModelScope.launch { keepContentsFlow() }
         viewModelScope.launch { keepPermissionStatusFlow() }
         
+        //todo remove all of that:
         viewModelScope.launch { reflectContentsFlow() }
         viewModelScope.launch { reflectNavigationStackFlow() }
         viewModelScope.launch { reflectItemsFlow() }

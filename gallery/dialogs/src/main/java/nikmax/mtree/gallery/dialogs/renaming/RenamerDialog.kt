@@ -1,4 +1,4 @@
-package nikmax.material_tree.gallery.dialogs.renaming
+package nikmax.mtree.gallery.dialogs.renaming
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

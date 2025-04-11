@@ -1,7 +1,7 @@
 package nikmax.mtree.gallery.explorer
 
-import nikmax.material_tree.gallery.dialogs.Dialog
 import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.dialogs.Dialog
 
 internal data class UiState(
     val albumPath: String? = null,

@@ -1,4 +1,4 @@
-package nikmax.material_tree.gallery.dialogs.album_picker
+package nikmax.mtree.gallery.dialogs.album_picker
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
