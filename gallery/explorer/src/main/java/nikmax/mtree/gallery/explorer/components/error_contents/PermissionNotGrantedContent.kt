@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -26,21 +26,22 @@ internal fun PermissionNotGrantedContent(
     onGrantClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface {
+    Surface(Modifier.fillMaxSize()) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = modifier.fillMaxSize()
+            modifier = modifier
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth(0.7F)
             ) {
                 Image(
                     imageVector = StoragePermissionNotGranted,
                     contentDescription = null
                 )
                 Text(
-                    text = stringResource(R.string.storage_access),
+                    text = stringResource(R.string.storage_not_granted),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
@@ -61,8 +62,7 @@ internal fun PermissionNotGrantedContent(
 private fun PermissionNotGrantedContentPreview() {
     GalleryTheme {
         PermissionNotGrantedContent(
-            onGrantClick = {},
-            modifier = Modifier.padding(16.dp)
+            onGrantClick = {}
         )
     }
 }

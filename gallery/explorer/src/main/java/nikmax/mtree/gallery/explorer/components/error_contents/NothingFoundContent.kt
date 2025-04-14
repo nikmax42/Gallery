@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -28,27 +30,30 @@ internal fun NothingFoundContent(
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PullToRefreshBox(
-        isRefreshing = false,
-        onRefresh = { onRefresh() },
-        contentAlignment = Alignment.Center,
-        modifier = modifier.fillMaxSize()
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+    Surface(Modifier.fillMaxSize()) {
+        PullToRefreshBox(
+            isRefreshing = false,
+            onRefresh = { onRefresh() },
+            contentAlignment = Alignment.Center,
+            modifier = modifier.fillMaxSize()
         ) {
-            Image(
-                imageVector = NothingFound,
-                contentDescription = null
-            )
-            Text(
-                text = stringResource(R.string.no_media_found),
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Row {
-                Button(onClick = { onRefresh() }) {
-                    Text(stringResource(R.string.refresh))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth(0.7f)
+            ) {
+                Image(
+                    imageVector = NothingFound,
+                    contentDescription = null
+                )
+                Text(
+                    text = stringResource(R.string.no_media_found),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Row {
+                    Button(onClick = { onRefresh() }) {
+                        Text(stringResource(R.string.refresh))
+                    }
                 }
             }
         }
