@@ -21,12 +21,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import nikmax.mtree.core.ui.theme.GalleryTheme
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import nikmax.mtree.gallery.dialogs.R
 
 
 @Composable
 fun DeletionDialog(
-    items: List<nikmax.mtree.gallery.core.ui.MediaItemUI>,
+    items: List<MediaItemUI>,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -74,7 +75,7 @@ fun DeletionDialog(
 @Preview
 @Composable
 private fun DeletionDialogPreview() {
-    val item = nikmax.mtree.gallery.core.ui.MediaItemUI.File(
+    val item = MediaItemUI.File(
         path = "test/image.png",
         size = 0,
         creationDate = 0,

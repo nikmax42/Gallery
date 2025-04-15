@@ -25,7 +25,8 @@ class MediastoreDsImpl(private val context: Context) : MediastoreDs {
             MediaStore.MediaColumns.DATE_MODIFIED,
             MediaStore.MediaColumns.VOLUME_NAME,
             MediaStore.MediaColumns.SIZE,
-            MediaStore.MediaColumns.DURATION
+            MediaStore.MediaColumns.DURATION,
+            MediaStore.MediaColumns.MIME_TYPE
         )
         val selection = "${MediaStore.Files.FileColumns.MIME_TYPE} LIKE 'image/%'" +
                 " OR ${MediaStore.Files.FileColumns.MIME_TYPE} LIKE 'video/%'"
@@ -68,6 +69,9 @@ class MediastoreDsImpl(private val context: Context) : MediastoreDs {
         val duration = cursor.getLong(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DURATION)
         )
+        val mimeType = cursor.getString(
+            cursor.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE)
+        )
         val volumeName = cursor.getString(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.VOLUME_NAME)
         )
@@ -76,8 +80,10 @@ class MediastoreDsImpl(private val context: Context) : MediastoreDs {
             uri = contentUri.toString(),
             size = size,
             duration = duration,
-            dateCreated = dateAdded,
-            dateModified = dateModified,
+            creationDate = dateAdded,
+            modificationDate = dateModified,
+            thumbnail = data,
+            mimeType = mimeType
         )
     }
 }

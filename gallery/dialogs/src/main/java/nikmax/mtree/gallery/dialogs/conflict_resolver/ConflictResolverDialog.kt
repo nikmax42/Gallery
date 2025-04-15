@@ -40,6 +40,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import nikmax.mtree.core.ui.theme.GalleryTheme
 import nikmax.mtree.gallery.core.data.media.ConflictResolution
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import nikmax.mtree.gallery.dialogs.R
 import kotlin.io.path.Path
 import kotlin.io.path.name
@@ -48,7 +49,7 @@ import kotlin.io.path.pathString
 
 @Composable
 fun ConflictResolverDialog(
-    conflictItem: nikmax.mtree.gallery.core.ui.MediaItemUI,
+    conflictItem: MediaItemUI,
     onResolve: (resolution: ConflictResolution, applyToAll: Boolean) -> Unit,
     onDismiss: () -> Unit,
     conflictsCount: Int = 1

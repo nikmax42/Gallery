@@ -33,8 +33,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import nikmax.mtree.core.ui.theme.GalleryTheme
-import nikmax.mtree.gallery.core.ui.MediaItemUI
 import nikmax.mtree.gallery.core.ui.components.grid.ItemsGrid
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import nikmax.mtree.gallery.dialogs.R
 
 

@@ -40,7 +40,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import nikmax.mtree.core.ui.theme.GalleryTheme
 import nikmax.mtree.gallery.core.data.media.FileOperation
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import nikmax.mtree.gallery.core.utils.SharingUtils
 import nikmax.mtree.gallery.dialogs.Dialog
 import nikmax.mtree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog

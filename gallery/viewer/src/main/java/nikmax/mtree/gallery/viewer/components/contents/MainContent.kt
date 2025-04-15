@@ -47,7 +47,7 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import nikmax.mtree.gallery.viewer.components.FramePreview
 import nikmax.mtree.gallery.viewer.components.Image
 import nikmax.mtree.gallery.viewer.components.PlayPauseButton

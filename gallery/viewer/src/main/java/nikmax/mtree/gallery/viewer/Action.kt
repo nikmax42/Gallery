@@ -1,6 +1,6 @@
 package nikmax.mtree.gallery.viewer
 
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 
 internal sealed interface Action {
     data class Launch(val filePath: String) : Action

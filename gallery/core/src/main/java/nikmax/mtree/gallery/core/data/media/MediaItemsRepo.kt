@@ -95,8 +95,9 @@ internal class MediaItemsRepoImpl(
         placeOnTop: MediaItemsRepo.PlaceOnTop
     ): Flow<Resource<List<MediaItemData>>> {
         return combine(_albumsFlow, _loadingFlow) { albums, loading ->
+            TODO("remove after usecase completion")
             //search mode
-            val itemsList = if (searchQuery != null) {
+            /* val itemsList = if (searchQuery != null) {
                 albums.getPlainSearchResult(
                     query = searchQuery,
                     baseDirectory = path
@@ -129,7 +130,7 @@ internal class MediaItemsRepoImpl(
             when (loading) {
                 true -> Resource.Loading(itemsList)
                 false -> Resource.Success(itemsList)
-            }
+            } */
         }
     }
     
@@ -249,7 +250,10 @@ internal class MediaItemsRepoImpl(
                     parentDirectories.forEach { albumPath ->
                         albums.put(
                             albumPath,
-                            MediaItemData.Album(path = albumPath)
+                            MediaItemData.Album(
+                                path = albumPath,
+                                files = emptyList()
+                            )
                         )
                     }
                 }
@@ -269,8 +273,8 @@ internal class MediaItemsRepoImpl(
                 val nestedAlbumsCount = albums.values.count { it.path.startsWith(album.path) && it.path != album.path }
                 val hiddenCount = (albumOwnFiles + albumDeepFiles).count { it.isHidden }
                 val unhiddenCount = (albumOwnFiles + albumDeepFiles).count { !it.isHidden }
-                val creationDate = (albumOwnFiles + albumDeepFiles).minOfOrNull { it.dateCreated } ?: 0
-                val modificationDate = (albumOwnFiles + albumDeepFiles).maxOfOrNull { it.dateModified } ?: 0
+                val creationDate = (albumOwnFiles + albumDeepFiles).minOfOrNull { it.creationDate } ?: 0
+                val modificationDate = (albumOwnFiles + albumDeepFiles).maxOfOrNull { it.modificationDate } ?: 0
                 val thumbnail = albumOwnFiles.firstOrNull()?.path
                 //hidden children excluded from thumbnail calculation for "safety reasons"
                     ?: albumDeepFiles.filterNot { it.isHidden }.firstOrNull()?.path
@@ -281,16 +285,16 @@ internal class MediaItemsRepoImpl(
                     MediaItemData.Album(
                         path = album.path,
                         files = albumOwnFiles,
-                        size = albumSize,
+                        /* size = albumSize,
                         imagesCount = imagesCount,
                         videosCount = videosCount,
                         gifsCount = gifsCount,
                         hiddenCount = hiddenCount,
                         unhiddenCount = unhiddenCount,
-                        dateCreated = creationDate,
-                        dateModified = modificationDate,
-                        nestedDirectoriesCount = nestedAlbumsCount,
-                        thumbnail = thumbnail
+                        creationDate = creationDate,
+                        modificationDate = modificationDate,
+                        nestedAlbumsCount = nestedAlbumsCount,
+                        thumbnail = thumbnail */
                     )
                 )
             }
@@ -298,7 +302,7 @@ internal class MediaItemsRepoImpl(
         }
         
         
-        @VisibleForTesting
+        /* @VisibleForTesting
         internal fun List<MediaItemData>.applyMediaTypeFilters(
             includeImages: Boolean,
             includeVideos: Boolean,
@@ -390,8 +394,8 @@ internal class MediaItemsRepoImpl(
             filesFirst: Boolean
         ): List<MediaItemData> {
             return when (order) {
-                SortOrder.CREATION_DATE -> this.sortedBy { it.dateCreated }
-                SortOrder.MODIFICATION_DATE -> this.sortedBy { it.dateModified }
+                SortOrder.CREATION_DATE -> this.sortedBy { it.creationDate }
+                SortOrder.MODIFICATION_DATE -> this.sortedBy { it.modificationDate }
                 SortOrder.NAME -> this.sortedBy { it.name }
                 SortOrder.SIZE -> this.sortedBy { it.size }
                 SortOrder.EXTENSION -> this.sortByExtension()
@@ -417,5 +421,6 @@ internal class MediaItemsRepoImpl(
         private fun List<MediaItemData>.placeFilesFirst(): List<MediaItemData> {
             return filterIsInstance<MediaItemData.File>() + filterIsInstance<MediaItemData.Album>()
         }
+        */
     }
 }

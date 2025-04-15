@@ -1,7 +1,7 @@
 package nikmax.mtree.gallery.dialogs
 
 import nikmax.mtree.gallery.core.data.media.ConflictResolution
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 
 sealed interface Dialog {
     data object None : Dialog

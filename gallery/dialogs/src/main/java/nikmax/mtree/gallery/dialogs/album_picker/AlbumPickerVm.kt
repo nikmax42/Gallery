@@ -22,7 +22,7 @@ import nikmax.mtree.gallery.core.data.preferences.GalleryPreferences
 import nikmax.mtree.gallery.core.data.preferences.GalleryPreferences.GalleryMode
 import nikmax.mtree.gallery.core.data.preferences.GalleryPreferencesRepo
 import nikmax.mtree.gallery.core.mappers.MediaItemMapper.mapToUi
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import javax.inject.Inject
 
 @HiltViewModel

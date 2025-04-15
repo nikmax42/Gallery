@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import nikmax.mtree.gallery.core.utils.MeasurementUnitsUtils.sizeToString
 import nikmax.mtree.gallery.explorer.R
 
@@ -39,7 +39,7 @@ fun SelectionTopBar(
     modifier: Modifier = Modifier
 ) {
     val selectedAlbums = selectedItems.filterIsInstance<MediaItemUI.Album>()
-    val affectedAlbumsCount = selectedAlbums.size + selectedAlbums.sumOf { it.nestedAlbumsCount }
+    val affectedAlbumsCount = selectedAlbums.size + selectedAlbums.sumOf { it.albumsCount }
     // including files in selected albums
     val affectedFilesCount = selectedItems.count { it is MediaItemUI.File } +
             selectedItems.filterIsInstance<MediaItemUI.Album>().sumOf { it.filesCount }

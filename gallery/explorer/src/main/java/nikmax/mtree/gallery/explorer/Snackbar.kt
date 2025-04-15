@@ -1,7 +1,7 @@
 package nikmax.mtree.gallery.explorer
 
 import nikmax.mtree.gallery.core.data.media.FileOperation
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 
 internal sealed interface SnackBar {
     data class ProtectedItems(

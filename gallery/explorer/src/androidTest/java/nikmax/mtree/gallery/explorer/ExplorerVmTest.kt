@@ -8,7 +8,7 @@ import nikmax.mtree.core.data.Resource
 import nikmax.mtree.gallery.core.data.media.MediaItemsRepo
 import nikmax.mtree.gallery.core.data.preferences.GalleryPreferencesRepo
 import nikmax.mtree.gallery.core.mappers.MediaItemMapper.mapToUi
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import org.junit.Before
 import org.junit.Test
 

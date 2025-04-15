@@ -1,6 +1,6 @@
 package nikmax.mtree.gallery.dialogs.album_picker
 
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 
 internal data class UiState(
     val items: List<MediaItemUI> = listOf(),

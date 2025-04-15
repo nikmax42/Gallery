@@ -8,8 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import nikmax.mtree.core.ui.theme.GalleryTheme
-import nikmax.mtree.gallery.core.ui.MediaItemUI
 import nikmax.mtree.gallery.core.ui.components.grid.ItemsGrid
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import nikmax.mtree.gallery.explorer.Action
 import nikmax.mtree.gallery.explorer.UiState
 

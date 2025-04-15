@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.toIntRect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import nikmax.mtree.core.ui.theme.GalleryTheme
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 
 /**
  * [LazyVerticalGrid] of [MediaItemUI] with drag-selection gesture support
@@ -113,7 +113,7 @@ fun ItemsGrid(
                 val albumFilesCount = if (item is MediaItemUI.Album) item.filesCount else 0
                 val isPlacedOnPluggableVolume = item.belongsToVolume == MediaItemUI.Volume.PLUGGABLE
                 val isSelected = selectedItems.contains(item)
-                val nestedAlbumsCount = if (item is MediaItemUI.Album) item.nestedAlbumsCount else 0
+                val nestedAlbumsCount = if (item is MediaItemUI.Album) item.albumsCount else 0
                 
                 GridItem(
                     image = image,
@@ -160,41 +160,16 @@ fun ItemsGrid(
 @Composable
 private fun ItemsGridPreview() {
     val image = remember {
-        MediaItemUI.File(
-            path = "",
-            name = "image.png",
-            creationDate = 0,
-            modificationDate = 0,
-            size = 0,
-        )
+        MediaItemUI.File.emptyFromPath("image.png")
     }
     val video = remember {
-        MediaItemUI.File(
-            path = "",
-            name = "video.mp4",
-            creationDate = 0,
-            modificationDate = 0,
-            size = 0,
-        )
+        MediaItemUI.File.emptyFromPath("video.mp4")
     }
     val gif = remember {
-        MediaItemUI.File(
-            path = "",
-            name = "gif.gif",
-            creationDate = 0,
-            modificationDate = 0,
-            size = 0,
-        )
+        MediaItemUI.File.emptyFromPath("gif.gif")
     }
     val album = remember {
-        MediaItemUI.Album(
-            path = "",
-            name = "album",
-            creationDate = 0,
-            modificationDate = 0,
-            size = 0,
-            filesCount = 3
-        )
+        MediaItemUI.Album.emptyFromPath("album")
     }
     val items = remember { mutableStateListOf(image, video, gif, album) }
     val selectedItems1 = remember { mutableStateListOf<MediaItemUI>() }

@@ -2,7 +2,7 @@ package nikmax.mtree.gallery.core.utils
 
 import android.content.Context
 import android.content.Intent
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 
 object SharingUtils {
     fun shareSingleFile(file: MediaItemUI.File, context: Context) {

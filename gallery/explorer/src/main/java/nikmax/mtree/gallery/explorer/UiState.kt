@@ -1,6 +1,6 @@
 package nikmax.mtree.gallery.explorer
 
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import nikmax.mtree.gallery.dialogs.Dialog
 
 internal data class UiState(

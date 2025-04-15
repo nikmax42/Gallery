@@ -15,7 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import nikmax.mtree.core.ui.theme.GalleryTheme
-import nikmax.mtree.gallery.core.ui.MediaItemUI
+import nikmax.mtree.gallery.core.ui.models.MediaItemUI
 import nikmax.mtree.gallery.core.utils.SharingUtils
 import nikmax.mtree.gallery.dialogs.Dialog
 import nikmax.mtree.gallery.dialogs.album_picker.AlbumPickerFullScreenDialog
