@@ -28,6 +28,8 @@ timber = "5.0.1"
 turbineVersion = "1.0.0"
 workRuntimeKtx = "2.10.0"
 coreKtxVersion = "1.6.1"
+appcompat = "1.7.0"
+material = "1.12.0"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityKtx" }
@@ -76,6 +78,8 @@ seeker = { module = "io.github.2307vivek:seeker", version.ref = "seeker" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "coreKtxVersion" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

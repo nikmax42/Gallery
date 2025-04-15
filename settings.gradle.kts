@@ -22,8 +22,8 @@ dependencyResolutionManagement {
 rootProject.name = "Gallery"
 include(":app")
 include(":core")
-include(":gallery")
-include(":gallery:explorer")
-include(":gallery:viewer")
-include(":gallery:core")
-include(":gallery:dialogs")
+include(":permission_request")
+include(":explorer")
+include(":viewer")
+include(":dialogs")
+include(":preferences_sheet")

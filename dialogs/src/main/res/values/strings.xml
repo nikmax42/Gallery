@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="pick_destination">Pick destination</string>
+    <string name="directory_is_not_writable">This directory is not writable</string>
+    <string name="pick_destination_first">Pick destination album first</string>
+
+    <string name="file_already_exists">File already exists</string>
+    <string name="filename_conflict">Filename conflict</string>
+    <string name="apply_to_all">Apply to all</string>
+    <string name="keep_both">Keep both</string>
+    <string name="skip">Skip</string>
+    <string name="overwrite">Overwrite</string>
+
+    <string name="delete">Delete</string>
+    <string name="delete_x_items">Delete %1$d items</string>
+
+    <string name="rename">Rename</string>
+    <string name="new_name">New name</string>
+    <string name="invalid_filename">Invalid name</string>
+    <string name="extension">Extension</string>
+    <string name="new_extension">New extension</string>
+    <string name="invalid_extension">Invalid extension</string>
+</resources>

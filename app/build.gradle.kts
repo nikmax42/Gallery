@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "nikmax.mtree"
+    namespace = "mtree.app"
     compileSdk = 35
     
     defaultConfig {
@@ -58,7 +58,8 @@ android {
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":gallery"))
+    implementation(project(":explorer"))
+    implementation(project(":viewer"))
     
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.work.runtime.ktx)
@@ -91,7 +92,6 @@ dependencies {
     // Dagger Hilt
     implementation(libs.hilt.android)
     implementation(libs.com.google.dagger.hilt.android.gradle.plugin)
-    // implementation(libs.androidx.hilt.work)
     ksp(libs.hilt.android.compiler)
     ksp(libs.hilt.compiler)
     // Activity KTX for viewModels()

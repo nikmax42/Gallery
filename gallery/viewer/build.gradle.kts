@@ -35,8 +35,6 @@ android {
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":gallery:dialogs"))
-    implementation(project(":gallery:core"))
     
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.core.ktx)

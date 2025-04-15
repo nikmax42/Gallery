@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "nikmax.mtree.core"
+    namespace = "mtree.core"
     compileSdk = 35
     
     defaultConfig {
@@ -75,4 +75,13 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     // Datastore
     implementation(libs.androidx.datastore.preferences)
+    //Timber
+    implementation(libs.timber)
+    //Work manager
+    implementation(libs.androidx.work.runtime.ktx)
+    //Coil
+    implementation(libs.coil.kt.coil.compose)
+    implementation(libs.coil.video)
+    //Icons
+    implementation(libs.material.icons.extended)
 }
