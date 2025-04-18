@@ -18,7 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mtree.core.ui.theme.GalleryTheme
-import mtree.permission_request.illustration.StorageIllustration
+import mtree.permission_request.illustration.StoragePermissionIllustration
 
 @Composable
 fun PermissionNotGrantedContent(
@@ -36,7 +36,7 @@ fun PermissionNotGrantedContent(
                 modifier = Modifier.fillMaxWidth(0.7F)
             ) {
                 Image(
-                    imageVector = StorageIllustration,
+                    imageVector = StoragePermissionIllustration,
                     contentDescription = null
                 )
                 Text(
