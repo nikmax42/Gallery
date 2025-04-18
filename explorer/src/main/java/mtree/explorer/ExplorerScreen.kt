@@ -42,7 +42,7 @@ import mtree.dialogs.renaming.RenamerDialog
 import mtree.explorer.components.bottom_bars.SelectionBottomBar
 import mtree.explorer.components.main_contents.InitializationContent
 import mtree.explorer.components.main_contents.MainContent
-import mtree.explorer.components.main_contents.NothingFoundContent
+import mtree.explorer.components.main_contents.NothingToShowContent
 import mtree.explorer.components.top_bars.SearchTopBar
 import mtree.explorer.components.top_bars.SelectionTopBar
 import mtree.preferences_sheet.GalleryPreferencesSheet
@@ -204,8 +204,9 @@ private fun ExplorerScreenContent(
                             )
                             .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
                     )
-                    Content.NothingToDisplay -> NothingFoundContent(
-                        onRefresh = { onAction(Action.Refresh) },
+                    Content.NothingToDisplay -> NothingToShowContent(
+                        onRescan = { onAction(Action.Refresh) },
+                        onReset = { onAction(Action.ResetFiltersAndSearch) },
                         modifier = Modifier.padding(
                             top = paddings.calculateTopPadding(),
                             bottom = paddings.calculateBottomPadding(),

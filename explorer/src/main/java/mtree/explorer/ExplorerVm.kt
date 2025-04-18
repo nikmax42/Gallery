@@ -44,20 +44,29 @@ class ExplorerVm
 ) : ViewModel() {
     
     private val _albumPath = MutableStateFlow<String?>(null)
-    private val _searchQuery = MutableStateFlow<String?>(null)
+    
     private val _galleryAlbums = galleryAlbumsRepo
         .getMediaAlbumsFlow()
         .stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(),
+            SharingStarted.Lazily,
             Resource.Loading(emptyList())
         )
+    private val _preferences = MtreePreferencesUtils
+        .getPreferencesFlow(context)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Lazily,
+            MtreePreferences.default()
+        )
+    
+    private val _searchQuery = MutableStateFlow<String?>(null)
     private val _selectedItems = MutableStateFlow(emptyList<MediaItemUI>())
     private val _dialog = MutableStateFlow<Dialog>(Dialog.None)
     
     val uiState = combine(
         _galleryAlbums,
-        MtreePreferencesUtils.getPreferencesFlow(context),
+        _preferences,
         _albumPath,
         _searchQuery,
         _dialog,
@@ -153,6 +162,7 @@ class ExplorerVm
             when (action) {
                 is Action.Launch -> onLaunch(action.albumPath, action.searchQuery)
                 Action.Refresh -> onRefresh()
+                Action.ResetFiltersAndSearch -> onFiltersReset()
                 is Action.SearchQueryChange -> onSearchQueryChange(action.newQuery)
                 is Action.ItemsSelectionChange -> onSelectionChange(action.newSelection)
                 is Action.ItemsCopy -> onCopyOrMove(action.itemsToCopy)
@@ -175,6 +185,20 @@ class ExplorerVm
     
     private suspend fun onRefresh() {
         galleryAlbumsRepo.rescan()
+    }
+    
+    private suspend fun onFiltersReset() {
+        _preferences.value.copy(
+            showImages = true,
+            showVideos = true,
+            showGifs = true,
+            showFiles = true,
+            showAlbums = true,
+            showUnHidden = true,
+            showHidden = false
+        ).let {
+            MtreePreferencesUtils.savePreferences(it, context)
+        }
     }
     
     private fun onSearchQueryChange(newQuery: String?) {

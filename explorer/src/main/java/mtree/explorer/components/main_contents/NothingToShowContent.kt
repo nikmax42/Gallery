@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -26,33 +27,41 @@ import mtree.explorer.components.drawables.NothingFound
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun NothingFoundContent(
-    onRefresh: () -> Unit,
+internal fun NothingToShowContent(
+    onRescan: () -> Unit,
+    onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(Modifier.fillMaxSize()) {
         PullToRefreshBox(
             isRefreshing = false,
-            onRefresh = { onRefresh() },
+            onRefresh = { onRescan() },
             contentAlignment = Alignment.Center,
             modifier = modifier.fillMaxSize()
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth(0.7f)
+                modifier = Modifier.fillMaxWidth(0.75f)
             ) {
                 Image(
                     imageVector = NothingFound,
                     contentDescription = null
                 )
                 Text(
-                    text = stringResource(R.string.no_media_found),
+                    text = stringResource(R.string.nothing_to_show),
                     style = MaterialTheme.typography.bodyLarge
                 )
-                Row {
-                    Button(onClick = { onRefresh() }) {
-                        Text(stringResource(R.string.refresh))
+                Text(
+                    text = stringResource(R.string.nothing_to_show_explanation),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { onReset() }) {
+                        Text(stringResource(R.string.reset_filters))
+                    }
+                    Button(onClick = { onRescan() }) {
+                        Text(stringResource(R.string.rescan_gallery))
                     }
                 }
             }
@@ -65,8 +74,9 @@ internal fun NothingFoundContent(
 @Composable
 private fun NoMediaFoundContentPreview() {
     GalleryTheme {
-        NothingFoundContent(
-            onRefresh = { },
+        NothingToShowContent(
+            onRescan = { },
+            onReset = {},
             modifier = Modifier.padding(16.dp)
         )
     }
