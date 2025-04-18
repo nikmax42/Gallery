@@ -1,4 +1,4 @@
-package mtree.explorer.components.drawables
+package mtree.explorer.components.illustrations
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image

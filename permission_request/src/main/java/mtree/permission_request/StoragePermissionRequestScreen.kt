@@ -40,7 +40,7 @@ fun StoragePermissionRequestScreen(
                     imageVector = StoragePermissionIllustration,
                     contentDescription = null,
                     contentScale = ContentScale.FillWidth,
-                    modifier = Modifier.fillMaxWidth(0.7F)
+                    modifier = Modifier.fillMaxWidth(0.7f)
                 )
                 Text(
                     text = stringResource(R.string.storage_not_granted),

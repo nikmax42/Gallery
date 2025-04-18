@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -20,13 +19,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mtree.core.ui.theme.GalleryTheme
 import mtree.explorer.R
-import mtree.explorer.components.drawables.NothingFound
+import mtree.explorer.components.illustrations.NothingFound
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,11 +46,13 @@ internal fun NothingToShowContent(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth(0.75f)
+                modifier = Modifier.fillMaxWidth(0.7f)
             ) {
                 Image(
                     imageVector = NothingFound,
-                    contentDescription = null
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxWidth(0.7f)
                 )
                 Text(
                     text = stringResource(R.string.nothing_to_show),
@@ -91,7 +93,6 @@ private fun NoMediaFoundContentPreview() {
             onRescan = { },
             onReset = {},
             snackbarHostState = SnackbarHostState(),
-            modifier = Modifier.padding(16.dp)
         )
     }
 }
