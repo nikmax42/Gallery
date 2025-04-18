@@ -12,15 +12,18 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import mtree.core.ui.theme.GalleryTheme
 import mtree.explorer.R
 import mtree.explorer.components.drawables.NothingFound
@@ -30,6 +33,7 @@ import mtree.explorer.components.drawables.NothingFound
 internal fun NothingToShowContent(
     onRescan: () -> Unit,
     onReset: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
     Surface(Modifier.fillMaxSize()) {
@@ -57,7 +61,16 @@ internal fun NothingToShowContent(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { onReset() }) {
+                    val scope = rememberCoroutineScope()
+                    val strFiltersReset = stringResource(R.string.filters_reset)
+                    OutlinedButton(
+                        onClick = {
+                            scope.launch {
+                                snackbarHostState.showSnackbar(strFiltersReset)
+                            }
+                            onReset()
+                        }
+                    ) {
                         Text(stringResource(R.string.reset_filters))
                     }
                     Button(onClick = { onRescan() }) {
@@ -77,6 +90,7 @@ private fun NoMediaFoundContentPreview() {
         NothingToShowContent(
             onRescan = { },
             onReset = {},
+            snackbarHostState = SnackbarHostState(),
             modifier = Modifier.padding(16.dp)
         )
     }

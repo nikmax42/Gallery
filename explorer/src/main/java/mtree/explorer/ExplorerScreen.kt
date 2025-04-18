@@ -191,6 +191,7 @@ private fun ExplorerScreenContent(
                     Content.NothingToDisplay -> NothingToShowContent(
                         onRescan = { onAction(Action.Refresh) },
                         onReset = { onAction(Action.ResetFiltersAndSearch) },
+                        snackbarHostState = snackbarHostState,
                         modifier = Modifier.padding(
                             top = paddings.calculateTopPadding(),
                             bottom = paddings.calculateBottomPadding(),
