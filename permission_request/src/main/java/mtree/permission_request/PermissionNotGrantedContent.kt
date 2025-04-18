@@ -17,11 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import nikmax.mtree.core.ui.theme.GalleryTheme
-import nikmax.mtree.gallery.explorer.components.drawables.StoragePermissionNotGranted
+import mtree.core.ui.theme.GalleryTheme
+import mtree.permission_request.illustration.StorageIllustration
 
 @Composable
-internal fun PermissionNotGrantedContent(
+fun PermissionNotGrantedContent(
     onGrantClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -36,7 +36,7 @@ internal fun PermissionNotGrantedContent(
                 modifier = Modifier.fillMaxWidth(0.7F)
             ) {
                 Image(
-                    imageVector = StoragePermissionNotGranted,
+                    imageVector = StorageIllustration,
                     contentDescription = null
                 )
                 Text(
@@ -44,7 +44,7 @@ internal fun PermissionNotGrantedContent(
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = stringResource(R.string.storage_permission_explanation),
+                    text = stringResource(R.string.storage_not_granted_explanation),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Button(onClick = { onGrantClick() }) {

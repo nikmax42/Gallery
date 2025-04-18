@@ -1,4 +1,4 @@
-package mtree.explorer.components.drawables
+package mtree.permission_request.illustration
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
@@ -18,7 +18,7 @@ import mtree.core.ui.theme.GalleryTheme
 * Based on illustration from https://undraw.co/
 *  */
 
-val StoragePermissionNotGranted: ImageVector
+val StorageIllustration: ImageVector
     @Composable
     @ReadOnlyComposable
     get() {
@@ -428,7 +428,7 @@ private var _UndrawLockedImageFolder: ImageVector? = null
 private fun Preview() {
     GalleryTheme {
         Surface {
-            Image(StoragePermissionNotGranted, null)
+            Image(StorageIllustration, null)
         }
     }
 }
