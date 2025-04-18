@@ -14,14 +14,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mtree.core.ui.theme.GalleryTheme
-import mtree.permission_request.illustration.StorageIllustration
+import mtree.permission_request.illustration.StoragePermissionIllustration
 
 @Composable
-fun PermissionNotGrantedContent(
+fun StoragePermissionRequestScreen(
     onGrantClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -36,8 +37,10 @@ fun PermissionNotGrantedContent(
                 modifier = Modifier.fillMaxWidth(0.7F)
             ) {
                 Image(
-                    imageVector = StorageIllustration,
-                    contentDescription = null
+                    imageVector = StoragePermissionIllustration,
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxWidth(0.7F)
                 )
                 Text(
                     text = stringResource(R.string.storage_not_granted),
@@ -60,7 +63,7 @@ fun PermissionNotGrantedContent(
 @Composable
 private fun PermissionNotGrantedContentPreview() {
     GalleryTheme {
-        PermissionNotGrantedContent(
+        StoragePermissionRequestScreen(
             onGrantClick = {}
         )
     }

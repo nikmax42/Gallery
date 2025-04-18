@@ -60,6 +60,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":explorer"))
     implementation(project(":viewer"))
+    implementation(project(":permission_request"))
     
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.work.runtime.ktx)
