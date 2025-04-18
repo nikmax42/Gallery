@@ -5,11 +5,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,7 +18,6 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,13 +36,12 @@ import mtree.explorer.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SearchTopBar(
+    albumName: String?,
     searchQuery: String?,
     onQueryChange: (String?) -> Unit,
-    onSearch: (query: String) -> Unit,
-    actions: @Composable (() -> Unit) = {},
-    albumName: String? = null,
-    scrollBehavior: TopAppBarScrollBehavior? = null,
-    focusManager: FocusManager = LocalFocusManager.current
+    onFilterButtonClick: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior?,
+    focusManager: FocusManager
 ) {
     fun cancelSearch() {
         focusManager.clearFocus()
@@ -53,21 +49,20 @@ internal fun SearchTopBar(
     }
     
     TopAppBar(
-        navigationIcon = {
+        title = {
             Surface(
                 shape = RoundedCornerShape(100F),
                 color = SearchBarDefaults.colors().containerColor,
                 modifier = Modifier
-                    .fillMaxWidth()
                     .padding( // to compensate hardcoded inner paddings
-                        start = 4.dp,
+                        start = 0.dp,
                         end = 8.dp
                     )
             ) {
                 SearchBarDefaults.InputField(
                     query = searchQuery ?: "",
                     onQueryChange = { onQueryChange(it) },
-                    onSearch = { onSearch(it) },
+                    onSearch = { },
                     expanded = false,
                     onExpandedChange = { },
                     placeholder = {
@@ -87,13 +82,6 @@ internal fun SearchTopBar(
                     },
                     trailingIcon = {
                         AnimatedVisibility(
-                            visible = searchQuery == null,
-                            enter = fadeIn() + slideInHorizontally { it },
-                            exit = fadeOut() + slideOutHorizontally { it }
-                        ) {
-                            actions()
-                        }
-                        AnimatedVisibility(
                             visible = searchQuery != null,
                             enter = fadeIn() + slideInHorizontally { it },
                             exit = fadeOut() + slideOutHorizontally { it }
@@ -109,10 +97,14 @@ internal fun SearchTopBar(
                 )
             }
         },
-        title = { /* has inner hardcoded paddings incompatible with searchbar */ },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors().copy(
-            containerColor = Color.Transparent
-        ),
+        actions = {
+            IconButton(onClick = { onFilterButtonClick() }) {
+                Icon(
+                    Icons.AutoMirrored.Filled.Sort,
+                    stringResource(R.string.gallery_preferences)
+                )
+            }
+        },
         scrollBehavior = scrollBehavior
     )
 }
@@ -126,20 +118,9 @@ private fun SearchbarPreview() {
     SearchTopBar(
         searchQuery = query,
         onQueryChange = { query = it },
-        onSearch = {},
+        onFilterButtonClick = {},
         albumName = "Album",
-        actions = {
-            AnimatedVisibility(
-                visible = !query.isNullOrBlank(),
-                enter = slideInHorizontally { it } + fadeIn(),
-                exit = slideOutHorizontally { it } + fadeOut()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Clear,
-                    contentDescription = "",
-                    modifier = Modifier.clickable { query = "" }
-                )
-            }
-        }
+        focusManager = LocalFocusManager.current,
+        scrollBehavior = null
     )
 }

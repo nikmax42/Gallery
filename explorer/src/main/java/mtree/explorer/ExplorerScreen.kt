@@ -8,13 +8,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -30,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import mtree.core.ui.models.MediaItemUI
@@ -133,18 +127,8 @@ private fun ExplorerScreenContent(
                     false -> SearchTopBar(
                         searchQuery = state.searchQuery,
                         onQueryChange = { onAction(Action.SearchQueryChange(it)) },
-                        onSearch = { /* search performs on query change */ },
+                        onFilterButtonClick = { showAppearanceSheet = !showAppearanceSheet },
                         albumName = state.albumPath?.substringAfterLast('/'),
-                        actions = {
-                            Row {
-                                IconButton(onClick = { showAppearanceSheet = !showAppearanceSheet }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.Sort,
-                                        stringResource(R.string.gallery_preferences)
-                                    )
-                                }
-                            }
-                        },
                         scrollBehavior = topBarScrollBehavior,
                         focusManager = focusManager
                     )
