@@ -27,7 +27,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import mtree.core.ui.models.MediaItemUI
 import mtree.core.ui.theme.GalleryTheme
-import mtree.core.utils.RenamingUtils
 import mtree.dialogs.R
 
 

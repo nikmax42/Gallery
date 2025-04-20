@@ -1,6 +1,6 @@
-package mtree.core.utils
+package mtree.dialogs.renaming
 
-object RenamingUtils {
+internal object RenamingUtils {
     
     /**
      * Checks if file name is valid.

@@ -1,11 +1,11 @@
-package mtree.core.utils
+package mtree.core.workers
 
 import androidx.annotation.VisibleForTesting
 import mtree.core.domain.models.ConflictResolutionDomain
-import mtree.core.utils.FilesystemUtils.copy
-import mtree.core.utils.FilesystemUtils.delete
-import mtree.core.utils.FilesystemUtils.move
-import mtree.core.utils.FilesystemUtils.rename
+import mtree.core.workers.FilesystemUtils.copy
+import mtree.core.workers.FilesystemUtils.delete
+import mtree.core.workers.FilesystemUtils.move
+import mtree.core.workers.FilesystemUtils.rename
 import java.io.File
 import java.nio.file.FileAlreadyExistsException
 import kotlin.io.path.Path
@@ -20,7 +20,7 @@ import kotlin.io.path.pathString
  *
  * Provides functions for [copy], [move], [delete], and [rename] files.
  */
-object FilesystemUtils {
+internal object FilesystemUtils {
     
     fun checkExistence(filePath: String): Boolean {
         return Path(filePath).exists()

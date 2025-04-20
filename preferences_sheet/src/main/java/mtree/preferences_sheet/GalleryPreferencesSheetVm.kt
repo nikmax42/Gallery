@@ -1,26 +1,24 @@
 package mtree.preferences_sheet
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mtree.core.preferences.MtreePreferences
-import mtree.core.preferences.MtreePreferencesUtils
+import mtree.core.preferences.MtreePreferencesRepo
 import javax.inject.Inject
 
 @HiltViewModel
 class GalleryPreferencesSheetVm
 @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val prefsRepo: MtreePreferencesRepo
 ) : ViewModel() {
     
-    private val _preferences = MtreePreferencesUtils
-        .getPreferencesFlow(context)
+    private val _preferences = prefsRepo
+        .getPreferencesFlow()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Lazily,
@@ -103,9 +101,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             galleryMode = newMode
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -118,9 +115,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             theme = newTheme
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -132,9 +128,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             dynamicColors = newColors
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -142,9 +137,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             portraitGridColumns = portrait
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -152,9 +146,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             landscapeGridColumns = landscape
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -167,9 +160,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             placeOnTop = newOnTop
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -185,9 +177,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             sortOrder = newSortOrder
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -195,9 +186,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             descendSortOrder = descendSorting
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -205,9 +195,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             showImages = includeImages
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -215,9 +204,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             showVideos = includeVideos
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -225,9 +213,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             showGifs = includeGifs
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -235,9 +222,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             showHidden = includeHidden
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -245,9 +231,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             showUnHidden = includeUnHidden
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -255,9 +240,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             showFiles = includeFiles
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
     
@@ -265,9 +249,8 @@ class GalleryPreferencesSheetVm
         val newPrefs = _preferences.value.copy(
             showAlbums = includeAlbums
         )
-        MtreePreferencesUtils.savePreferences(
+        prefsRepo.savePreferences(
             preferences = newPrefs,
-            context = context
         )
     }
 }

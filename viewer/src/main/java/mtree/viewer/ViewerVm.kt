@@ -1,10 +1,9 @@
 package mtree.viewer
 
-import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -14,15 +13,16 @@ import kotlinx.coroutines.launch
 import mtree.core.data.MediaItemData
 import mtree.core.data.MediaItemsRepo
 import mtree.core.data.Resource
-import mtree.core.domain.models.FileOperation
 import mtree.core.domain.models.Filters
 import mtree.core.domain.models.GalleryMode
 import mtree.core.domain.models.MediaItemDomain
 import mtree.core.domain.models.Sort
+import mtree.core.domain.usecases.CopyOrMoveItemsUc
 import mtree.core.domain.usecases.CreateItemsListToDisplayUc
-import mtree.core.domain.usecases.PerformFileOperationsUc
+import mtree.core.domain.usecases.DeleteItemsUc
+import mtree.core.domain.usecases.RenameItemsUc
 import mtree.core.preferences.MtreePreferences
-import mtree.core.preferences.MtreePreferencesUtils
+import mtree.core.preferences.MtreePreferencesRepo
 import mtree.core.ui.models.ConflictResolutionUi
 import mtree.core.ui.models.MediaItemUI
 import javax.inject.Inject
@@ -31,26 +31,29 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.io.path.Path
-import kotlin.io.path.exists
 import kotlin.io.path.pathString
 
 @HiltViewModel
 class ViewerVm
 @Inject constructor(
     galleryAlbumsRepo: MediaItemsRepo,
-    @ApplicationContext private val context: Context,
+    prefsRepo: MtreePreferencesRepo,
     private val createItemsListToDisplayUc: CreateItemsListToDisplayUc,
-    private val performFileOperationsUc: PerformFileOperationsUc
+    private val copyOrMoveItemsUc: CopyOrMoveItemsUc,
+    private val renameItemsUc: RenameItemsUc,
+    private val deleteItemsUc: DeleteItemsUc
 ) : ViewModel() {
     
-    private val _initialFilePath = MutableStateFlow<String?>(null)
-    private val _searchQuery = MutableStateFlow<String?>(null)
+    @VisibleForTesting
+    internal val _initialFilePath = MutableStateFlow<String?>(null)
+    @VisibleForTesting
+    internal val _searchQuery = MutableStateFlow<String?>(null)
     private val _controlsIsShownFlow = MutableStateFlow(true)
     private val _dialog = MutableStateFlow<Dialog>(Dialog.None)
     
     val uiState = combine(
         galleryAlbumsRepo.getMediaAlbumsFlow(),
-        MtreePreferencesUtils.getPreferencesFlow(context),
+        prefsRepo.getPreferencesFlow(),
         _initialFilePath,
         _controlsIsShownFlow,
         _dialog,
@@ -139,7 +142,7 @@ class ViewerVm
     fun onAction(action: Action) {
         viewModelScope.launch {
             when (action) {
-                is Action.Launch -> onLaunch(action.filePath)
+                is Action.Launch -> onLaunch(action.initialFilePath, action.searchQuery)
                 Action.SwitchControls -> onControlsVisibilityChange()
                 is Action.Copy -> onCopyOrMove(listOf(action.file))
                 is Action.Move -> onCopyOrMove(listOf(action.file), true)
@@ -150,8 +153,9 @@ class ViewerVm
     }
     
     
-    private fun onLaunch(filePath: String) {
-        _initialFilePath.update { filePath }
+    private fun onLaunch(initialFilePath: String, searchQuery: String? = null) {
+        _initialFilePath.update { initialFilePath }
+        _searchQuery.update { searchQuery }
     }
     
     private fun onControlsVisibilityChange() {
@@ -160,37 +164,24 @@ class ViewerVm
     
     private suspend fun onCopyOrMove(items: List<MediaItemUI>, move: Boolean = false) {
         try {
-            val destinationDirectory = awaitForDestinationPath()
-            var conflictResolutionForAll: ConflictResolutionUi? = null
-            val operations = items.map { item ->
-                val newPath = "$destinationDirectory/${item.name}"
-                //if target file already exists:
-                // if resolution with "apply to all" checkbox is not set yet - show dialog
-                // else use "applied to all" resolution
-                val conflictResolution = when (Path(newPath).exists()) {
-                    true -> when (conflictResolutionForAll == null) {
-                        true -> awaitForConflictResolution(item).let { resolution ->
-                            if (resolution.applyToAll) conflictResolutionForAll = resolution
-                            resolution
-                        }
-                        false -> conflictResolutionForAll!!
-                    }
-                    false -> ConflictResolutionUi.default
+            copyOrMoveItemsUc.execute(
+                items = items.map { it.mapToDomain() },
+                move = move,
+                onDestinationDirectoryRequired = {
+                    awaitForDestinationPath()
+                },
+                onConflictResolutionRequired = { item ->
+                    awaitForConflictResolution(
+                        item.mapToUi()
+                    ).mapToNewDomain()
+                },
+                onFilesystemOperationsStarted = {
+                    //TODO("show snack")
+                },
+                onFilesystemOperationsFinished = {
+                    //TODO("show snack")
                 }
-                when (move) {
-                    true -> FileOperation.Move(
-                        sourceFilePath = item.path,
-                        destinationFilePath = newPath,
-                        conflictResolution = conflictResolution.mapToDomain()
-                    )
-                    false -> FileOperation.Copy(
-                        sourceFilePath = item.path,
-                        destinationFilePath = newPath,
-                        conflictResolution = conflictResolution.mapToDomain()
-                    )
-                }
-            }
-            performFileOperations(operations)
+            )
         }
         catch (e: Exception) {
             setDialog(Dialog.None)
@@ -199,45 +190,41 @@ class ViewerVm
     
     private suspend fun onRename(items: List<MediaItemUI>) {
         try {
-            var conflictResolutionForAll: ConflictResolutionUi? = null
-            val operations = items.map { item ->
-                val newPath = awaitForNewName(item).let { newName ->
-                    val directoryPath = Path(item.path).parent.pathString
-                    "$directoryPath/$newName"
+            renameItemsUc.execute(
+                items = items.map { it.mapToDomain() },
+                onNewNameRequired = { item ->
+                    awaitForNewName(item.mapToUi())
+                },
+                onConflictResolutionRequired = { item ->
+                    awaitForConflictResolution(
+                        item.mapToUi()
+                    ).mapToNewDomain()
+                },
+                onFilesystemOperationsStarted = {
+                    //TODO("show snack")
+                },
+                onFilesystemOperationsFinished = {
+                    //TODO("show snack")
                 }
-                //if target file already exists:
-                // if resolution with "apply to all" checkbox is not set yet - show dialog
-                // else use "applied to all" resolution
-                val conflictResolution = when (Path(newPath).exists()) {
-                    true -> when (conflictResolutionForAll == null) {
-                        true -> awaitForConflictResolution(item).let { resolution ->
-                            if (resolution.applyToAll) conflictResolutionForAll = resolution
-                            resolution
-                        }
-                        false -> conflictResolutionForAll!!
-                    }
-                    false -> ConflictResolutionUi.default
-                }
-                FileOperation.Rename(
-                    originalFilePath = item.path,
-                    newFilePath = newPath,
-                    conflictResolution = conflictResolution.mapToDomain()
-                )
-            }
-            performFileOperations(operations)
+            )
         }
         catch (e: Exception) {
             setDialog(Dialog.None)
         }
     }
     
-    private suspend fun onDelete(itemsToDelete: List<MediaItemUI>) {
+    private suspend fun onDelete(items: List<MediaItemUI>) {
         try {
-            awaitForConfirmation(itemsToDelete)
-            val operations = itemsToDelete.map {
-                FileOperation.Delete(it.path)
-            }
-            performFileOperations(operations)
+            deleteItemsUc.execute(
+                items = items.map { it.mapToDomain() },
+                onConfirmationRequired = { awaitForConfirmation(items) },
+                onFilesystemOperationsStarted = {
+                    TODO("show snack")
+                },
+                onFilesystemOperationsFinished = {
+                    TODO("show snack")
+                }
+            )
         }
         catch (e: Exception) {
             setDialog(Dialog.None)
@@ -306,9 +293,5 @@ class ViewerVm
     
     private fun setDialog(newDialog: Dialog) {
         _dialog.update { newDialog }
-    }
-    
-    private fun performFileOperations(operations: List<FileOperation>) {
-        performFileOperationsUc.execute(operations)
     }
 }

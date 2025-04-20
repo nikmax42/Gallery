@@ -17,7 +17,17 @@ internal object UsecasesModule {
     }
     
     @Provides
-    fun providePerformFileOperationsUc(@ApplicationContext context: Context): PerformFileOperationsUc {
-        return PerformFileOperationsUcImpl(context = context)
+    fun provideCopyOrMoveItemsUc(@ApplicationContext context: Context): CopyOrMoveItemsUc {
+        return CopyOrMoveItemsUcImpl(context = context)
+    }
+    
+    @Provides
+    fun provideRenameItemsUc(@ApplicationContext context: Context): RenameItemsUc {
+        return RenameItemsUcImpl(context = context)
+    }
+    
+    @Provides
+    fun provideDeleteItemsUc(@ApplicationContext context: Context): DeleteItemsUc {
+        return DeleteItemsUcImpl(context = context)
     }
 }

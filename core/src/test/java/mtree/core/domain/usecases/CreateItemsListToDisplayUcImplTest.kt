@@ -472,7 +472,7 @@ class CreateItemsListToDisplayUcImplTest {
             )
         )
         
-        val desiredResult = FakeData.images.ownFiles.sortedBy { it.nestedMediaSize }
+        val desiredResult = FakeData.images.ownFiles.sortedBy { it.size }
         assert(realResult == desiredResult)
     }
     
@@ -491,7 +491,7 @@ class CreateItemsListToDisplayUcImplTest {
             )
         )
         
-        val desiredResult = FakeData.images.ownFiles.sortedByDescending { it.nestedMediaSize }
+        val desiredResult = FakeData.images.ownFiles.sortedByDescending { it.size }
         assert(realResult == desiredResult)
     }
 }

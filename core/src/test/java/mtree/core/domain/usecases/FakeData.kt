@@ -29,7 +29,7 @@ internal object FakeData {
     init {
         image1 = MediaItemDomain.File(
             path = "/storage/emulated/0/DCIM/Images/image1.png",
-            nestedMediaSize = 1234,
+            size = 1234,
             creationDate = 1643723400,
             modificationDate = 1643723400,
             thumbnailPath = null,
@@ -39,7 +39,7 @@ internal object FakeData {
         )
         image2 = MediaItemDomain.File(
             path = "/storage/emulated/0/DCIM/Images/image2.jpg",
-            nestedMediaSize = 4567,
+            size = 4567,
             creationDate = 1643263400,
             modificationDate = 1643727372,
             thumbnailPath = null,
@@ -50,7 +50,7 @@ internal object FakeData {
         
         video = MediaItemDomain.File(
             path = "/storage/emulated/0/DCIM/Videos/video.mp4",
-            nestedMediaSize = 1234,
+            size = 1234,
             creationDate = 1643723400,
             modificationDate = 1643723400,
             thumbnailPath = null,
@@ -61,7 +61,7 @@ internal object FakeData {
         
         gif = MediaItemDomain.File(
             path = "/storage/emulated/0/DCIM/Gifs/gif.gif",
-            nestedMediaSize = 1234,
+            size = 1234,
             creationDate = 1643723400,
             modificationDate = 1643723400,
             thumbnailPath = null,
@@ -72,7 +72,7 @@ internal object FakeData {
         
         hiddenImage = MediaItemDomain.File(
             path = "/storage/emulated/0/DCIM/.Hidden/.hidden.png",
-            nestedMediaSize = 1234,
+            size = 1234,
             creationDate = 1643723400,
             modificationDate = 1643723400,
             thumbnailPath = null,
@@ -86,12 +86,12 @@ internal object FakeData {
         
         images = MediaItemDomain.Album(
             path = Path(image1.path).parent.pathString,
-            nestedMediaSize = image1.nestedMediaSize,
+            size = image1.size,
             creationDate = image1.creationDate,
             modificationDate = image1.modificationDate,
             thumbnailPath = null,
             ownFiles = listOf(image1, image2),
-            filesCount = 1,
+            nestedFilesCount = 1,
             nestedImagesCount = 1,
             nestedVideosCount = 0,
             nestedGifsCount = 0,
@@ -102,12 +102,12 @@ internal object FakeData {
         
         videos = MediaItemDomain.Album(
             path = Path(video.path).parent.pathString,
-            nestedMediaSize = video.nestedMediaSize,
+            size = video.size,
             creationDate = video.creationDate,
             modificationDate = video.modificationDate,
             thumbnailPath = null,
             ownFiles = listOf(video),
-            filesCount = 1,
+            nestedFilesCount = 1,
             nestedImagesCount = 0,
             nestedVideosCount = 1,
             nestedGifsCount = 0,
@@ -118,12 +118,12 @@ internal object FakeData {
         
         gifs = MediaItemDomain.Album(
             path = Path(gif.path).parent.pathString,
-            nestedMediaSize = gif.nestedMediaSize,
+            size = gif.size,
             creationDate = gif.creationDate,
             modificationDate = gif.modificationDate,
             thumbnailPath = null,
             ownFiles = listOf(gif),
-            filesCount = 1,
+            nestedFilesCount = 1,
             nestedImagesCount = 0,
             nestedVideosCount = 0,
             nestedGifsCount = 1,
@@ -134,12 +134,12 @@ internal object FakeData {
         
         hiddenImages = MediaItemDomain.Album(
             path = Path(hiddenImage.path).parent.pathString,
-            nestedMediaSize = hiddenImage.nestedMediaSize,
+            size = hiddenImage.size,
             creationDate = hiddenImage.creationDate,
             modificationDate = hiddenImage.modificationDate,
             thumbnailPath = null,
             ownFiles = listOf(hiddenImage),
-            filesCount = 1,
+            nestedFilesCount = 1,
             nestedImagesCount = 1,
             nestedVideosCount = 0,
             nestedGifsCount = 0,
@@ -153,12 +153,12 @@ internal object FakeData {
         
         storage = MediaItemDomain.Album(
             path = "/storage",
-            nestedMediaSize = 0,
+            size = 0,
             creationDate = 0,
             modificationDate = 0,
             thumbnailPath = null,
             ownFiles = emptyList(),
-            filesCount = fakeFilesList.size,
+            nestedFilesCount = fakeFilesList.size,
             nestedImagesCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.IMAGE },
             nestedVideosCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.VIDEO },
             nestedGifsCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.GIF },
@@ -169,12 +169,12 @@ internal object FakeData {
         
         emulated = MediaItemDomain.Album(
             path = "/storage/emulated",
-            nestedMediaSize = 0,
+            size = 0,
             creationDate = 0,
             modificationDate = 0,
             thumbnailPath = null,
             ownFiles = emptyList(),
-            filesCount = fakeFilesList.size,
+            nestedFilesCount = fakeFilesList.size,
             nestedImagesCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.IMAGE },
             nestedVideosCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.VIDEO },
             nestedGifsCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.GIF },
@@ -185,12 +185,12 @@ internal object FakeData {
         
         `0` = MediaItemDomain.Album(
             path = "/storage/emulated/0",
-            nestedMediaSize = 0,
+            size = 0,
             creationDate = 0,
             modificationDate = 0,
             thumbnailPath = null,
             ownFiles = emptyList(),
-            filesCount = fakeFilesList.size,
+            nestedFilesCount = fakeFilesList.size,
             nestedImagesCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.IMAGE },
             nestedVideosCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.VIDEO },
             nestedGifsCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.GIF },
@@ -201,12 +201,12 @@ internal object FakeData {
         
         dcim = MediaItemDomain.Album(
             path = "/storage/emulated/0/DCIM",
-            nestedMediaSize = 0,
+            size = 0,
             creationDate = 0,
             modificationDate = 0,
             thumbnailPath = null,
             ownFiles = emptyList(),
-            filesCount = fakeFilesList.size,
+            nestedFilesCount = fakeFilesList.size,
             nestedImagesCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.IMAGE },
             nestedVideosCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.VIDEO },
             nestedGifsCount = fakeFilesList.count { it.mediaType == MediaItemDomain.File.MediaType.GIF },

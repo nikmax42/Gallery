@@ -1,5 +1,6 @@
 package mtree.core.ui.models
 
+import mtree.core.domain.models.MediaItemDomain
 import mtree.core.utils.MimetypeUtils
 import kotlin.io.path.Path
 import kotlin.io.path.extension
@@ -35,11 +36,10 @@ sealed interface MediaItemUI {
         override val size: Long,
         override val creationDate: Long,
         override val modificationDate: Long,
-        override val name: String,
         override val thumbnail: String?,
         val mimetype: String,
         val duration: Long,
-        val uri: String?
+        val uri: String
     ) : MediaItemUI {
         enum class MediaType { IMAGE, VIDEO, GIF }
         
@@ -49,6 +49,9 @@ sealed interface MediaItemUI {
             else MediaType.IMAGE
         
         val isVideoOrGif = mediaType == MediaType.VIDEO || mediaType == MediaType.GIF
+        
+        override val name: String
+            get() = Path(path).name
         
         val extension: String
             get() = Path(path).extension
@@ -62,7 +65,6 @@ sealed interface MediaItemUI {
                 size = 0,
                 creationDate = 0,
                 modificationDate = 0,
-                name = Path(path).name,
                 thumbnail = null,
                 mimetype = MimetypeUtils.getFromPath(path).toString(),
                 duration = 0,
@@ -79,12 +81,15 @@ sealed interface MediaItemUI {
         override val creationDate: Long,
         override val modificationDate: Long,
         override val thumbnail: String?,
+        val files: List<File>,
         //in tree mode should also include files in nested albums
         val filesCount: Int,
         val imagesCount: Int,
         val videosCount: Int,
         val gifsCount: Int,
-        val albumsCount: Int
+        val albumsCount: Int,
+        val unHiddenCount: Int,
+        val hiddenCount: Int
     ) : MediaItemUI {
         val isVolume: Boolean
             get() {
@@ -107,6 +112,40 @@ sealed interface MediaItemUI {
                 videosCount = 0,
                 gifsCount = 0,
                 albumsCount = 0,
+                files = emptyList(),
+                unHiddenCount = 0,
+                hiddenCount = 0,
+            )
+        }
+    }
+    
+    
+    fun mapToDomain(): MediaItemDomain {
+        return when (this) {
+            is File -> MediaItemDomain.File(
+                path = path,
+                size = size,
+                creationDate = creationDate,
+                modificationDate = modificationDate,
+                thumbnailPath = thumbnail,
+                mimetype = mimetype,
+                duration = duration,
+                uri = uri
+            )
+            is Album -> MediaItemDomain.Album(
+                path = path,
+                size = size,
+                creationDate = creationDate,
+                modificationDate = modificationDate,
+                thumbnailPath = thumbnail,
+                ownFiles = files.map { it.mapToDomain() as MediaItemDomain.File },
+                nestedFilesCount = filesCount,
+                nestedAlbumsCount = albumsCount,
+                nestedImagesCount = imagesCount,
+                nestedVideosCount = videosCount,
+                nestedGifsCount = gifsCount,
+                nestedHiddenMediaCount = hiddenCount,
+                nestedUnhiddenMediaCount = unHiddenCount
             )
         }
     }

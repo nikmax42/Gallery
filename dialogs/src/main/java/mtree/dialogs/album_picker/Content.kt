@@ -7,6 +7,5 @@ sealed interface Content {
     data class Main(
         val items: List<MediaItemUI>,
         val pickedAlbum: MediaItemUI.Album?,
-        val pickedAlbumIsNotWritable: Boolean
     ) : Content
 }

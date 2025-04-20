@@ -26,6 +26,7 @@ interface CreateItemsListToDisplayUc {
 }
 
 
+
 internal class CreateItemsListToDisplayUcImpl() : CreateItemsListToDisplayUc {
     override fun execute(
         galleryAlbums: List<MediaItemDomain.Album>,
@@ -252,7 +253,7 @@ internal object ItemsUtils {
             return when (sort.order) {
                 Sort.Order.NAME -> this.sortedBy { it.name }
                 Sort.Order.EXTENSION -> this.sortedByExtension()
-                Sort.Order.SIZE -> this.sortedBy { it.nestedMediaSize }
+                Sort.Order.SIZE -> this.sortedBy { it.size }
                 Sort.Order.CREATION_DATE -> this.sortedBy { it.creationDate }
                 Sort.Order.MODIFICATION_DATE -> this.sortedBy { it.modificationDate }
                 Sort.Order.RANDOM -> this.shuffled()

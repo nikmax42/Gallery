@@ -17,7 +17,7 @@ sealed interface MediaItemDomain {
     
     val thumbnailPath: String?
     
-    val nestedMediaSize: Long
+    val size: Long
     
     val creationDate: Long
     
@@ -33,7 +33,7 @@ sealed interface MediaItemDomain {
     
     data class File(
         override val path: String,
-        override val nestedMediaSize: Long,
+        override val size: Long,
         override val creationDate: Long,
         override val modificationDate: Long,
         override val thumbnailPath: String?,
@@ -55,7 +55,7 @@ sealed interface MediaItemDomain {
             fun createEmptyFromPath(path: String) {
                 File(
                     path = path,
-                    nestedMediaSize = 0,
+                    size = 0,
                     creationDate = 0,
                     modificationDate = 0,
                     thumbnailPath = null,
@@ -70,13 +70,13 @@ sealed interface MediaItemDomain {
     
     data class Album(
         override val path: String,
-        override val nestedMediaSize: Long,
+        override val size: Long,
         override val creationDate: Long,
         override val modificationDate: Long,
         override val thumbnailPath: String?,
         //in tree mode should also include files in nested albums
         val ownFiles: List<File>,
-        val filesCount: Int,
+        val nestedFilesCount: Int,
         val nestedImagesCount: Int,
         val nestedVideosCount: Int,
         val nestedGifsCount: Int,
@@ -90,10 +90,9 @@ sealed interface MediaItemDomain {
         return when (this) {
             is File -> MediaItemUI.File(
                 path = path,
-                name = name,
                 creationDate = creationDate,
                 modificationDate = modificationDate,
-                size = nestedMediaSize,
+                size = size,
                 thumbnail = thumbnailPath,
                 mimetype = mimetype,
                 duration = duration,
@@ -104,13 +103,16 @@ sealed interface MediaItemDomain {
                 name = name,
                 creationDate = creationDate,
                 modificationDate = modificationDate,
-                size = nestedMediaSize,
+                size = size,
                 thumbnail = thumbnailPath,
-                filesCount = filesCount,
+                filesCount = nestedFilesCount,
                 imagesCount = nestedImagesCount,
                 videosCount = nestedVideosCount,
                 gifsCount = nestedGifsCount,
-                albumsCount = nestedAlbumsCount
+                albumsCount = nestedAlbumsCount,
+                files = ownFiles.map { it.mapToUi() as MediaItemUI.File },
+                unHiddenCount = nestedUnhiddenMediaCount,
+                hiddenCount = nestedHiddenMediaCount,
             )
         }
     }
@@ -122,7 +124,7 @@ sealed interface MediaItemDomain {
                 path = path,
                 creationDate = creationDate,
                 modificationDate = modificationDate,
-                size = nestedMediaSize,
+                size = size,
                 thumbnail = thumbnailPath,
                 mimeType = mimetype,
                 duration = duration,
@@ -131,7 +133,7 @@ sealed interface MediaItemDomain {
             is Album -> MediaItemData.Album(
                 path = path,
                 ownFiles = ownFiles.map { it.mapToData() as MediaItemData.File },
-                nestedMediaSize = nestedMediaSize,
+                nestedMediaSize = size,
                 nestedImagesCount = nestedImagesCount,
                 nestedVideosCount = nestedVideosCount,
                 nestedGifsCount = nestedGifsCount,

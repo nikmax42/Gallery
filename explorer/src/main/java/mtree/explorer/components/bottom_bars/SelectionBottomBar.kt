@@ -18,11 +18,13 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.launch
 import mtree.core.ui.models.MediaItemUI
 import mtree.explorer.R
 
@@ -46,14 +48,17 @@ fun SelectionBottomBar(
         )
         false -> IconButtonDefaults.iconButtonColors()
     }
-    /* val strSnackbarText = stringResource(R.string.protected_items_warning)
+    val strUnableToCopy = stringResource(R.string.system_directories_cannot_be_copied)
+    val strUnableToMove = stringResource(R.string.system_directories_cannot_be_moved)
+    val strUnableToRename = stringResource(R.string.system_directories_cannot_be_renamed)
+    val strUnableToDelete = stringResource(R.string.system_directories_cannot_be_deleted)
     val strSnackbarActionText = stringResource(R.string.unselect)
     
-    fun showErrorSnackbar() {
+    fun showErrorSnackbar(text: String) {
         scope.launch {
             when (
                 snackbarHostState.showSnackbar(
-                    message = strSnackbarText,
+                    message = text,
                     actionLabel = strSnackbarActionText
                 )
             ) {
@@ -66,15 +71,15 @@ fun SelectionBottomBar(
                 }
             }
         }
-    } */
+    }
     
     BottomAppBar(
         actions = {
             IconButton(
                 colors = buttonsColors,
                 onClick = {
-                    /*  if (thereIsVolumesSelected) showErrorSnackbar()
-                     else onCopy(selectedItems) */
+                    if (thereIsVolumesSelected) showErrorSnackbar(strUnableToCopy)
+                    else onCopy(selectedItems)
                 },
             ) {
                 Icon(
@@ -85,8 +90,8 @@ fun SelectionBottomBar(
             IconButton(
                 colors = buttonsColors,
                 onClick = {
-                    /*  if (thereIsVolumesSelected) showErrorSnackbar()
-                     else onMove(selectedItems) */
+                    if (thereIsVolumesSelected) showErrorSnackbar(strUnableToMove)
+                    else onMove(selectedItems)
                 }
             ) {
                 Icon(
@@ -97,8 +102,8 @@ fun SelectionBottomBar(
             IconButton(
                 colors = buttonsColors,
                 onClick = {
-                    /*  if (thereIsVolumesSelected) showErrorSnackbar()
-                     else onRename(selectedItems) */
+                    if (thereIsVolumesSelected) showErrorSnackbar(strUnableToRename)
+                    else onRename(selectedItems)
                 }
             ) {
                 Icon(
@@ -109,8 +114,8 @@ fun SelectionBottomBar(
             IconButton(
                 colors = buttonsColors,
                 onClick = {
-                    /* if (thereIsVolumesSelected) showErrorSnackbar()
-                    else onDelete(selectedItems) */
+                    if (thereIsVolumesSelected) showErrorSnackbar(strUnableToDelete)
+                    else onDelete(selectedItems)
                 }
             ) {
                 Icon(

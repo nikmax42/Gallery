@@ -26,6 +26,7 @@ import mtree.viewer.components.contents.MainContent
 @Composable
 fun ViewerScreen(
     filePath: String,
+    searchQuery: String?,
     onClose: () -> Unit,
     vm: ViewerVm = hiltViewModel()
 ) {
@@ -38,7 +39,12 @@ fun ViewerScreen(
     )
     
     LaunchedEffect(filePath) {
-        vm.onAction(Action.Launch(filePath))
+        vm.onAction(
+            Action.Launch(
+                initialFilePath = filePath,
+                searchQuery = searchQuery
+            )
+        )
     }
 }
 

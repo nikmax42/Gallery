@@ -1,6 +1,7 @@
 package mtree.core.ui.models
 
 import mtree.core.domain.models.ConflictResolutionDomain
+import mtree.core.domain.models.NewConflictResolutionDomain
 
 
 data class ConflictResolutionUi(
@@ -26,5 +27,16 @@ data class ConflictResolutionUi(
             Type.ADD_SUFFIX_TO_NEW_FILE_NAME -> ConflictResolutionDomain.KEEP_BOTH
             Type.OVERWRITE_OLD_FILE -> ConflictResolutionDomain.OVERWRITE
         }
+    }
+    
+    fun mapToNewDomain(): NewConflictResolutionDomain {
+        return NewConflictResolutionDomain(
+            type = when (type) {
+                Type.SKIP_FILE -> NewConflictResolutionDomain.Type.SKIP
+                Type.ADD_SUFFIX_TO_NEW_FILE_NAME -> NewConflictResolutionDomain.Type.KEEP_BOTH
+                Type.OVERWRITE_OLD_FILE -> NewConflictResolutionDomain.Type.OVERWRITE
+            },
+            applyToAll = applyToAll
+        )
     }
 }

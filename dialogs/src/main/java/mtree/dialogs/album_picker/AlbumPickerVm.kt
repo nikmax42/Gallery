@@ -1,10 +1,9 @@
 package mtree.dialogs.album_picker
 
-import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -20,23 +19,24 @@ import mtree.core.domain.models.MediaItemDomain
 import mtree.core.domain.models.Sort
 import mtree.core.domain.usecases.CreateItemsListToDisplayUc
 import mtree.core.preferences.MtreePreferences
-import mtree.core.preferences.MtreePreferencesUtils
+import mtree.core.preferences.MtreePreferencesRepo
 import mtree.core.ui.models.MediaItemUI
 import javax.inject.Inject
 
 @HiltViewModel
 class AlbumPickerVm
 @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val albumsRepo: MediaItemsRepo,
+    private val prefsRepo: MtreePreferencesRepo,
     private val createItemsListToDisplayUc: CreateItemsListToDisplayUc,
 ) : ViewModel() {
     
-    private val _openedAlbumsStack = MutableStateFlow(listOf<MediaItemUI.Album>())
+    @VisibleForTesting
+    internal val _openedAlbumsStack = MutableStateFlow(listOf<MediaItemUI.Album>())
     
     val uiState = combine(
         albumsRepo.getMediaAlbumsFlow(),
-        MtreePreferencesUtils.getPreferencesFlow(context),
+        prefsRepo.getPreferencesFlow(),
         _openedAlbumsStack
     ) {
         val albumsResource = it[0] as Resource<List<MediaItemData.Album>>
@@ -85,9 +85,12 @@ class AlbumPickerVm
                     }
                 )
             )
-        }
+        }.map { it.mapToUi() }
         
-        val content = TODO()
+        val content = Content.Main(
+            items = itemsToDisplay,
+            pickedAlbum = openedAlbumsStack.lastOrNull(),
+        )
         
         UiState(
             currentAlbum = openedAlbumsStack.lastOrNull(),
@@ -132,11 +135,7 @@ class AlbumPickerVm
         _openedAlbumsStack.update { it + album }
     }
     
-    private suspend fun navigateBack() {
-        /*  when (_openedAlbumsStack.value.isNotEmpty()) {
-             true -> _openedAlbumsStack.update { it.dropLast(1) }
-             false -> _event.emit(Event.DismissDialog)
-         } */
+    private fun navigateBack() {
         _openedAlbumsStack.update { it.dropLast(1) }
     }
     

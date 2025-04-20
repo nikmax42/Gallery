@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import mtree.core.ui.models.MediaItemUI
+import mtree.dialogs.album_picker.components.contents.InitializationShimmer
 import mtree.dialogs.album_picker.components.contents.MainContent
 
 
@@ -60,7 +61,11 @@ private fun PickerContent(
                 gridColumnsPortrait = state.portraitGridColumns,
                 gridColumnsLandscape = state.landscapeGridColumns
             )
-            Content.Initialization -> TODO()
+            Content.Initialization -> InitializationShimmer(
+                portraitGridColumns = state.portraitGridColumns,
+                landscapeGridColumns = state.landscapeGridColumns,
+                onDismiss = { onDismiss() }
+            )
         }
     }
 }

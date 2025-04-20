@@ -63,6 +63,7 @@ fun MainNavHost() {
                 val args = entry.toRoute<MainRoutes.Viewer>()
                 ViewerScreen(
                     filePath = args.filePath,
+                    searchQuery = args.searchQuery,
                     onClose = { navController.popBackStack() }
                 )
             }
