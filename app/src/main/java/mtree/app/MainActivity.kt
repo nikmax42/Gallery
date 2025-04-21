@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,19 +18,26 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import dagger.hilt.android.AndroidEntryPoint
 import mtree.core.domain.models.GalleryPermission
 import mtree.core.domain.models.PermissionStatus
+import mtree.core.preferences.MtreePreferences
+import mtree.core.preferences.MtreePreferencesRepo
 import mtree.core.ui.theme.GalleryTheme
 import mtree.core.utils.PermissionsUtils
 import mtree.permission_request.StoragePermissionRequestScreen
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    @Inject
+    lateinit var prefsRepo: MtreePreferencesRepo
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            /* val appPrefs = MtreePreferencesUtils
-                .getPreferencesFlow(LocalContext.current)
+            val appPrefs = prefsRepo
+                .getPreferencesFlow()
                 .collectAsState(MtreePreferences.default())
                 .value
             
@@ -40,11 +49,11 @@ class MainActivity : ComponentActivity() {
             val useSystemDynamicColors = when (appPrefs.dynamicColors) {
                 MtreePreferences.DynamicColors.SYSTEM -> true
                 MtreePreferences.DynamicColors.DISABLED -> false
-            } */
+            }
             
             GalleryTheme(
-                darkTheme = true,
-                dynamicColor = true
+                darkTheme = useDarkTheme,
+                dynamicColor = useSystemDynamicColors
             ) {
                 var storagePermissionStatus by remember {
                     mutableStateOf(
