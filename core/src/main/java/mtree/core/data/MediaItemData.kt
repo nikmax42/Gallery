@@ -77,17 +77,17 @@ sealed interface MediaItemData {
             is Album -> MediaItemDomain.Album(
                 path = path,
                 ownFiles = ownFiles.map { it.mapToDomain() as MediaItemDomain.File },
-                size = ownFiles.sumOf { it.size },
-                creationDate = ownFiles.minOfOrNull { it.creationDate } ?: 0,
-                modificationDate = ownFiles.maxOfOrNull { it.modificationDate } ?: 0,
-                thumbnailPath = ownFiles.firstOrNull()?.thumbnail,
-                nestedFilesCount = ownFiles.size,
-                nestedImagesCount = ownFiles.count { it.mediaType == File.Type.IMAGE },
-                nestedVideosCount = ownFiles.count { it.mediaType == File.Type.VIDEO },
-                nestedGifsCount = ownFiles.count { it.mediaType == File.Type.GIF },
-                nestedHiddenMediaCount = ownFiles.count { it.isHidden },
-                nestedUnhiddenMediaCount = ownFiles.count { !it.isHidden },
-                nestedAlbumsCount = 0,
+                size = nestedMediaSize,
+                creationDate = creationDate,
+                modificationDate = modificationDate,
+                thumbnailPath = thumbnailPath,
+                nestedFilesCount = nestedImagesCount + nestedVideosCount + nestedGifsCount,
+                nestedImagesCount = nestedImagesCount,
+                nestedVideosCount = nestedVideosCount,
+                nestedGifsCount = nestedGifsCount,
+                nestedHiddenMediaCount = nestedHiddenMediaCount,
+                nestedUnhiddenMediaCount = nestedUnhiddenMediaCount,
+                nestedAlbumsCount = nestedAlbumsCount,
             )
         }
     }

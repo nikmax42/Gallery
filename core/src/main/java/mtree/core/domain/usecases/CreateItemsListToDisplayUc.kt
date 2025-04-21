@@ -139,7 +139,6 @@ internal object ItemsUtils {
     }
     
     object Filtering {
-        
         fun List<MediaItemDomain>.applyFilters(
             filters: Filters
         ): List<MediaItemDomain> {
