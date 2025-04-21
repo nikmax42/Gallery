@@ -29,7 +29,7 @@ internal class MediaItemsRepoImpl(
     private val context: Context
 ) : MediaItemsRepo {
     
-    private val _loadingFlow = MutableStateFlow(false)
+    private val _loadingFlow = MutableStateFlow(true)
     private val _albumsFlow = MutableStateFlow<List<MediaItemData.Album>>(emptyList())
     
     override fun getMediaAlbumsFlow(): Flow<Resource<List<MediaItemData>>> {

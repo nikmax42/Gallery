@@ -42,6 +42,7 @@ class ExplorerVm
 ) : ViewModel() {
     
     private val _albumPath = MutableStateFlow<String?>(null)
+    private val _searchQuery = MutableStateFlow<String?>(null)
     
     private val _galleryAlbums = galleryAlbumsRepo
         .getMediaAlbumsFlow()
@@ -58,9 +59,10 @@ class ExplorerVm
             MtreePreferences.default()
         )
     
-    private val _searchQuery = MutableStateFlow<String?>(null)
     private val _selectedItems = MutableStateFlow(emptyList<MediaItemUI>())
     private val _dialog = MutableStateFlow<Dialog>(Dialog.None)
+    
+    private val _initializationInProgress = MutableStateFlow(true)
     
     val uiState = combine(
         _galleryAlbums,
@@ -68,7 +70,8 @@ class ExplorerVm
         _albumPath,
         _searchQuery,
         _dialog,
-        _selectedItems
+        _selectedItems,
+        _initializationInProgress
     ) {
         val albumsResource = it[0] as Resource<List<MediaItemData.Album>>
         val prefs = it[1] as MtreePreferences
@@ -76,6 +79,7 @@ class ExplorerVm
         val searchQuery = it[3] as String?
         val dialog = it[4] as Dialog
         val selectedItems = it[5] as List<MediaItemUI>
+        val initializationInProgress = it[6] as Boolean
         
         val itemsToDisplay = when (albumsResource) {
             is Resource.Success -> albumsResource.data
@@ -123,7 +127,9 @@ class ExplorerVm
         }
         val isLoading = albumsResource is Resource.Loading
         val content =
-            if (itemsToDisplay.isEmpty() && !isLoading)
+            if (initializationInProgress)
+                Content.Initialization
+            else if (itemsToDisplay.isEmpty() && !isLoading)
                 Content.NothingToDisplay
             else
                 Content.Main
@@ -155,6 +161,13 @@ class ExplorerVm
         )
     )
     
+    init {
+        viewModelScope.launch {
+            onRefresh()
+        }
+    }
+    
+    
     internal fun onAction(action: Action) {
         viewModelScope.launch {
             when (action) {
@@ -172,17 +185,16 @@ class ExplorerVm
     }
     
     
-    private suspend fun onLaunch(albumPath: String?, searchQuery: String?) {
+    private fun onLaunch(albumPath: String?, searchQuery: String?) {
         _albumPath.update { albumPath }
         _searchQuery.update { searchQuery }
-        //to initiate rescan on first launch
-        if (albumPath == null && uiState.value.items.isEmpty()) {
-            onRefresh()
-        }
     }
     
     private suspend fun onRefresh() {
-        galleryAlbumsRepo.rescan()
+        viewModelScope.launch {
+            galleryAlbumsRepo.rescan()
+        }.join()
+        _initializationInProgress.update { false }
     }
     
     private suspend fun onFiltersReset() {
