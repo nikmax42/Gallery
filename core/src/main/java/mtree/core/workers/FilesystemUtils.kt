@@ -46,25 +46,25 @@ internal object FilesystemUtils {
         return try {
             val sourceFile = File(sourceFilePath)
             val destinationFile = File(destinationFilePath)
-            when (conflictResolution) {
-                ConflictResolutionDomain.SKIP -> sourceFile.copyRecursively(
+            when (conflictResolution.type) {
+                ConflictResolutionDomain.Type.SKIP -> sourceFile.copyRecursively(
                     target = destinationFile,
                     onError = { _, e ->
                         if (e is FileAlreadyExistsException) OnErrorAction.SKIP
                         else throw e
                     }
                 )
-                ConflictResolutionDomain.KEEP_BOTH -> {
+                ConflictResolutionDomain.Type.KEEP_BOTH -> {
                     when (destinationFile.exists()) {
                         true -> copy(
                             sourceFilePath = sourceFilePath,
                             destinationFilePath = addSuffixToFilePath(destinationFilePath),
-                            conflictResolution = ConflictResolutionDomain.KEEP_BOTH
+                            conflictResolution = ConflictResolutionDomain.keepBoth()
                         )
                         false -> sourceFile.copyRecursively(target = destinationFile)
                     }
                 }
-                ConflictResolutionDomain.OVERWRITE -> sourceFile.copyRecursively(
+                ConflictResolutionDomain.Type.OVERWRITE -> sourceFile.copyRecursively(
                     target = destinationFile,
                     overwrite = true
                 )

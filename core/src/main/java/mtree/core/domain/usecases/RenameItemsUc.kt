@@ -1,9 +1,9 @@
 package mtree.core.domain.usecases
 
 import android.content.Context
+import mtree.core.domain.models.ConflictResolutionDomain
+import mtree.core.domain.models.FileOperation
 import mtree.core.domain.models.MediaItemDomain
-import mtree.core.domain.models.NewConflictResolutionDomain
-import mtree.core.domain.models.NewFileOperation
 import mtree.core.workers.FileOperationWorker
 import kotlin.io.path.Path
 import kotlin.io.path.exists
@@ -13,7 +13,7 @@ interface RenameItemsUc {
     suspend fun execute(
         items: List<MediaItemDomain>,
         onNewNameRequired: suspend (MediaItemDomain) -> String,
-        onConflictResolutionRequired: suspend (item: MediaItemDomain) -> NewConflictResolutionDomain,
+        onConflictResolutionRequired: suspend (item: MediaItemDomain) -> ConflictResolutionDomain,
         onFilesystemOperationsStarted: () -> Unit,
         onFilesystemOperationsFinished: () -> Unit
     )
@@ -24,11 +24,11 @@ internal class RenameItemsUcImpl(private val context: Context) : RenameItemsUc {
     override suspend fun execute(
         items: List<MediaItemDomain>,
         onNewNameRequired: suspend (MediaItemDomain) -> String,
-        onConflictResolutionRequired: suspend (item: MediaItemDomain) -> NewConflictResolutionDomain,
+        onConflictResolutionRequired: suspend (item: MediaItemDomain) -> ConflictResolutionDomain,
         onFilesystemOperationsStarted: () -> Unit,
         onFilesystemOperationsFinished: () -> Unit
     ) {
-        var conflictResolutionForAll: NewConflictResolutionDomain? = null
+        var conflictResolutionForAll: ConflictResolutionDomain? = null
         val operations = items.map { item ->
             val newPath = onNewNameRequired(item).let { newName ->
                 val directoryPath = Path(item.path).parent.pathString
@@ -45,9 +45,9 @@ internal class RenameItemsUcImpl(private val context: Context) : RenameItemsUc {
                     }
                     false -> conflictResolutionForAll!!
                 }
-                false -> NewConflictResolutionDomain.default()
+                false -> ConflictResolutionDomain.keepBoth()
             }
-            NewFileOperation.Rename(
+            FileOperation.Rename(
                 originalFilePath = item.path,
                 newFilePath = newPath,
                 conflictResolution = conflictResolution

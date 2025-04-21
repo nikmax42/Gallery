@@ -1,9 +1,9 @@
 package mtree.core.domain.usecases
 
 import android.content.Context
+import mtree.core.domain.models.ConflictResolutionDomain
+import mtree.core.domain.models.FileOperation
 import mtree.core.domain.models.MediaItemDomain
-import mtree.core.domain.models.NewConflictResolutionDomain
-import mtree.core.domain.models.NewFileOperation
 import mtree.core.workers.FileOperationWorker
 import kotlin.io.path.Path
 import kotlin.io.path.exists
@@ -14,7 +14,7 @@ interface CopyOrMoveItemsUc {
         items: List<MediaItemDomain>,
         move: Boolean = false,
         onDestinationDirectoryRequired: suspend () -> String,
-        onConflictResolutionRequired: suspend (item: MediaItemDomain) -> NewConflictResolutionDomain,
+        onConflictResolutionRequired: suspend (item: MediaItemDomain) -> ConflictResolutionDomain,
         onFilesystemOperationsStarted: () -> Unit,
         onFilesystemOperationsFinished: () -> Unit
     )
@@ -26,12 +26,12 @@ internal class CopyOrMoveItemsUcImpl(private val context: Context) : CopyOrMoveI
         items: List<MediaItemDomain>,
         move: Boolean,
         onDestinationDirectoryRequired: suspend () -> String,
-        onConflictResolutionRequired: suspend (MediaItemDomain) -> NewConflictResolutionDomain,
+        onConflictResolutionRequired: suspend (MediaItemDomain) -> ConflictResolutionDomain,
         onFilesystemOperationsStarted: () -> Unit,
         onFilesystemOperationsFinished: () -> Unit
     ) {
         val destinationDirectory = onDestinationDirectoryRequired()
-        var conflictResolutionForAll: NewConflictResolutionDomain? = null
+        var conflictResolutionForAll: ConflictResolutionDomain? = null
         items.map { item ->
             val newPath = "$destinationDirectory/${item.name}"
             //if target file already exists:
@@ -45,15 +45,15 @@ internal class CopyOrMoveItemsUcImpl(private val context: Context) : CopyOrMoveI
                     }
                     false -> conflictResolutionForAll!!
                 }
-                false -> NewConflictResolutionDomain.default()
+                false -> ConflictResolutionDomain.keepBoth()
             }
             when (move) {
-                true -> NewFileOperation.Move(
+                true -> FileOperation.Move(
                     sourceFilePath = item.path,
                     destinationFilePath = newPath,
                     conflictResolution = conflictResolution
                 )
-                false -> NewFileOperation.Copy(
+                false -> FileOperation.Copy(
                     sourceFilePath = item.path,
                     destinationFilePath = newPath,
                     conflictResolution = conflictResolution

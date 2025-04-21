@@ -1,7 +1,6 @@
 package mtree.core.ui.models
 
 import mtree.core.domain.models.ConflictResolutionDomain
-import mtree.core.domain.models.NewConflictResolutionDomain
 
 
 data class ConflictResolutionUi(
@@ -22,19 +21,22 @@ data class ConflictResolutionUi(
     }
     
     fun mapToDomain(): ConflictResolutionDomain {
-        return when (type) {
-            Type.SKIP_FILE -> ConflictResolutionDomain.SKIP
-            Type.ADD_SUFFIX_TO_NEW_FILE_NAME -> ConflictResolutionDomain.KEEP_BOTH
-            Type.OVERWRITE_OLD_FILE -> ConflictResolutionDomain.OVERWRITE
-        }
+        return ConflictResolutionDomain(
+            type = when (type) {
+                Type.SKIP_FILE -> ConflictResolutionDomain.Type.SKIP
+                Type.ADD_SUFFIX_TO_NEW_FILE_NAME -> ConflictResolutionDomain.Type.KEEP_BOTH
+                Type.OVERWRITE_OLD_FILE -> ConflictResolutionDomain.Type.OVERWRITE
+            },
+            applyToAll = applyToAll
+        )
     }
     
-    fun mapToNewDomain(): NewConflictResolutionDomain {
-        return NewConflictResolutionDomain(
+    fun mapToNewDomain(): ConflictResolutionDomain {
+        return ConflictResolutionDomain(
             type = when (type) {
-                Type.SKIP_FILE -> NewConflictResolutionDomain.Type.SKIP
-                Type.ADD_SUFFIX_TO_NEW_FILE_NAME -> NewConflictResolutionDomain.Type.KEEP_BOTH
-                Type.OVERWRITE_OLD_FILE -> NewConflictResolutionDomain.Type.OVERWRITE
+                Type.SKIP_FILE -> ConflictResolutionDomain.Type.SKIP
+                Type.ADD_SUFFIX_TO_NEW_FILE_NAME -> ConflictResolutionDomain.Type.KEEP_BOTH
+                Type.OVERWRITE_OLD_FILE -> ConflictResolutionDomain.Type.OVERWRITE
             },
             applyToAll = applyToAll
         )

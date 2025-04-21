@@ -1,7 +1,7 @@
 package mtree.viewer
 
+import mtree.core.domain.models.ConflictResolutionDomain
 import mtree.core.domain.models.MediaItemDomain
-import mtree.core.domain.models.NewConflictResolutionDomain
 import mtree.core.domain.usecases.CopyOrMoveItemsUc
 
 internal class FakeCopyOrMoveItemsUc : CopyOrMoveItemsUc {
@@ -9,7 +9,7 @@ internal class FakeCopyOrMoveItemsUc : CopyOrMoveItemsUc {
         items: List<MediaItemDomain>,
         move: Boolean,
         onDestinationDirectoryRequired: suspend () -> String,
-        onConflictResolutionRequired: suspend (MediaItemDomain) -> NewConflictResolutionDomain,
+        onConflictResolutionRequired: suspend (MediaItemDomain) -> ConflictResolutionDomain,
         onFilesystemOperationsStarted: () -> Unit,
         onFilesystemOperationsFinished: () -> Unit
     ) {

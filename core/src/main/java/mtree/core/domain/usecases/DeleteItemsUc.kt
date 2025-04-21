@@ -1,8 +1,8 @@
 package mtree.core.domain.usecases
 
 import android.content.Context
+import mtree.core.domain.models.FileOperation
 import mtree.core.domain.models.MediaItemDomain
-import mtree.core.domain.models.NewFileOperation
 import mtree.core.workers.FileOperationWorker
 
 interface DeleteItemsUc {
@@ -25,7 +25,7 @@ class DeleteItemsUcImpl(private val context: Context) : DeleteItemsUc {
         onConfirmationRequired().let { deletionConfirmed ->
             if (deletionConfirmed) {
                 val operations = items.map {
-                    NewFileOperation.Delete(it.path)
+                    FileOperation.Delete(it.path)
                 }
                 onFilesystemOperationsStarted()
                 FileOperationWorker.performFileOperationsInBackground(

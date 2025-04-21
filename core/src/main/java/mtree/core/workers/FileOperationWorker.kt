@@ -11,7 +11,6 @@ import androidx.work.workDataOf
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import mtree.core.domain.models.FileOperation
-import mtree.core.domain.models.NewFileOperation
 
 class FileOperationWorker(
     appContext: Context, params: WorkerParameters
@@ -21,7 +20,7 @@ class FileOperationWorker(
         enum class Keys { FILE_OPERATION_JSON }
         
         suspend fun performFileOperationsInBackground(
-            operations: List<NewFileOperation>,
+            operations: List<FileOperation>,
             context: Context,
             onProgressChanged: (succeeded: Int, failed: Int) -> Unit,
             onFinished: () -> Unit
