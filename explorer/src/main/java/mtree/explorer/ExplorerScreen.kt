@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -160,7 +161,10 @@ private fun ExplorerScreenContent(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddings ->
         Box {
-            AnimatedContent(state.content) { content ->
+            AnimatedContent(
+                targetState = state.content,
+                transitionSpec = { fadeIn() togetherWith fadeOut() }
+            ) { content ->
                 when (content) {
                     Content.Shimmer -> InitializationContent(
                         portraitGridColumns = state.portraitGridColumns,
