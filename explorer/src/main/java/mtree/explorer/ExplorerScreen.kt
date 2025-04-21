@@ -52,7 +52,7 @@ fun ExplorerScreen(
     val state by vm.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     
-    //todo for snackbars
+    // todo for snackbars
     /* val strProtectedItemsWarning = stringResource(R.string.protected_items_warning)
     val strUnselect = stringResource(R.string.unselect)
     val strCopying = stringResource(R.string.copying)
@@ -75,7 +75,7 @@ fun ExplorerScreen(
         state = state,
         onAction = { vm.onAction(it) },
         onFileOpen = { file -> onFileOpen(file.path, state.searchQuery) },
-        onAlbumOpen = { file -> onAlbumOpen(file.path, state.searchQuery) },
+        onAlbumOpen = { album -> onAlbumOpen(album.path, state.searchQuery) },
         snackbarHostState = snackbarHostState
     )
 }

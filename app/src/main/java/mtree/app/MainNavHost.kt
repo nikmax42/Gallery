@@ -31,8 +31,8 @@ fun MainNavHost() {
                     onAlbumOpen = { albumPath, searchQuery ->
                         navController.navigate(
                             MainRoutes.Explorer(
-                                albumPath = args.albumPath,
-                                searchQuery = args.searchQuery,
+                                albumPath = albumPath,
+                                searchQuery = searchQuery,
                             )
                         )
                     },
