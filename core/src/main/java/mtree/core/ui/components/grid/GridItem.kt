@@ -47,8 +47,8 @@ import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import mtree.core.R
 import mtree.core.ui.theme.GalleryTheme
+import mtree.core.utils.MeasurementUnitsUtils.millisToDurationString
 import mtree.core.utils.MeasurementUnitsUtils.sizeToString
-import mtree.core.utils.MeasurementUnitsUtils.videoDurationToString
 
 @Composable
 internal fun GridItem(
@@ -125,8 +125,8 @@ internal fun GridItem(
                 }
                 if (isVideo) IconCorner(
                     icon = Icons.Default.PlayCircle,
-                    label = videoDuration.videoDurationToString(),
-                    contentDescription = videoDuration.videoDurationToString(),
+                    label = videoDuration.millisToDurationString(),
+                    contentDescription = videoDuration.millisToDurationString(),
                     topEndRadius = 30F,
                     modifier = Modifier.align(Alignment.BottomStart)
                 )

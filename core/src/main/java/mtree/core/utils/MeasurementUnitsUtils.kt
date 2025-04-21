@@ -15,7 +15,7 @@ object MeasurementUnitsUtils {
         return (percentage * duration).toLong()
     }
     
-    fun Long.videoDurationToString(): String {
+    fun Long.millisToDurationString(): String {
         val totalSeconds = this / 1000
         val totalHours = totalSeconds / 3600
         val hours = "${totalSeconds / 3600}".padStart(2, '0')

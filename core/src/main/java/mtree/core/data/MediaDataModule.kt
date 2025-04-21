@@ -14,12 +14,8 @@ internal object MediaDataModule {
     
     @Singleton
     @Provides
-    fun providesMediaItemsRepo(
-        @ApplicationContext context: Context,
-        mediastoreDs: MediastoreDs
-    ): MediaItemsRepo {
+    fun providesMediaItemsRepo(mediastoreDs: MediastoreDs): MediaItemsRepo {
         return MediaItemsRepoImpl(
-            context = context,
             mediastoreDs = mediastoreDs
         )
     }

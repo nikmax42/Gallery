@@ -69,6 +69,9 @@ fun ExplorerScreen(
                 searchQuery = searchQuery
             )
         )
+        if (albumPath == null && state.items.isEmpty()) {
+            vm.onAction(Action.Refresh)
+        }
     }
     
     ExplorerScreenContent(

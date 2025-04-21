@@ -1,6 +1,5 @@
 package mtree.core.data
 
-import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.compose.ui.util.fastFilter
 import kotlinx.coroutines.Dispatchers
@@ -9,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import mtree.core.utils.MeasurementUnitsUtils.millisToDurationString
 import timber.log.Timber
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
@@ -26,10 +26,9 @@ interface MediaItemsRepo {
 
 internal class MediaItemsRepoImpl(
     private val mediastoreDs: MediastoreDs,
-    private val context: Context
 ) : MediaItemsRepo {
     
-    private val _loadingFlow = MutableStateFlow(true)
+    private val _loadingFlow = MutableStateFlow(false)
     private val _albumsFlow = MutableStateFlow<List<MediaItemData.Album>>(emptyList())
     
     override fun getMediaAlbumsFlow(): Flow<Resource<List<MediaItemData>>> {
@@ -42,20 +41,22 @@ internal class MediaItemsRepoImpl(
     }
     
     override suspend fun rescan() {
-        val startTime = System.currentTimeMillis()
-        Timber.d("Rescan initiated")
-        _loadingFlow.update { true }
-        withContext(Dispatchers.IO) {
-            val galleryData = mediastoreDs
-                .getImagesAndVideos()
-                .createGalleryData()
-            withContext(Dispatchers.Main) {
-                _albumsFlow.update { galleryData }
-                _loadingFlow.update { false }
+        if (_loadingFlow.value == false) { //to prevent multiple rescans
+            val startTime = System.currentTimeMillis()
+            Timber.d("Rescan initiated")
+            _loadingFlow.update { true }
+            withContext(Dispatchers.IO) {
+                val galleryData = mediastoreDs
+                    .getImagesAndVideos()
+                    .createGalleryData()
+                withContext(Dispatchers.Main) {
+                    _albumsFlow.update { galleryData }
+                    _loadingFlow.update { false }
+                }
             }
+            val endTime = System.currentTimeMillis()
+            Timber.d("Rescan finished. Took ${(endTime - startTime).millisToDurationString()}")
         }
-        val endTime = System.currentTimeMillis()
-        Timber.d("Rescan finished. Took ${endTime - startTime} ms")
     }
     
     

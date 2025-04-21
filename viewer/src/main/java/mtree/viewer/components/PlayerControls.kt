@@ -29,9 +29,9 @@ import dev.vivvvek.seeker.Seeker
 import dev.vivvvek.seeker.SeekerDefaults
 import kotlinx.coroutines.Dispatchers
 import mtree.core.ui.theme.GalleryTheme
+import mtree.core.utils.MeasurementUnitsUtils.millisToDurationString
 import mtree.core.utils.MeasurementUnitsUtils.percentageToPosition
 import mtree.core.utils.MeasurementUnitsUtils.positionToPercentage
-import mtree.core.utils.MeasurementUnitsUtils.videoDurationToString
 import mtree.viewer.R
 
 @Composable
@@ -111,7 +111,7 @@ internal fun Seekbar(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
-        Text(position.videoDurationToString())
+        Text(position.millisToDurationString())
         Spacer(Modifier.size(4.dp))
         Seeker(
             value = positionToPercentage(position, duration),
@@ -127,7 +127,7 @@ internal fun Seekbar(
             modifier = Modifier.weight(1F)
         )
         Spacer(Modifier.size(4.dp))
-        Text(duration.videoDurationToString())
+        Text(duration.millisToDurationString())
     }
 }
 

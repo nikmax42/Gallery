@@ -62,16 +62,13 @@ class ExplorerVm
     private val _selectedItems = MutableStateFlow(emptyList<MediaItemUI>())
     private val _dialog = MutableStateFlow<Dialog>(Dialog.None)
     
-    private val _initializationInProgress = MutableStateFlow(true)
-    
     val uiState = combine(
         _galleryAlbums,
         _preferences,
         _albumPath,
         _searchQuery,
         _dialog,
-        _selectedItems,
-        _initializationInProgress
+        _selectedItems
     ) {
         val albumsResource = it[0] as Resource<List<MediaItemData.Album>>
         val prefs = it[1] as MtreePreferences
@@ -79,7 +76,6 @@ class ExplorerVm
         val searchQuery = it[3] as String?
         val dialog = it[4] as Dialog
         val selectedItems = it[5] as List<MediaItemUI>
-        val initializationInProgress = it[6] as Boolean
         
         val itemsToDisplay = when (albumsResource) {
             is Resource.Success -> albumsResource.data
@@ -127,9 +123,7 @@ class ExplorerVm
         }
         val isLoading = albumsResource is Resource.Loading
         val content =
-            if (initializationInProgress)
-                Content.Initialization
-            else if (itemsToDisplay.isEmpty() && !isLoading)
+            if (itemsToDisplay.isEmpty() && !isLoading)
                 Content.NothingToDisplay
             else
                 Content.Main
@@ -161,12 +155,6 @@ class ExplorerVm
         )
     )
     
-    init {
-        viewModelScope.launch {
-            onRefresh()
-        }
-    }
-    
     
     internal fun onAction(action: Action) {
         viewModelScope.launch {
@@ -191,10 +179,7 @@ class ExplorerVm
     }
     
     private suspend fun onRefresh() {
-        viewModelScope.launch {
-            galleryAlbumsRepo.rescan()
-        }.join()
-        _initializationInProgress.update { false }
+        galleryAlbumsRepo.rescan()
     }
     
     private suspend fun onFiltersReset() {
