@@ -18,12 +18,12 @@
     <string name="filters_reset">Filters reset to default</string>
     <string name="rescan_gallery">Rescan</string>
 
-    <string name="search_in_directory">Search in $s</string>
+    <string name="search_in_directory">Search in %s</string>
     <string name="search_in_gallery">Search in gallery</string>
     <string name="cancel_search">SCancel search</string>
 
-    <string name="contains_x_albums">Contains $d albums</string>
-    <string name="contains_x_files">Contains $d files</string>
+    <string name="contains_x_albums">Contains %d albums</string>
+    <string name="contains_x_files">Contains %d files</string>
 
     <string name="copying">Copying…</string>
     <string name="moving">Moving…</string>
