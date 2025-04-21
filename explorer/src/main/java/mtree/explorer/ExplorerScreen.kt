@@ -99,7 +99,7 @@ private fun ExplorerScreenContent(
     val focusManager = LocalFocusManager.current
     
     // if it's gallery root - cancel search mode
-    BackHandler(state.searchQuery != null) {
+    BackHandler(state.searchQuery != null && state.albumPath == null) {
         onAction(Action.SearchQueryChange(null))
         focusManager.clearFocus()
     }
