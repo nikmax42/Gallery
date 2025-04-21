@@ -53,10 +53,6 @@ class MediastoreDsImpl(private val context: Context) : MediastoreDs {
         val data = cursor.getString(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
         )
-        val contentUri = ContentUris.withAppendedId(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
-        )
         val dateAdded = cursor.getLong(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
         )
@@ -72,9 +68,20 @@ class MediastoreDsImpl(private val context: Context) : MediastoreDs {
         val mimeType = cursor.getString(
             cursor.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE)
         )
-        val volumeName = cursor.getString(
-            cursor.getColumnIndexOrThrow(MediaStore.Images.Media.VOLUME_NAME)
+        
+        val id = cursor.getLong(
+            cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
         )
+        val startsWith =
+            if (mimeType.startsWith("video/"))
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            else
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val contentUri = ContentUris.withAppendedId(
+            startsWith,
+            id
+        )
+        
         return MediaItemData.File(
             path = data,
             uri = contentUri.toString(),

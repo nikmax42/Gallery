@@ -84,10 +84,12 @@ internal fun MainContent(
     // for videos and gifs only
     val player = remember(currentFile) {
         ExoPlayer.Builder(context).build().apply {
-            val videoUri = currentFile.uri ?: "file://${currentFile.path}"
-            this.setMediaItem(MediaItem.fromUri(videoUri))
+            val fileUri = "file://${currentFile.path}"
+            this.setMediaItem(
+                MediaItem.fromUri(fileUri)
+            )
+            playWhenReady = true
             prepare()
-            playWhenReady = false
         }
     }
     DisposableEffect(player) { onDispose { player.release() } }
