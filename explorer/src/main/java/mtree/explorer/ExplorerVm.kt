@@ -123,7 +123,9 @@ class ExplorerVm
         }
         val isLoading = albumsResource is Resource.Loading
         val content =
-            if (itemsToDisplay.isEmpty() && !isLoading)
+            if (isLoading)
+                Content.Shimmer
+            else if (itemsToDisplay.isEmpty())
                 Content.NothingToDisplay
             else
                 Content.Main
@@ -141,7 +143,7 @@ class ExplorerVm
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.Lazily,
+        started = SharingStarted.WhileSubscribed(5000),
         initialValue = UiState(
             albumPath = null,
             items = emptyList(),
@@ -150,7 +152,7 @@ class ExplorerVm
             isLoading = false,
             portraitGridColumns = 3,
             landscapeGridColumns = 4,
-            content = Content.Initialization,
+            content = Content.Shimmer,
             dialog = Dialog.None
         )
     )

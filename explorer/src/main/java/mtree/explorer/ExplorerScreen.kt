@@ -162,7 +162,7 @@ private fun ExplorerScreenContent(
         Box {
             AnimatedContent(state.content) { content ->
                 when (content) {
-                    Content.Initialization -> InitializationContent(
+                    Content.Shimmer -> InitializationContent(
                         portraitGridColumns = state.portraitGridColumns,
                         landscapeGridColumns = state.landscapeGridColumns,
                         modifier = Modifier.padding(
