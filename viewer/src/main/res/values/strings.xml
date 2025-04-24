@@ -8,4 +8,13 @@
     <string name="back">Back</string>
     <string name="play">Play</string>
     <string name="pause">Pause</string>
+
+    <string name="copying">Copying …</string>
+    <string name="copied">Copied</string>
+    <string name="moving">Moving…</string>
+    <string name="moved">Moved</string>
+    <string name="renaming">Renaming…</string>
+    <string name="renamed">Renamed</string>
+    <string name="deleting">Deleting …</string>
+    <string name="deleted">Deleted</string>
 </resources>
