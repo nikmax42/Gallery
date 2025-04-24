@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="its_system_directory">It is system directory</string>
+    <string name="item_selected">Is selected</string>
+    <string name="files_count">Files count</string>
+    <string name="directories_count">Directories count</string>
+    <string name="directory_size">Directory size</string>
+
+    <string name="bytes">%1$s b</string>
+    <string name="kilobytes">%1$s kb</string>
+    <string name="megabytes">%1$s mb</string>
+    <string name="gigabytes">%1$s gb</string>
+</resources>

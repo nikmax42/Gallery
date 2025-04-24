@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sorting">Sorting</string>
+    <string name="appearance">Appearance</string>
+    <string name="filtering">Filtering</string>
+
+    <string name="albums_mode">Albums mode</string>
+    <string name="tree_mode">Tree mode</string>
+    <string name="plain_mode">Plain mode</string>
+
+    <string name="app_theme">App theme</string>
+    <string name="system">System</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="dynamic_colors">Dynamic colors</string>
+    <string name="disabled">Disabled</string>
+
+    <string name="grid_appearance">Grid appearance</string>
+    <string name="grid_columns_portrait">Grid columns (portrait)</string>
+    <string name="grid_columns_landscape">Grid columns (landscape)</string>
+
+    <string name="place_on_top">Place on top</string>
+    <string name="albums_on_top">Albums on top</string>
+    <string name="files_on_top">Files on top</string>
+    <string name="sort_order">Sort order</string>
+    <string name="creation_date">Creation date</string>
+    <string name="modification_date">Modification date</string>
+    <string name="name">Name</string>
+    <string name="extension">Extension</string>
+    <string name="size">Size</string>
+    <string name="random">Random</string>
+
+    <string name="media_type">Media type</string>
+    <string name="images">Images</string>
+    <string name="videos">Videos</string>
+    <string name="gifs">GIFs</string>
+
+    <string name="item_type">Item type</string>
+    <string name="file">Files</string>
+    <string name="album">Albums</string>
+    <string name="unhidden">Unhidden</string>
+    <string name="hidden">Hidden</string>
+</resources>

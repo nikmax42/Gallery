@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="name">Name</string>
+    <string name="new_name">New name</string>
+    <string name="invalid_filename">Invalid name</string>
+    <string name="extension">Extension</string>
+    <string name="new_extension">New extension</string>
+    <string name="invalid_extension">Invalid extension</string>
+    <string name="delete_x_items">Permanently delete %1$d items? </string>
+    <string name="pick_destination">Pick destination</string>
+    <string name="pick_destination_first">Pick destination first</string>
+    <string name="ok">OK</string>
+    <string name="filename_conflict">Filename conflict</string>
+    <string name="x_files_already_exist">%1$d items already exists in the target directory</string>
+    <string name="file_already_exist">Item with such name already exists in the target directory</string>
+    <string name="apply_to_all">Apply to all</string>
+    <string name="skip">Skip this item</string>
+    <string name="keep_both">Keep both</string>
+    <string name="overwrite">Overwrite with new</string>
+    <string name="directory_is_not_writable">This directory is not writable</string>
+</resources>

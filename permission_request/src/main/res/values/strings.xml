@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="storage_not_granted">Storage access not granted</string>
+    <string name="storage_not_granted_explanation">App requires external storage access to manage media files on your device. Please grant permission below</string>
+    <string name="grant">Grant</string>
+</resources>

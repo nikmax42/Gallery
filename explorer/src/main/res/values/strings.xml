@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="system_directories_cannot_be_copied">System directories cannot be copied</string>
+    <string name="system_directories_cannot_be_moved">System directories cannot be moved</string>
+    <string name="system_directories_cannot_be_renamed">System directories cannot be renamed</string>
+    <string name="system_directories_cannot_be_deleted">System directories cannot be deleted</string>
+    <string name="unselect">Unselect</string>
+    <string name="copy_selected">Copy selected</string>
+    <string name="move_selected">Move selected</string>
+    <string name="rename_selected">Rename selected</string>
+    <string name="delete_selected">Delete selected</string>
+    <string name="share">Share</string>
+    <string name="refresh">Refresh</string>
+
+    <string name="nothing_to_show">Nothing to show</string>
+    <string name="nothing_to_show_explanation">No media matching target path, search query and filters were found</string>
+    <string name="reset_filters">Reset filters</string>
+    <string name="filters_reset">Filters reset to default</string>
+    <string name="rescan_gallery">Rescan</string>
+
+    <string name="search_in_directory">Search in %s</string>
+    <string name="search_in_gallery">Search in gallery</string>
+    <string name="cancel_search">SCancel search</string>
+
+    <string name="contains_x_albums">Contains %d albums</string>
+    <string name="contains_x_files">Contains %d files</string>
+
+    <string name="copying">Copying …</string>
+    <string name="copied">Copied</string>
+    <string name="moving">Moving…</string>
+    <string name="moved">Moved</string>
+    <string name="renaming">Renaming…</string>
+    <string name="renamed">Renamed</string>
+    <string name="deleting">Deleting …</string>
+    <string name="deleted">Deleted</string>
+
+    <string name="gallery_preferences">Gallery preferences</string>
+</resources>

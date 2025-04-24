@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="back">Back</string>
+    <string name="name">Name</string>
+    <string name="size">Size</string>
+    <string name="creation_date">Creation date</string>
+    <string name="modification_date">Modification date</string>
+    <string name="copy">Copy</string>
+    <string name="move">Move</string>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="share">Share</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+</resources>
