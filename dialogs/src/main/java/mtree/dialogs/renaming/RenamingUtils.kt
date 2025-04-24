@@ -9,13 +9,13 @@ internal object RenamingUtils {
      *
      * 1. starts with a letter or a dot
      * 2. don't start with minus or space
-     * 2. contains only letters, numbers - and _
+     * 2. contains only letters, numbers, (, ), - and _
      * 3. length is between 1 and 255 symbols
      *
      * @return true if valid, false if not
      */
     fun fileNameIsValid(filename: String): Boolean {
-        val filenameRegex = Regex("^(?!- )\\.*[\\w\\-_ +]{1,255}$")
+        val filenameRegex = Regex("^(?!- )\\.*[\\w\\-_() +]{1,255}$")
         return filenameRegex.matches(filename)
     }
     
