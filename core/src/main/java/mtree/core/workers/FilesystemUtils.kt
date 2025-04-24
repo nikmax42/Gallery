@@ -150,7 +150,7 @@ internal object FilesystemUtils {
         val file = Path(path)
         val name = file.nameWithoutExtension
         val extension = file.extension
-        val suffixRegex = Regex("\\((\\d+)\\)(?=\\.[^.]+\$)")
+        val suffixRegex = Regex("\\((\\d+)\\)(?=\\.[^.]+$)")
         val newFilename = when (suffixRegex.matches(name)) {
             true -> {
                 val number = suffixRegex.find(name)!!
@@ -160,10 +160,8 @@ internal object FilesystemUtils {
                     .toInt()
                 name.replace("($number)", "(${number + 1})")
             }
-            false -> {
-                "$name(1)"
-            }
+            false -> "$name(1)"
         }
-        return "${file.parent.pathString}/$newFilename.$extension"
+        return "${file.parent.pathString}/${newFilename}${if (extension.isNotEmpty()) ".$extension" else ""}"
     }
 }
