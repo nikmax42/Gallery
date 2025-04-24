@@ -3,6 +3,7 @@ package mtree.explorer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -224,6 +225,9 @@ class ExplorerVm
                 },
                 onFilesystemOperationsFinished = {
                     //TODO("show snack")
+                    viewModelScope.launch(Dispatchers.IO) {
+                        galleryAlbumsRepo.rescan()
+                    }
                 }
             )
         }
@@ -249,6 +253,9 @@ class ExplorerVm
                 },
                 onFilesystemOperationsFinished = {
                     //TODO("show snack")
+                    viewModelScope.launch(Dispatchers.IO) {
+                        galleryAlbumsRepo.rescan()
+                    }
                 }
             )
         }
@@ -263,10 +270,13 @@ class ExplorerVm
                 items = items.map { it.mapToDomain() },
                 onConfirmationRequired = { awaitForConfirmation(items) },
                 onFilesystemOperationsStarted = {
-                    TODO("show snack")
+                    //TODO("show snack")
                 },
                 onFilesystemOperationsFinished = {
-                    TODO("show snack")
+                    //TODO("show snack")
+                    viewModelScope.launch(Dispatchers.IO) {
+                        galleryAlbumsRepo.rescan()
+                    }
                 }
             )
         }
