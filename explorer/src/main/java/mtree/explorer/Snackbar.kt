@@ -1,14 +1,15 @@
 package mtree.explorer
 
-import mtree.core.domain.models.FileOperation
-import mtree.core.ui.models.MediaItemUI
-
 sealed interface Snackbar {
-    data class ProtectedItems(
-        val protectedItems: List<MediaItemUI>,
-        val onConfirm: () -> Unit
-    ) : Snackbar
+    data class CopyingStarted(val itemsCount: Int) : Snackbar
+    data object CopyingFinished : Snackbar
     
-    data class OperationStarted(val operations: List<FileOperation>) : Snackbar
-    data class OperationFinished(val completeItems: Int, val failedItems: Int) : Snackbar
+    data class MovingStarted(val itemsCount: Int) : Snackbar
+    data object MovingFinished : Snackbar
+    
+    data class RenamingStarted(val itemsCount: Int) : Snackbar
+    data object RenamingFinished : Snackbar
+    
+    data class DeletionStarted(val itemsCount: Int) : Snackbar
+    data object DeletionFinished : Snackbar
 }

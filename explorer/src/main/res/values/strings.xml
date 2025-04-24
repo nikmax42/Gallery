@@ -25,10 +25,14 @@
     <string name="contains_x_albums">Contains %d albums</string>
     <string name="contains_x_files">Contains %d files</string>
 
-    <string name="copying">Copying…</string>
+    <string name="copying">Copying …</string>
+    <string name="copied">Copied</string>
     <string name="moving">Moving…</string>
+    <string name="moved">Moved</string>
     <string name="renaming">Renaming…</string>
-    <string name="deleting">Deleting…</string>
+    <string name="renamed">Renamed</string>
+    <string name="deleting">Deleting …</string>
+    <string name="deleted">Deleted</string>
 
     <string name="gallery_preferences">Gallery preferences</string>
 </resources>

@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -158,6 +160,9 @@ class ExplorerVm
         )
     )
     
+    private val _snackbar = MutableSharedFlow<Snackbar>()
+    val snackbar = _snackbar.asSharedFlow()
+    
     
     internal fun onAction(action: Action) {
         viewModelScope.launch {
@@ -221,10 +226,20 @@ class ExplorerVm
                     ).mapToNewDomain()
                 },
                 onFilesystemOperationsStarted = {
-                    //TODO("show snack")
+                    viewModelScope.launch {
+                        when (move) {
+                            true -> Snackbar.MovingStarted(items.size)
+                            false -> Snackbar.CopyingStarted(items.size)
+                        }.let { _snackbar.emit(it) }
+                    }
                 },
                 onFilesystemOperationsFinished = {
-                    //TODO("show snack")
+                    viewModelScope.launch {
+                        when (move) {
+                            true -> Snackbar.MovingFinished
+                            false -> Snackbar.CopyingFinished
+                        }.let { _snackbar.emit(it) }
+                    }
                     viewModelScope.launch(Dispatchers.IO) {
                         galleryAlbumsRepo.rescan()
                     }
@@ -249,10 +264,18 @@ class ExplorerVm
                     ).mapToNewDomain()
                 },
                 onFilesystemOperationsStarted = {
-                    //TODO("show snack")
+                    viewModelScope.launch {
+                        Snackbar.RenamingStarted(items.size).let {
+                            _snackbar.emit(it)
+                        }
+                    }
                 },
                 onFilesystemOperationsFinished = {
-                    //TODO("show snack")
+                    viewModelScope.launch {
+                        Snackbar.RenamingFinished.let {
+                            _snackbar.emit(it)
+                        }
+                    }
                     viewModelScope.launch(Dispatchers.IO) {
                         galleryAlbumsRepo.rescan()
                     }
@@ -270,10 +293,18 @@ class ExplorerVm
                 items = items.map { it.mapToDomain() },
                 onConfirmationRequired = { awaitForConfirmation(items) },
                 onFilesystemOperationsStarted = {
-                    //TODO("show snack")
+                    viewModelScope.launch {
+                        Snackbar.DeletionStarted(items.size).let {
+                            _snackbar.emit(it)
+                        }
+                    }
                 },
                 onFilesystemOperationsFinished = {
-                    //TODO("show snack")
+                    viewModelScope.launch {
+                        Snackbar.DeletionFinished.let {
+                            _snackbar.emit(it)
+                        }
+                    }
                     viewModelScope.launch(Dispatchers.IO) {
                         galleryAlbumsRepo.rescan()
                     }

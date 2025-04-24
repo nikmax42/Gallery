@@ -26,8 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import mtree.core.ui.models.MediaItemUI
 import mtree.core.utils.SharingUtils
 import mtree.dialogs.album_picker.AlbumPickerFullScreenDialog
@@ -53,15 +55,14 @@ fun ExplorerScreen(
     val state by vm.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     
-    // todo for snackbars
-    /* val strProtectedItemsWarning = stringResource(R.string.protected_items_warning)
-    val strUnselect = stringResource(R.string.unselect)
     val strCopying = stringResource(R.string.copying)
+    val strCopied = stringResource(R.string.copied)
     val strMoving = stringResource(R.string.moving)
+    val strMoved = stringResource(R.string.moved)
     val strRenaming = stringResource(R.string.renaming)
+    val strRenamed = stringResource(R.string.renamed)
     val strDeleting = stringResource(R.string.deleting)
-    val strFailed = stringResource(R.string.operation_failed)
-    val strComplete = stringResource(R.string.operation_complete) */
+    val strDeleted = stringResource(R.string.deleted)
     
     LaunchedEffect(albumPath) {
         vm.onAction(
@@ -72,6 +73,19 @@ fun ExplorerScreen(
         )
         if (albumPath == null && state.items.isEmpty()) {
             vm.onAction(Action.Refresh)
+        }
+        
+        vm.snackbar.collectLatest { snackbar ->
+            when (snackbar) {
+                is Snackbar.RenamingStarted -> snackbarHostState.showSnackbar(strRenaming)
+                Snackbar.RenamingFinished -> snackbarHostState.showSnackbar(strRenamed)
+                is Snackbar.CopyingStarted -> snackbarHostState.showSnackbar(strCopying)
+                Snackbar.CopyingFinished -> snackbarHostState.showSnackbar(strCopied)
+                is Snackbar.MovingStarted -> snackbarHostState.showSnackbar(strMoving)
+                Snackbar.MovingFinished -> snackbarHostState.showSnackbar(strMoved)
+                is Snackbar.DeletionStarted -> snackbarHostState.showSnackbar(strDeleting)
+                Snackbar.DeletionFinished -> snackbarHostState.showSnackbar(strDeleted)
+            }
         }
     }
     
