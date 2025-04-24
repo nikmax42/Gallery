@@ -38,7 +38,7 @@ internal fun PickerTopBar(
         actions = {
             val scope = rememberCoroutineScope()
             val albumIsNotSelectedYet = currentAlbum == null
-            val albumIsNotWritable = currentAlbum?.isVolume == true
+            val albumIsNotWritable = currentAlbum?.path?.isNotWritableDestination() != false
             val strDirectoryIsNotWritable = stringResource(R.string.directory_is_not_writable)
             val strPickDestination = stringResource(R.string.pick_destination_first)
             TextButton(
@@ -64,4 +64,9 @@ internal fun PickerTopBar(
             }
         }
     )
+}
+
+
+private fun String.isNotWritableDestination(): Boolean {
+    return this == "/storage" || this == "/storage/emulated"
 }
