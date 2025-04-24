@@ -240,6 +240,7 @@ class ExplorerVm
                             false -> Snackbar.CopyingFinished
                         }.let { _snackbar.emit(it) }
                     }
+                    onSelectionChange(emptyList())
                     viewModelScope.launch(Dispatchers.IO) {
                         galleryAlbumsRepo.rescan()
                     }
@@ -276,6 +277,7 @@ class ExplorerVm
                             _snackbar.emit(it)
                         }
                     }
+                    onSelectionChange(emptyList())
                     viewModelScope.launch(Dispatchers.IO) {
                         galleryAlbumsRepo.rescan()
                     }
@@ -305,6 +307,7 @@ class ExplorerVm
                             _snackbar.emit(it)
                         }
                     }
+                    onSelectionChange(emptyList())
                     viewModelScope.launch(Dispatchers.IO) {
                         galleryAlbumsRepo.rescan()
                     }
